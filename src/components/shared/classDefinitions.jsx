@@ -136,10 +136,10 @@ export const BASE_CLASSES = {
         unlockLevel: 5,
         statBonuses: { dexterity: 5, strength: 2, charisma: -1 },
         abilities: [
-          { id: "backstab", name: "Backstab", description: "3x damage if enemy hasn't acted yet.", type: "active", effect_type: "damage", effect_magnitude: 300, cooldown_rounds: 3, unlocked_at_level: 5, source: "specialization" },
-          { id: "poison", name: "Envenom", description: "Apply poison: 10 damage per round for 4 rounds.", type: "active", effect_type: "debuff", effect_magnitude: 10, cooldown_rounds: 3, unlocked_at_level: 6, source: "specialization" },
-          { id: "shadow_veil", name: "Shadow Veil", description: "Passive: +25 evasion and +20% crit chance.", type: "passive", effect_type: "buff", effect_magnitude: 25, cooldown_rounds: 0, unlocked_at_level: 8, source: "specialization" },
-          { id: "death_mark", name: "Death Mark", description: "Ultimate: Mark target – next attack crits for 5x damage.", type: "ultimate", effect_type: "utility", effect_magnitude: 500, cooldown_rounds: 10, unlocked_at_level: 10, source: "specialization" },
+          { id: "backstab", name: "Backstab", description: "3x damage if enemy hasn't acted yet.", type: "active", effect_type: "damage", effect_magnitude: 300, cooldown_rounds: 3, energy_cost: 20, unlocked_at_level: 5, source: "specialization" },
+          { id: "poison", name: "Envenom", description: "Apply poison: 10 damage per round for 4 rounds.", type: "active", effect_type: "debuff", effect_magnitude: 10, cooldown_rounds: 3, energy_cost: 15, unlocked_at_level: 6, source: "specialization" },
+          { id: "shadow_veil", name: "Shadow Veil", description: "Passive: +25 evasion and +20% crit chance.", type: "passive", effect_type: "buff", effect_magnitude: 25, cooldown_rounds: 0, energy_cost: 0, unlocked_at_level: 8, source: "specialization" },
+          { id: "death_mark", name: "Death Mark", description: "Ultimate: Mark target – next attack crits for 5x damage.", type: "ultimate", effect_type: "utility", effect_magnitude: 500, cooldown_rounds: 10, energy_cost: 38, unlocked_at_level: 10, source: "specialization" },
         ]
       },
       beastmaster: {
