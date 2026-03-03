@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { createPageUrl } from "@/utils";
 import { Link } from "react-router-dom";
-import { Sword, Bot, Users, Vote, Briefcase, Map, Zap, Hammer } from "lucide-react";
+import { Sword, Bot, Users, Vote, Briefcase, Map, Zap, Hammer, Video } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export default function Home() {
