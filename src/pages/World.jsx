@@ -26,6 +26,7 @@ export default function World() {
   const [encounterZone, setEncounterZone] = useState(null);
   const [viewPos, setViewPos] = useState(null);
   const [combatMonster, setCombatMonster] = useState(null);
+  const [showInventory, setShowInventory] = useState(false);
 
   useEffect(() => {
     loadWorld();
