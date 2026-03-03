@@ -54,6 +54,7 @@ import Governance from './pages/Governance';
 import Jobs from './pages/Jobs';
 import Agents from './pages/Agents';
 import Combat from './pages/Combat';
+import WorldEvents from './pages/WorldEvents';
 import __Layout from './Layout.jsx';
 
 
@@ -65,6 +66,7 @@ export const PAGES = {
     "Jobs": Jobs,
     "Agents": Agents,
     "Combat": Combat,
+    "WorldEvents": WorldEvents,
 }
 
 export const pagesConfig = {
