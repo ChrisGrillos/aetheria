@@ -17,7 +17,26 @@ const CATEGORY_EMOJI = {
   build: "🏗️", rule: "📜", economy: "💰", culture: "🎭", tool: "🔧", event: "🎉"
 };
 
-export default function ProposalCard({ proposal, myCharacter, hasVoted, myVote, onVote }) {
+function canVoteCheck(character) {
+  if (!character) return { eligible: false, errors: ["No character selected."] };
+  const errors = [];
+  if ((character.level || 1) < 2) errors.push("Must be level 2+ to vote.");
+  const ageHours = (Date.now() - new Date(character.created_date).getTime()) / (1000 * 60 * 60);
+  if (ageHours < 24) errors.push(`Character must be 24h old (${Math.ceil(24 - ageHours)}h left).`);
+  return { eligible: errors.length === 0, errors };
+}
+
+function calcVotingPowerLocal(character) {
+  if (!character) return 1;
+  let power = 1.0;
+  power += (character.level || 1) * 0.1;
+  const daysActive = Math.floor((Date.now() - new Date(character.created_date).getTime()) / (1000 * 60 * 60 * 24));
+  power += daysActive * 0.05;
+  power += (character.guild_id ? 0.5 : 0);
+  return Math.min(5.0, Math.round(power * 100) / 100);
+}
+
+export default function ProposalCard({ proposal, myCharacter, hasVoted, myVote, onVote, surgeWarning }) {
   const [reasoning, setReasoning] = useState("");
   const [showVote, setShowVote] = useState(false);
   const [pendingChoice, setPendingChoice] = useState(null);
@@ -25,6 +44,8 @@ export default function ProposalCard({ proposal, myCharacter, hasVoted, myVote, 
 
   const total = (proposal.votes_for || 0) + (proposal.votes_against || 0);
   const forPct = total > 0 ? Math.round((proposal.votes_for || 0) / total * 100) : 0;
+  const { eligible, errors } = canVoteCheck(myCharacter);
+  const votingPower = calcVotingPowerLocal(myCharacter);
 
   const handleVoteClick = (choice) => {
     if (!myCharacter) return;
