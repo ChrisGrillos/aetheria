@@ -104,14 +104,15 @@ export default function CharacterHUD({ character, onInventory, onUpdateCharacter
 
         {/* Quick potions */}
         {potions.length > 0 && (
-          <div className="flex items-center gap-1">
-            {potions.map((p, i) => (
-              <button key={i} title={`Use ${p.name} (+${p.heals} HP)`}
-                className="text-sm leading-none bg-gray-800 hover:bg-gray-700 rounded px-1 border border-gray-700 transition-colors">
-                🧪
-              </button>
-            ))}
-          </div>
+        <div className="flex items-center gap-1">
+          {potions.map((p, i) => (
+            <button key={i} title={`Use ${p.name} (+${p.heals || p.heal} HP)`}
+              onClick={() => usePotion(p)}
+              className="text-sm leading-none bg-gray-800 hover:bg-gray-700 rounded px-1 border border-gray-700 transition-colors">
+              🧪
+            </button>
+          ))}
+        </div>
         )}
 
         {/* Inventory button */}
