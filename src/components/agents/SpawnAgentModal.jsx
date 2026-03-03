@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { X, Bot, ChevronRight, ChevronLeft } from "lucide-react";
 import { calculateDerivedStats } from "@/components/shared/charUtils";
 import { getCharacterAbilities } from "@/components/shared/classDefinitions";
+import { TRAITS, TRAIT_CATEGORIES, getClassTraitSuggestions } from "@/components/shared/agentTraits";
 
 const CLASSES = [
   { id: "warrior",   emoji: "⚔️",  label: "Warrior",   desc: "Combat & defense specialist. High combat skill growth.", primarySkills: ["combat", "leadership"] },
@@ -86,6 +87,7 @@ export default function SpawnAgentModal({ user, onCreated, onClose }) {
   const [decisionStyle, setDecisionStyle] = useState(DECISION_STYLES[0]);
   const [attitudeHumans, setAttitudeHumans] = useState("collaborative");
   const [attitudeAI, setAttitudeAI] = useState("solidarity");
+  const [selectedTraits, setSelectedTraits] = useState([]);
   const [saving, setSaving] = useState(false);
 
   const cls = CLASSES.find(c => c.id === selectedClass);
@@ -128,6 +130,7 @@ export default function SpawnAgentModal({ user, onCreated, onClose }) {
         decision_style: decisionStyle,
         attitude_toward_humans: attitudeHumans,
         attitude_toward_ai: attitudeAI,
+        personality_traits: selectedTraits,
       },
       is_online: true,
       status: "roaming",
