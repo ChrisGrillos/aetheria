@@ -226,10 +226,10 @@ export const BASE_CLASSES = {
         unlockLevel: 5,
         statBonuses: { charisma: 5, intelligence: 3, strength: -1 },
         abilities: [
-          { id: "monopoly", name: "Market Monopoly", description: "Passive: Double gold from all sources.", type: "passive", effect_type: "utility", effect_magnitude: 100, cooldown_rounds: 0, unlocked_at_level: 5, source: "specialization" },
-          { id: "invest", name: "Risky Investment", description: "Spend 20 gold: 50% chance to gain 60 gold.", type: "active", effect_type: "utility", effect_magnitude: 60, cooldown_rounds: 5, unlocked_at_level: 6, source: "specialization" },
-          { id: "trade_empire", name: "Trade Empire", description: "+30% to all trade bonuses.", type: "passive", effect_type: "buff", effect_magnitude: 30, cooldown_rounds: 0, unlocked_at_level: 8, source: "specialization" },
-          { id: "market_crash", name: "Market Crash", description: "Ultimate: Drain 30% of enemy's gold and add to yours.", type: "ultimate", effect_type: "utility", effect_magnitude: 30, cooldown_rounds: 12, unlocked_at_level: 10, source: "specialization" },
+          { id: "monopoly", name: "Market Monopoly", description: "Passive: Double gold from all sources.", type: "passive", effect_type: "utility", effect_magnitude: 100, cooldown_rounds: 0, energy_cost: 0, unlocked_at_level: 5, source: "specialization" },
+          { id: "invest", name: "Risky Investment", description: "Spend 20 gold: 50% chance to gain 60 gold.", type: "active", effect_type: "utility", effect_magnitude: 60, cooldown_rounds: 5, energy_cost: 15, unlocked_at_level: 6, source: "specialization" },
+          { id: "trade_empire", name: "Trade Empire", description: "+30% to all trade bonuses.", type: "passive", effect_type: "buff", effect_magnitude: 30, cooldown_rounds: 0, energy_cost: 0, unlocked_at_level: 8, source: "specialization" },
+          { id: "market_crash", name: "Market Crash", description: "Ultimate: Drain 30% of enemy's gold and add to yours.", type: "ultimate", effect_type: "utility", effect_magnitude: 30, cooldown_rounds: 12, energy_cost: 35, unlocked_at_level: 10, source: "specialization" },
         ]
       },
       diplomat: {
