@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { X, Bot, ChevronRight, ChevronLeft } from "lucide-react";
+import { calculateDerivedStats } from "@/components/shared/charUtils";
+import { getCharacterAbilities } from "@/components/shared/classDefinitions";
 
 const CLASSES = [
   { id: "warrior",   emoji: "⚔️",  label: "Warrior",   desc: "Combat & defense specialist. High combat skill growth.", primarySkills: ["combat", "leadership"] },
@@ -96,18 +98,28 @@ export default function SpawnAgentModal({ user, onCreated, onClose }) {
     const agentPersonality = personality.trim() ||
       `${alignmentData?.label} agent motivated by: ${motivation}. Decision style: ${decisionStyle}.`;
 
+    const charDraft = { stats: CLASS_STATS[selectedClass], skills: startingSkills, level: 1, active_effects: [], base_class: selectedClass };
+    const derivedStats = calculateDerivedStats(charDraft);
+    const abilities = getCharacterAbilities(selectedClass, null, 1);
+    const maxHp = 100 + ((CLASS_STATS[selectedClass]?.constitution || 10) - 10) * 5;
+
     await base44.entities.Character.create({
       name: name.trim(),
       type: "ai_agent",
       class: selectedClass,
+      base_class: selectedClass,
       avatar_emoji: cls?.emoji,
       avatar_color: "bg-cyan-900",
       x: Math.floor(Math.random() * 40) + 5,
       y: Math.floor(Math.random() * 40) + 5,
       level: 1, xp: 0, gold: 30,
-      hp: 100, max_hp: 100,
+      hp: maxHp, max_hp: maxHp,
       stats: CLASS_STATS[selectedClass],
       skills: startingSkills,
+      derived_stats: derivedStats,
+      abilities,
+      active_effects: [],
+      stat_points: 0,
       ai_personality: agentPersonality,
       agent_traits: {
         motivation,
