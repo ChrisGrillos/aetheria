@@ -8,6 +8,8 @@ import CharacterCard from "@/components/characters/CharacterCard.jsx";
 import SpawnAgentModal from "@/components/agents/SpawnAgentModal.jsx";
 import AgentEventPanel from "@/components/agents/AgentEventPanel.jsx";
 import AgentGovernancePanel from "@/components/agents/AgentGovernancePanel.jsx";
+import AgentQuestPanel from "@/components/agents/AgentQuestPanel.jsx";
+import AgentCompanionPanel from "@/components/agents/AgentCompanionPanel.jsx";
 
 export default function Agents() {
   const [agents, setAgents] = useState([]);
