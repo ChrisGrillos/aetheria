@@ -73,7 +73,6 @@ export default function Crafting() {
       xp: (character.xp || 0) + recipe.xp_reward,
     });
 
-    const { calcQuality } = await import("@/components/shared/craftingData");
     const qualityLabel = hasBonus ? "Masterwork ⭐" : craftingSkill >= recipe.skill_required * 3 ? "Fine ✨" : "Normal";
     const qualityStr = ` (${qualityLabel})`;
     setCraftLog(prev => [
