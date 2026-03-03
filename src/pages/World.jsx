@@ -222,6 +222,18 @@ export default function World() {
         />
       )}
 
+      {showInventory && myCharacter && (
+        <InventoryPanel
+          open={showInventory}
+          onClose={() => setShowInventory(false)}
+          character={myCharacter}
+          onUpdate={(updated) => {
+            setMyCharacter(updated);
+            setAllCharacters(prev => prev.map(c => c.id === updated.id ? updated : c));
+          }}
+        />
+      )}
+
       {encounter && myCharacter && (
         <TravelEncounterModal
           encounter={encounter}
