@@ -148,10 +148,10 @@ export const BASE_CLASSES = {
         unlockLevel: 5,
         statBonuses: { wisdom: 4, dexterity: 2, constitution: 2 },
         abilities: [
-          { id: "beast_call", name: "Beast Call", description: "Summon a beast companion dealing 80% of your attack.", type: "active", effect_type: "damage", effect_magnitude: 80, cooldown_rounds: 4, unlocked_at_level: 5, source: "specialization" },
-          { id: "feral_bond", name: "Feral Bond", description: "Passive: +15% to all stats when in wild terrain.", type: "passive", effect_type: "buff", effect_magnitude: 15, cooldown_rounds: 0, unlocked_at_level: 6, source: "specialization" },
-          { id: "pack_tactics", name: "Pack Tactics", description: "+20 attack and evasion for 3 rounds (hunting pack mode).", type: "active", effect_type: "buff", effect_magnitude: 20, cooldown_rounds: 5, unlocked_at_level: 8, source: "specialization" },
-          { id: "apex_predator", name: "Apex Predator", description: "Ultimate: Unleash a stampede for 4x damage + stun.", type: "ultimate", effect_type: "damage", effect_magnitude: 400, cooldown_rounds: 10, unlocked_at_level: 10, source: "specialization" },
+          { id: "beast_call", name: "Beast Call", description: "Summon a beast companion dealing 80% of your attack.", type: "active", effect_type: "damage", effect_magnitude: 80, cooldown_rounds: 4, energy_cost: 18, unlocked_at_level: 5, source: "specialization" },
+          { id: "feral_bond", name: "Feral Bond", description: "Passive: +15% to all stats when in wild terrain.", type: "passive", effect_type: "buff", effect_magnitude: 15, cooldown_rounds: 0, energy_cost: 0, unlocked_at_level: 6, source: "specialization" },
+          { id: "pack_tactics", name: "Pack Tactics", description: "+20 attack and evasion for 3 rounds (hunting pack mode).", type: "active", effect_type: "buff", effect_magnitude: 20, cooldown_rounds: 5, energy_cost: 20, unlocked_at_level: 8, source: "specialization" },
+          { id: "apex_predator", name: "Apex Predator", description: "Ultimate: Unleash a stampede for 4x damage + stun.", type: "ultimate", effect_type: "damage", effect_magnitude: 400, cooldown_rounds: 10, energy_cost: 38, unlocked_at_level: 10, source: "specialization" },
         ]
       }
     }
