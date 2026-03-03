@@ -3,12 +3,13 @@ import { base44 } from "@/api/base44Client";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
-import { Shield, Plus, Sword, Package, MessageSquare, Zap, ChevronDown, ChevronUp, Crown, Users } from "lucide-react";
+import { Shield, Plus, Sword, Package, MessageSquare, Zap, Eye, Crown, Users } from "lucide-react";
 import { GUILD_HALL_TIERS, WAR_TRIGGERS } from "@/components/shared/housingData";
 import GuildChat from "@/components/guilds/GuildChat";
 import GuildStorage from "@/components/guilds/GuildStorage";
 import GuildHallPanel from "@/components/guilds/GuildHallPanel";
 import GuildWarPanel from "@/components/guilds/GuildWarPanel";
+import GuildIntelligencePanel from "@/components/guilds/GuildIntelligencePanel";
 import CreateGuildModal from "@/components/guilds/CreateGuildModal";
 
 const RANK_COLOR = { leader: "text-amber-400", officer: "text-yellow-300", veteran: "text-blue-300", member: "text-gray-300", recruit: "text-gray-500" };
@@ -89,6 +90,7 @@ export default function Guilds() {
     { id: "storage",  label: "Storage", icon: Package },
     { id: "hall",     label: "Hall", icon: Zap },
     { id: "war",      label: "War Room", icon: Sword },
+    { id: "intel",    label: "Intel", icon: Eye },
   ];
 
   return (
@@ -262,6 +264,7 @@ export default function Guilds() {
             {tab === "storage" && <GuildStorage guild={myGuild} character={character} onUpdate={g => { setMyGuild(g); setAllGuilds(prev => prev.map(x => x.id === g.id ? g : x)); }} />}
             {tab === "hall"    && <GuildHallPanel guild={myGuild} character={character} isLeader={isLeader} onUpdate={g => { setMyGuild(g); setAllGuilds(prev => prev.map(x => x.id === g.id ? g : x)); }} />}
             {tab === "war"     && <GuildWarPanel guild={myGuild} character={character} allGuilds={allGuilds} isLeader={isLeader} onUpdate={g => { setMyGuild(g); setAllGuilds(prev => prev.map(x => x.id === g.id ? g : x)); }} />}
+            {tab === "intel"   && <GuildIntelligencePanel guild={myGuild} myCharacter={character} />}
           </>
         )}
       </div>
