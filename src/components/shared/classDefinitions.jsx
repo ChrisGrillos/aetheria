@@ -175,10 +175,10 @@ export const BASE_CLASSES = {
         unlockLevel: 5,
         statBonuses: { wisdom: 5, charisma: 2, constitution: 1 },
         abilities: [
-          { id: "greater_heal", name: "Greater Heal", description: "Restore 80 HP to a target.", type: "active", effect_type: "heal", effect_magnitude: 80, cooldown_rounds: 3, unlocked_at_level: 5, source: "specialization" },
-          { id: "holy_smite", name: "Holy Smite", description: "Deal divine damage equal to healing_power * 1.5.", type: "active", effect_type: "damage", effect_magnitude: 150, cooldown_rounds: 3, unlocked_at_level: 6, source: "specialization" },
-          { id: "divine_aegis", name: "Divine Aegis", description: "Passive: +15 defense when healing an ally.", type: "passive", effect_type: "buff", effect_magnitude: 15, cooldown_rounds: 0, unlocked_at_level: 8, source: "specialization" },
-          { id: "resurrection", name: "Resurrection", description: "Ultimate: Fully restore HP and remove all debuffs.", type: "ultimate", effect_type: "heal", effect_magnitude: 100, cooldown_rounds: 12, unlocked_at_level: 10, source: "specialization" },
+          { id: "greater_heal", name: "Greater Heal", description: "Restore 80 HP to a target.", type: "active", effect_type: "heal", effect_magnitude: 80, cooldown_rounds: 3, energy_cost: 20, unlocked_at_level: 5, source: "specialization" },
+          { id: "holy_smite", name: "Holy Smite", description: "Deal divine damage equal to healing_power * 1.5.", type: "active", effect_type: "damage", effect_magnitude: 150, cooldown_rounds: 3, energy_cost: 18, unlocked_at_level: 6, source: "specialization" },
+          { id: "divine_aegis", name: "Divine Aegis", description: "Passive: +15 defense when healing an ally.", type: "passive", effect_type: "buff", effect_magnitude: 15, cooldown_rounds: 0, energy_cost: 0, unlocked_at_level: 8, source: "specialization" },
+          { id: "resurrection", name: "Resurrection", description: "Ultimate: Fully restore HP and remove all debuffs.", type: "ultimate", effect_type: "heal", effect_magnitude: 100, cooldown_rounds: 12, energy_cost: 40, unlocked_at_level: 10, source: "specialization" },
         ]
       },
       shaman: {
