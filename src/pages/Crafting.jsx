@@ -63,7 +63,7 @@ export default function Crafting() {
 
     setCrafting(true);
     const hasBonus = specId === recipe.specialization_bonus;
-    const newInventory = craftItem(recipe, inventory, hasBonus);
+    const newInventory = craftItem(recipe, inventory, hasBonus, craftingSkill);
     const newSkill = Math.min(100, craftingSkill + Math.floor(recipe.skill_required * 0.1) + 1);
     const skillUpdates = { crafting: newSkill };
 
@@ -73,7 +73,9 @@ export default function Crafting() {
       xp: (character.xp || 0) + recipe.xp_reward,
     });
 
-    const qualityStr = hasBonus ? " (Masterwork! ⭐)" : "";
+    const { calcQuality } = await import("@/components/shared/craftingData");
+    const qualityLabel = hasBonus ? "Masterwork ⭐" : craftingSkill >= recipe.skill_required * 3 ? "Fine ✨" : "Normal";
+    const qualityStr = ` (${qualityLabel})`;
     setCraftLog(prev => [
       `✅ Crafted: ${recipe.emoji} ${recipe.name}${qualityStr} (+${recipe.xp_reward} XP)`,
       ...prev.slice(0, 9)
