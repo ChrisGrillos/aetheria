@@ -51,6 +51,7 @@ import Home from './pages/Home';
 import Characters from './pages/Characters';
 import World from './pages/World';
 import Governance from './pages/Governance';
+import Jobs from './pages/Jobs';
 
 
 export const PAGES = {
@@ -58,6 +59,7 @@ export const PAGES = {
     "Characters": Characters,
     "World": World,
     "Governance": Governance,
+    "Jobs": Jobs,
 }
 
 export const pagesConfig = {
