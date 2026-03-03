@@ -92,13 +92,53 @@ Return JSON with: title, description (2-3 sentences, in-world tone), event_type,
   const respond = async (event) => {
     if (!myCharacter) return;
     if (event.participants?.includes(myCharacter.id)) return;
-    await base44.entities.WorldEvent.update(event.id, {
-      participants: [...(event.participants || []), myCharacter.id],
-    });
+    const newParticipants = [...(event.participants || []), myCharacter.id];
+    await base44.entities.WorldEvent.update(event.id, { participants: newParticipants });
     await base44.entities.Character.update(myCharacter.id, {
       gold: (myCharacter.gold || 0) + event.reward_gold,
       xp: (myCharacter.xp || 0) + event.reward_xp,
     });
+    // Auto-resolve if enough participants and generate NPC quest follow-up
+    if (newParticipants.length >= 2 && event.status === "active") {
+      const outcome = await base44.integrations.Core.InvokeLLM({
+        prompt: `The world event "${event.title}" in the MMO Agentic has been responded to by ${newParticipants.length} citizens. Generate a brief outcome (1-2 sentences, in-world dramatic tone) and optionally spawn a follow-up NPC quest.
+Return JSON: outcome (string), spawn_quest (boolean), quest_title (string or null), quest_description (string or null).`,
+        response_json_schema: {
+          type: "object",
+          properties: {
+            outcome: { type: "string" },
+            spawn_quest: { type: "boolean" },
+            quest_title: { type: "string" },
+            quest_description: { type: "string" },
+          }
+        }
+      });
+      await base44.entities.WorldEvent.update(event.id, { status: "resolved", outcome: outcome.outcome });
+      if (outcome.spawn_quest && outcome.quest_title) {
+        const expires = new Date(); expires.setDate(expires.getDate() + 3);
+        await base44.entities.WorldEvent.create({
+          title: outcome.quest_title,
+          description: outcome.quest_description,
+          event_type: "npc_quest",
+          severity: "minor",
+          status: "active",
+          triggered_by_proposal_id: event.id,
+          affected_area: event.affected_area,
+          affected_tiles: event.affected_tiles,
+          reward_gold: Math.round((event.reward_gold || 20) * 0.6),
+          reward_xp: Math.round((event.reward_xp || 15) * 0.6),
+          participants: [],
+          requires_cooperation: false,
+          expires_at: expires.toISOString(),
+        });
+      }
+      await base44.entities.WorldChronicle.create({
+        title: `Event Resolved: ${event.title}`,
+        entry_type: "world_event",
+        summary: outcome.outcome,
+        impact_tags: [event.event_type, "resolved"],
+      });
+    }
     loadData();
   };
 
