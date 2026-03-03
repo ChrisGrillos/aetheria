@@ -8,6 +8,7 @@ import CharacterHUD from "@/components/world/CharacterHUD.jsx";
 import TravelEncounterModal from "@/components/world/TravelEncounterModal.jsx";
 import ZoneInfoPanel from "@/components/world/ZoneInfoPanel.jsx";
 import CombatOverlay from "@/components/combat/CombatOverlay.jsx";
+import Minimap from "@/components/world/Minimap.jsx";
 import { getZoneAt, getPOIAt, rollEncounter, calcTravelSteps } from "@/components/shared/worldZones";
 import { RESOURCES } from "@/components/shared/craftingData";
 
@@ -175,9 +176,15 @@ export default function World() {
             activeEvents={activeEvents}
             onMonsterClick={(monster) => setCombatMonster(monster)}
           />
+          <Minimap
+            myCharacter={myCharacter}
+            allCharacters={allCharacters}
+            monsters={monsters}
+            onFastTravel={(tx, ty) => handleMove(tx, ty)}
+          />
           {/* Zone info overlay bottom-left */}
           {viewPos && (
-            <div className="absolute bottom-2 left-2 w-56">
+            <div className="absolute bottom-8 left-2 w-56">
               <ZoneInfoPanel x={viewPos.x} y={viewPos.y} />
             </div>
           )}
