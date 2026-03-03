@@ -240,6 +240,23 @@ Return JSON: outcome (string), spawn_quest (boolean), quest_title (string or nul
                     )}
                   </div>
 
+                  {event.world_impact?.impact_label && event.status === "active" && (
+                    <div className="mt-2 flex gap-3 text-xs">
+                      {event.world_impact.danger_level > 0 && (
+                        <span className="text-red-400">⚠️ Danger +{event.world_impact.danger_level}</span>
+                      )}
+                      {event.world_impact.resource_depletion > 0 && (
+                        <span className="text-orange-400">📉 Resources -{event.world_impact.resource_depletion}</span>
+                      )}
+                      {event.world_impact.bonus_resources > 0 && (
+                        <span className="text-green-400">📈 Resources +{event.world_impact.bonus_resources}</span>
+                      )}
+                      <span className="text-gray-500">{event.world_impact.impact_label}</span>
+                    </div>
+                  )}
+                  {event.initiated_by_agent_name && (
+                    <div className="mt-2 text-xs text-cyan-400">🤖 Initiated by agent: {event.initiated_by_agent_name}</div>
+                  )}
                   {event.outcome && (
                     <div className="mt-3 pt-3 border-t border-gray-700 text-xs text-gray-400 italic">
                       Outcome: {event.outcome}
