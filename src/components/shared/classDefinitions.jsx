@@ -289,10 +289,10 @@ export const BASE_CLASSES = {
         unlockLevel: 5,
         statBonuses: { intelligence: 4, wisdom: 3, dexterity: 1 },
         abilities: [
-          { id: "healing_potion", name: "Brew Healing Potion", description: "Create and use a potion healing 50 HP.", type: "active", effect_type: "heal", effect_magnitude: 50, cooldown_rounds: 3, unlocked_at_level: 5, source: "specialization" },
-          { id: "acid_flask", name: "Acid Flask", description: "Throw acid: -20 defense to enemy for 3 rounds.", type: "active", effect_type: "debuff", effect_magnitude: 20, cooldown_rounds: 3, unlocked_at_level: 6, source: "specialization" },
-          { id: "transmute", name: "Transmutation", description: "Passive: Convert 10% of damage taken into gold.", type: "passive", effect_type: "utility", effect_magnitude: 10, cooldown_rounds: 0, unlocked_at_level: 8, source: "specialization" },
-          { id: "philosophers_stone", name: "Philosopher's Stone", description: "Ultimate: Transmute enemy HP into gold (30% of their HP).", type: "ultimate", effect_type: "utility", effect_magnitude: 30, cooldown_rounds: 12, unlocked_at_level: 10, source: "specialization" },
+          { id: "healing_potion", name: "Brew Healing Potion", description: "Create and use a potion healing 50 HP.", type: "active", effect_type: "heal", effect_magnitude: 50, cooldown_rounds: 3, energy_cost: 15, unlocked_at_level: 5, source: "specialization" },
+          { id: "acid_flask", name: "Acid Flask", description: "Throw acid: -20 defense to enemy for 3 rounds.", type: "active", effect_type: "debuff", effect_magnitude: 20, cooldown_rounds: 3, energy_cost: 12, unlocked_at_level: 6, source: "specialization" },
+          { id: "transmute", name: "Transmutation", description: "Passive: Convert 10% of damage taken into gold.", type: "passive", effect_type: "utility", effect_magnitude: 10, cooldown_rounds: 0, energy_cost: 0, unlocked_at_level: 8, source: "specialization" },
+          { id: "philosophers_stone", name: "Philosopher's Stone", description: "Ultimate: Transmute enemy HP into gold (30% of their HP).", type: "ultimate", effect_type: "utility", effect_magnitude: 30, cooldown_rounds: 12, energy_cost: 35, unlocked_at_level: 10, source: "specialization" },
         ]
       },
       runesmith: {
