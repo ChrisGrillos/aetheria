@@ -13,6 +13,7 @@ export default function World() {
   const [monsters, setMonsters] = useState([]);
   const [worldObjects, setWorldObjects] = useState([]);
   const [messages, setMessages] = useState([]);
+  const [activeEvents, setActiveEvents] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -36,17 +37,19 @@ export default function World() {
     const u = await base44.auth.me().catch(() => null);
     setUser(u);
 
-    const [chars, mons, objs, msgs] = await Promise.all([
+    const [chars, mons, objs, msgs, events] = await Promise.all([
       base44.entities.Character.list("-updated_date", 100),
       base44.entities.Monster.filter({ is_alive: true }),
       base44.entities.WorldObject.list(),
       base44.entities.ChatMessage.list("-created_date", 40),
+      base44.entities.WorldEvent.filter({ status: "active" }),
     ]);
 
     setAllCharacters(chars);
     setMonsters(mons);
     setWorldObjects(objs);
     setMessages(msgs.reverse());
+    setActiveEvents(events);
 
     if (u) {
       const mine = chars.find(c => c.created_by === u.email && c.type === "human");
@@ -121,6 +124,7 @@ export default function World() {
             monsters={monsters}
             worldObjects={worldObjects}
             onMove={handleMove}
+            activeEvents={activeEvents}
           />
         </div>
         <ChatPanel messages={messages} onSend={handleSendMessage} myCharacter={myCharacter} />
