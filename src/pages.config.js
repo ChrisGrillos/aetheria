@@ -64,6 +64,7 @@ import Recording from './pages/Recording';
 import World from './pages/World';
 import WorldEvents from './pages/WorldEvents';
 import WorldMapView from './pages/WorldMapView';
+import AgentProfile from './pages/AgentProfile';
 import __Layout from './Layout.jsx';
 
 
@@ -85,6 +86,7 @@ export const PAGES = {
     "World": World,
     "WorldEvents": WorldEvents,
     "WorldMapView": WorldMapView,
+    "AgentProfile": AgentProfile,
 }
 
 export const pagesConfig = {
