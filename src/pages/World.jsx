@@ -290,14 +290,22 @@ export default function World() {
           monster={combatMonster}
           onClose={() => setCombatMonster(null)}
           onVictory={async (updates, drop) => {
-            // Apply all updates (hp, xp, gold, energy, inventory) to local state
-            setMyCharacter(prev => ({ ...prev, ...updates }));
-            setAllCharacters(prev => prev.map(c => c.id === myCharacter.id ? { ...c, ...updates } : c));
-            // Persist monster death
+            // Check for new achievements
+            const achievementUpdates = checkAchievements({ ...myCharacter, ...updates }, myCharacter);
+            const finalUpdates = { ...updates, ...achievementUpdates };
+            
+            // Apply all updates (hp, xp, gold, energy, inventory, achievements) to local state
+            const updatedChar = { ...myCharacter, ...finalUpdates };
+            setMyCharacter(updatedChar);
+            setAllCharacters(prev => prev.map(c => c.id === myCharacter.id ? updatedChar : c));
+            
+            // Persist monster death and all updates
             await base44.entities.Monster.update(combatMonster.id, {
               is_alive: false,
               hp: 0,
             });
+            await base44.entities.Character.update(myCharacter.id, finalUpdates);
+            
             setMonsters(prev => prev.map(m => m.id === combatMonster.id ? { ...m, is_alive: false, hp: 0 } : m));
             setCombatMonster(null);
           }}
