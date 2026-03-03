@@ -67,8 +67,11 @@ export function rollLoot(monster, zone) {
     const item = UNCOMMON_DROPS[Math.floor(Math.random() * UNCOMMON_DROPS.length)];
     return { ...item, rarity: "uncommon", qty: 1 };
   } else if (roll < 0.97) {
-    // Common — 1-3 resources
-    const item = COMMON_DROPS[Math.floor(Math.random() * COMMON_DROPS.length)];
+    // Zone-aware common drops
+    const zoneId = zone?.id || "town_center";
+    const zonePool = ZONE_DROPS[zoneId] || ["wood", "stone", "herb"];
+    const dropId = zonePool[Math.floor(Math.random() * zonePool.length)];
+    const item = ZONE_COMMON_DROPS[dropId] || ZONE_COMMON_DROPS["stone"];
     const qty = 1 + Math.floor(Math.random() * 2 + Math.floor(level / 5));
     return { ...item, rarity: "common", qty };
   }
