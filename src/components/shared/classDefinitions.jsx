@@ -124,10 +124,10 @@ export const BASE_CLASSES = {
         unlockLevel: 5,
         statBonuses: { dexterity: 4, wisdom: 3, constitution: 1 },
         abilities: [
-          { id: "barrage", name: "Arrow Barrage", description: "Fire 3 arrows: 60% damage each.", type: "active", effect_type: "damage", effect_magnitude: 60, cooldown_rounds: 4, unlocked_at_level: 5, source: "specialization" },
-          { id: "camouflage", name: "Camouflage", description: "+40 evasion for 2 rounds.", type: "active", effect_type: "buff", effect_magnitude: 40, cooldown_rounds: 5, unlocked_at_level: 6, source: "specialization" },
-          { id: "natures_grace", name: "Nature's Grace", description: "Passive: Regenerate 5 HP per round.", type: "passive", effect_type: "heal", effect_magnitude: 5, cooldown_rounds: 0, unlocked_at_level: 8, source: "specialization" },
-          { id: "volley", name: "Storm of Arrows", description: "Ultimate: 10-arrow volley, 80% damage each.", type: "ultimate", effect_type: "damage", effect_magnitude: 80, cooldown_rounds: 8, unlocked_at_level: 10, source: "specialization" },
+          { id: "barrage", name: "Arrow Barrage", description: "Fire 3 arrows: 60% damage each.", type: "active", effect_type: "damage", effect_magnitude: 60, cooldown_rounds: 4, energy_cost: 18, unlocked_at_level: 5, source: "specialization" },
+          { id: "camouflage", name: "Camouflage", description: "+40 evasion for 2 rounds.", type: "active", effect_type: "buff", effect_magnitude: 40, cooldown_rounds: 5, energy_cost: 20, unlocked_at_level: 6, source: "specialization" },
+          { id: "natures_grace", name: "Nature's Grace", description: "Passive: Regenerate 5 HP per round.", type: "passive", effect_type: "heal", effect_magnitude: 5, cooldown_rounds: 0, energy_cost: 0, unlocked_at_level: 8, source: "specialization" },
+          { id: "volley", name: "Storm of Arrows", description: "Ultimate: 10-arrow volley, 80% damage each.", type: "ultimate", effect_type: "damage", effect_magnitude: 80, cooldown_rounds: 8, energy_cost: 35, unlocked_at_level: 10, source: "specialization" },
         ]
       },
       assassin: {
