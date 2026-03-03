@@ -73,12 +73,15 @@ export default function ProposalCard({ proposal, myCharacter, hasVoted, myVote, 
       </div>
 
       {myCharacter && !hasVoted && proposal.status === "active" && (
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           <Button size="sm" onClick={() => handleVoteClick("for")} className="bg-green-700 hover:bg-green-600 text-white font-bold flex gap-1">
             <ThumbsUp className="w-3 h-3" /> Vote For
           </Button>
           <Button size="sm" onClick={() => handleVoteClick("against")} className="bg-red-800 hover:bg-red-700 text-white font-bold flex gap-1">
             <ThumbsDown className="w-3 h-3" /> Vote Against
+          </Button>
+          <Button size="sm" variant="outline" onClick={() => setShowAmend(true)} className="border-purple-700 text-purple-300 hover:bg-purple-900/30 flex gap-1">
+            <FilePen className="w-3 h-3" /> Amend
           </Button>
         </div>
       )}
@@ -88,6 +91,15 @@ export default function ProposalCard({ proposal, myCharacter, hasVoted, myVote, 
           You voted {myVote?.choice === "for" ? "👍 for" : "👎 against"}
           {myVote?.reasoning && <span className="text-gray-500 ml-2 italic">"{myVote.reasoning}"</span>}
         </div>
+      )}
+
+      {showAmend && myCharacter && (
+        <AmendmentModal
+          proposal={proposal}
+          character={myCharacter}
+          onCreated={() => setShowAmend(false)}
+          onClose={() => setShowAmend(false)}
+        />
       )}
 
       {showVote && (
