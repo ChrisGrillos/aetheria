@@ -10,6 +10,7 @@ import GuildStorage from "@/components/guilds/GuildStorage";
 import GuildHallPanel from "@/components/guilds/GuildHallPanel";
 import GuildWarPanel from "@/components/guilds/GuildWarPanel";
 import GuildIntelligencePanel from "@/components/guilds/GuildIntelligencePanel";
+import GuildDiplomacyPanel from "@/components/guilds/GuildDiplomacyPanel";
 import CreateGuildModal from "@/components/guilds/CreateGuildModal";
 
 const RANK_COLOR = { leader: "text-amber-400", officer: "text-yellow-300", veteran: "text-blue-300", member: "text-gray-300", recruit: "text-gray-500" };
@@ -263,7 +264,26 @@ export default function Guilds() {
             {tab === "chat"    && <GuildChat guild={myGuild} character={character} />}
             {tab === "storage" && <GuildStorage guild={myGuild} character={character} onUpdate={g => { setMyGuild(g); setAllGuilds(prev => prev.map(x => x.id === g.id ? g : x)); }} />}
             {tab === "hall"    && <GuildHallPanel guild={myGuild} character={character} isLeader={isLeader} onUpdate={g => { setMyGuild(g); setAllGuilds(prev => prev.map(x => x.id === g.id ? g : x)); }} />}
-            {tab === "war"     && <GuildWarPanel guild={myGuild} character={character} allGuilds={allGuilds} isLeader={isLeader} onUpdate={g => { setMyGuild(g); setAllGuilds(prev => prev.map(x => x.id === g.id ? g : x)); }} />}
+            {tab === "war" && (
+              <div className="space-y-6">
+                <GuildWarPanel guild={myGuild} character={character} allGuilds={allGuilds} isLeader={isLeader} onUpdate={g => { setMyGuild(g); setAllGuilds(prev => prev.map(x => x.id === g.id ? g : x)); }} />
+                {myGuild.war_status !== "peace" && (
+                  <div>
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="text-sm font-bold text-indigo-400">🏛️ Diplomatic Negotiations</span>
+                      <span className="text-xs text-gray-600">— propose ceasefire or peace while war continues</span>
+                    </div>
+                    <GuildDiplomacyPanel
+                      guild={myGuild}
+                      character={character}
+                      enemyGuild={allGuilds.find(g => g.id === myGuild.at_war_with_guild_id)}
+                      isLeader={isLeader}
+                      onUpdate={g => { setMyGuild(g); setAllGuilds(prev => prev.map(x => x.id === g.id ? g : x)); }}
+                    />
+                  </div>
+                )}
+              </div>
+            )}
             {tab === "intel"   && <GuildIntelligencePanel guild={myGuild} myCharacter={character} />}
           </>
         )}
