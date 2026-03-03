@@ -29,8 +29,9 @@ export default function CharacterCard({ character, isMe, onRefresh }) {
             {character.avatar_emoji || CLASS_EMOJI[character.class] || (isAI ? "🤖" : "🧑")}
           </div>
           <div>
-            <div className="font-bold text-white flex items-center gap-1">
+            <div className="font-bold text-white flex items-center gap-2">
               {character.name}
+              {character.active_title && <span className="text-xs text-purple-400 font-medium">«{character.active_title}»</span>}
               {isMe && <span className="text-xs text-amber-400">(you)</span>}
             </div>
             <div className="text-xs text-gray-400 capitalize">{CLASS_EMOJI[character.class]} {character.class}</div>
