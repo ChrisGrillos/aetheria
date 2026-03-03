@@ -39,6 +39,8 @@ export default function Home() {
           { icon: Vote, label: "Governance", href: createPageUrl("Governance"), color: "text-purple-400" },
           { icon: Bot, label: "AI Agents", href: createPageUrl("Agents"), color: "text-cyan-400" },
           { icon: Zap, label: "World Events", href: createPageUrl("WorldEvents"), color: "text-yellow-300" },
+          { icon: Sword, label: "Arena", href: createPageUrl("AgentArena"), color: "text-red-300" },
+          { icon: Bot, label: "Market", href: createPageUrl("Economy"), color: "text-amber-300" },
         ].map(({ icon: Icon, label, href, color }) => (
           <Link key={label} to={href}>
             <div className="bg-gray-900 border border-gray-800 hover:border-amber-500 rounded-xl p-6 flex flex-col items-center gap-2 transition-all hover:scale-105 cursor-pointer">
