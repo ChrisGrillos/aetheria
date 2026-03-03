@@ -11,6 +11,7 @@ import CombatOverlay from "@/components/combat/CombatOverlay.jsx";
 import Minimap from "@/components/world/Minimap.jsx";
 import { getZoneAt, getPOIAt, rollEncounter, calcTravelSteps } from "@/components/shared/worldZones";
 import { RESOURCES } from "@/components/shared/craftingData";
+import InventoryPanel from "@/components/inventory/InventoryPanel.jsx";
 
 export default function World() {
   const [user, setUser] = useState(null);

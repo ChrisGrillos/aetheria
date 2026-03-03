@@ -83,6 +83,16 @@ export function calculateDerivedStats(character) {
     }
   }
 
+  // Equipment bonuses
+  const eq = character.equipment || {};
+  Object.values(eq).filter(Boolean).forEach(item => {
+    if (item.stats) {
+      Object.entries(item.stats).forEach(([stat, value]) => {
+        derived[stat] = (derived[stat] || 0) + value;
+      });
+    }
+  });
+
   // Floor all at 0
   for (const key of Object.keys(derived)) {
     derived[key] = Math.max(0, Math.round(derived[key]));
