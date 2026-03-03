@@ -1,6 +1,9 @@
+import { useState } from "react";
 import { HOUSE_TIERS, GUILD_HALL_TIERS } from "@/components/shared/housingData";
 import { ZONES } from "@/components/shared/worldZones";
-import { X, Lock, Unlock, Swords, Eye } from "lucide-react";
+import { X, Lock, Unlock, Swords, Eye, Loader2 } from "lucide-react";
+import { base44 } from "@/api/base44Client";
+import { Button } from "@/components/ui/button";
 
 const CLASS_EMOJI = {
   warrior:"⚔️",hunter:"🏹",healer:"💚",wizard:"🧙",merchant:"💰",craftsman:"🔨"
@@ -218,6 +221,74 @@ function PoiPanel({ poi }) {
 function ZonePanel({ zone, controller, contested, guilds }) {
   const resources = zone.resources || [];
   const encounters = zone.encounter_types || [];
+  const [scouting, setScouting] = useState(false);
+  const [scoutResult, setScoutResult] = useState(null);
+
+  const handleQuickScout = async () => {
+    setScouting(true);
+    try {
+      // Find player's guild and an agent to scout
+      const u = await base44.auth.me().catch(() => null);
+      if (!u) { setScouting(false); return; }
+      const chars = await base44.entities.Character.filter({ created_by: u.email, type: "human" }, "-created_date", 1);
+      const me = chars[0];
+      if (!me) { setScouting(false); return; }
+      const myGuildData = (await base44.entities.Guild.filter({ status: "active" }))
+        .find(g => g.members?.some(m => m.character_id === me.id));
+      if (!myGuildData) { setScoutResult({ error: "You must be in a guild to file scout reports." }); setScouting(false); return; }
+
+      // Find best agent in guild
+      const guildMemberIds = (myGuildData.members || []).map(m => m.character_id);
+      const allAgents = await base44.entities.Character.filter({ type: "ai_agent" });
+      const guildAgents = allAgents.filter(a => guildMemberIds.includes(a.id));
+      const scout = guildAgents.sort((a,b) => ((b.skills?.research||1)+(b.level||1)*2) - ((a.skills?.research||1)+(a.level||1)*2))[0];
+      const scoutName = scout?.name || me.name;
+
+      const prompt = `You are ${scoutName}, a scout for guild "${myGuildData.name}" in the fantasy MMO "Agentic".
+You are scouting the ${zone.name} zone from the World Map.
+Zone details: Danger ${zone.danger}/10. Resources: ${zone.resources?.join(", ")}. Known threats: ${zone.encounter_types?.filter(e=>!e.includes("npc")).join(", ")}.
+${contested ? `⚠️ This zone is CONTESTED — active war operations detected!` : ""}
+${controller ? `This zone is controlled by ${controller.name} guild (Tier ${controller.hall_tier}).` : "This zone has no guild controller."}
+
+Write a quick tactical field report (3-4 sentences). Include: threat assessment, any enemy activity observed, resource availability, and one recommendation. Write as a field agent reporting to command.`;
+
+      const reportText = await base44.integrations.Core.InvokeLLM({ prompt });
+      const threatMatch = reportText.toLowerCase().match(/\b(critical|high|moderate|low)\b/);
+      const threat = threatMatch?.[1] || (zone.danger >= 7 ? "high" : zone.danger >= 4 ? "moderate" : "low");
+
+      // Save to intel log if in a guild
+      await base44.entities.GuildIntelReport.create({
+        guild_id: myGuildData.id,
+        guild_name: myGuildData.name,
+        scout_character_id: scout?.id || me.id,
+        scout_name: scoutName,
+        target_type: "zone",
+        target_id: zone.id,
+        target_name: zone.name,
+        report_title: `World Map Scout: ${zone.name}`,
+        report_body: reportText,
+        threat_level: threat,
+        key_findings: [`Zone: ${zone.name}`, `Danger: ${zone.danger}/10`, contested ? "Active conflict" : "Stable", `Resources: ${zone.resources?.slice(0,2).join(", ")}`],
+        troop_estimate: Math.floor(Math.random() * 20) + zone.danger * 2,
+        is_read: false,
+      });
+
+      if (scout) {
+        await base44.entities.Character.update(scout.id, {
+          skills: { ...(scout.skills||{}), research: Math.min(100, (scout.skills?.research||1)+1) },
+          last_message: `Scouted ${zone.name} from World Map`,
+        });
+      }
+
+      setScoutResult({ report: reportText, threat });
+    } catch (e) {
+      setScoutResult({ error: e.message });
+    }
+    setScouting(false);
+  };
+
+  const THREAT_COLOR = { low: "text-green-400 border-green-800 bg-green-900/20", moderate: "text-yellow-400 border-yellow-800 bg-yellow-900/20", high: "text-orange-400 border-orange-800 bg-orange-900/20", critical: "text-red-400 border-red-800 bg-red-900/20" };
+
   return (
     <div className="space-y-3">
       <div className="bg-gray-800 rounded-xl p-4 text-center">
@@ -241,7 +312,6 @@ function ZonePanel({ zone, controller, contested, guilds }) {
           </div>
         </div>
       )}
-
       {!controller && (
         <div className="text-xs text-gray-600 bg-gray-800/50 rounded-lg p-2 text-center">No guild controls this zone</div>
       )}
@@ -256,13 +326,32 @@ function ZonePanel({ zone, controller, contested, guilds }) {
       </div>
 
       <div className="bg-gray-800 rounded-lg p-3">
-        <div className="text-xs text-gray-500 mb-2">Scout Report — Threats:</div>
+        <div className="text-xs text-gray-500 mb-2">Known Threats:</div>
         <div className="flex flex-wrap gap-1">
           {encounters.filter(e => !e.includes("npc")).map(e => (
             <span key={e} className="bg-red-900/30 text-red-300 border border-red-900 text-xs px-2 py-0.5 rounded-full">{e.replace(/_/g," ")}</span>
           ))}
         </div>
       </div>
+
+      {/* Quick Scout from Map */}
+      <Button size="sm" onClick={handleQuickScout} disabled={scouting}
+        className="w-full bg-emerald-800 hover:bg-emerald-700 text-xs gap-1">
+        {scouting ? <Loader2 className="w-3 h-3 animate-spin" /> : <Eye className="w-3 h-3" />}
+        {scouting ? "Scouting..." : "Scout & File Intel Report"}
+      </Button>
+
+      {scoutResult && (
+        <div className={`rounded-lg border p-3 text-xs ${scoutResult.error ? "border-red-800 bg-red-900/20 text-red-400" : THREAT_COLOR[scoutResult.threat]}`}>
+          {scoutResult.error ? scoutResult.error : (
+            <>
+              <div className="font-bold mb-1 capitalize">🔍 {scoutResult.threat} threat</div>
+              <p className="leading-relaxed italic opacity-90">{scoutResult.report}</p>
+              <p className="text-gray-600 mt-1">Report filed to guild intel log.</p>
+            </>
+          )}
+        </div>
+      )}
 
       <p className="text-xs text-gray-500 italic">{zone.description}</p>
     </div>
