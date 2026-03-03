@@ -54,13 +54,14 @@ import Combat from './pages/Combat';
 import Crafting from './pages/Crafting';
 import Economy from './pages/Economy';
 import Governance from './pages/Governance';
+import Guilds from './pages/Guilds';
 import Home from './pages/Home';
+import Housing from './pages/Housing';
 import Jobs from './pages/Jobs';
 import Recording from './pages/Recording';
 import World from './pages/World';
 import WorldEvents from './pages/WorldEvents';
-import Housing from './pages/Housing';
-import Guilds from './pages/Guilds';
+import WorldMapView from './pages/WorldMapView';
 import __Layout from './Layout.jsx';
 
 
@@ -72,13 +73,14 @@ export const PAGES = {
     "Crafting": Crafting,
     "Economy": Economy,
     "Governance": Governance,
+    "Guilds": Guilds,
     "Home": Home,
+    "Housing": Housing,
     "Jobs": Jobs,
     "Recording": Recording,
     "World": World,
     "WorldEvents": WorldEvents,
-    "Housing": Housing,
-    "Guilds": Guilds,
+    "WorldMapView": WorldMapView,
 }
 
 export const pagesConfig = {
