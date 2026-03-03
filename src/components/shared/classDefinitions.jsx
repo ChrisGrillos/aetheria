@@ -113,9 +113,9 @@ export const BASE_CLASSES = {
     primarySkills: ["combat", "resource_management"],
     startingSkills: { combat: 10, resource_management: 12, research: 6, crafting: 4, diplomacy: 4, healing: 3, trading: 4, leadership: 5 },
     baseAbilities: [
-      { id: "precise_shot", name: "Precise Shot", description: "+40% damage if target hasn't attacked yet this combat.", type: "active", effect_type: "damage", effect_magnitude: 140, cooldown_rounds: 2, unlocked_at_level: 1, source: "base_class" },
-      { id: "tracker", name: "Tracker", description: "Passive: +10 evasion and +10% resource find rate.", type: "passive", effect_type: "buff", effect_magnitude: 10, cooldown_rounds: 0, unlocked_at_level: 1, source: "base_class" },
-      { id: "snare", name: "Snare Trap", description: "Immobilize enemy: skip their next turn.", type: "active", effect_type: "utility", effect_magnitude: 1, cooldown_rounds: 5, unlocked_at_level: 3, source: "base_class" },
+      { id: "precise_shot", name: "Precise Shot", description: "+40% damage if target hasn't attacked yet this combat.", type: "active", effect_type: "damage", effect_magnitude: 140, cooldown_rounds: 2, energy_cost: 12, unlocked_at_level: 1, source: "base_class" },
+      { id: "tracker", name: "Tracker", description: "Passive: +10 evasion and +10% resource find rate.", type: "passive", effect_type: "buff", effect_magnitude: 10, cooldown_rounds: 0, energy_cost: 0, unlocked_at_level: 1, source: "base_class" },
+      { id: "snare", name: "Snare Trap", description: "Immobilize enemy: skip their next turn.", type: "active", effect_type: "utility", effect_magnitude: 1, cooldown_rounds: 5, energy_cost: 15, unlocked_at_level: 3, source: "base_class" },
     ],
     specializations: {
       ranger: {
