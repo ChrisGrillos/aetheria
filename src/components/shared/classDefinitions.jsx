@@ -97,10 +97,10 @@ export const BASE_CLASSES = {
         unlockLevel: 5,
         statBonuses: { intelligence: 3, wisdom: 4, charisma: 2 },
         abilities: [
-          { id: "mind_blast", name: "Mind Blast", description: "Mental attack dealing 120% magic damage and confusing enemy.", type: "active", effect_type: "damage", effect_magnitude: 120, cooldown_rounds: 3, unlocked_at_level: 5, source: "specialization" },
-          { id: "imbue", name: "Imbue Ally", description: "Grant an ally +20% attack and +10 evasion for 3 rounds.", type: "active", effect_type: "buff", effect_magnitude: 20, cooldown_rounds: 4, unlocked_at_level: 6, source: "specialization" },
-          { id: "foresight", name: "Foresight", description: "Passive: +15% critical hit chance.", type: "passive", effect_type: "buff", effect_magnitude: 15, cooldown_rounds: 0, unlocked_at_level: 8, source: "specialization" },
-          { id: "time_stop", name: "Time Stop", description: "Ultimate: Skip enemy's next 2 turns.", type: "ultimate", effect_type: "utility", effect_magnitude: 2, cooldown_rounds: 12, unlocked_at_level: 10, source: "specialization" },
+          { id: "mind_blast", name: "Mind Blast", description: "Mental attack dealing 120% magic damage and confusing enemy.", type: "active", effect_type: "damage", effect_magnitude: 120, cooldown_rounds: 3, energy_cost: 15, unlocked_at_level: 5, source: "specialization" },
+          { id: "imbue", name: "Imbue Ally", description: "Grant an ally +20% attack and +10 evasion for 3 rounds.", type: "active", effect_type: "buff", effect_magnitude: 20, cooldown_rounds: 4, energy_cost: 18, unlocked_at_level: 6, source: "specialization" },
+          { id: "foresight", name: "Foresight", description: "Passive: +15% critical hit chance.", type: "passive", effect_type: "buff", effect_magnitude: 15, cooldown_rounds: 0, energy_cost: 0, unlocked_at_level: 8, source: "specialization" },
+          { id: "time_stop", name: "Time Stop", description: "Ultimate: Skip enemy's next 2 turns.", type: "ultimate", effect_type: "utility", effect_magnitude: 2, cooldown_rounds: 12, energy_cost: 40, unlocked_at_level: 10, source: "specialization" },
         ]
       }
     }
