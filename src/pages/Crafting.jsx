@@ -3,8 +3,8 @@ import { base44 } from "@/api/base44Client";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
-import { Hammer, Package, FlaskConical, Sword, Shield, Utensils, Wrench, ChevronDown, ChevronUp } from "lucide-react";
-import { RECIPES, CRAFTING_STATIONS, RESOURCES, canCraft, craftItem, getRecipesByStation } from "@/components/shared/craftingData";
+import { Hammer, Package, FlaskConical, Sword, Shield, Wrench, ChevronDown, ChevronUp, Home, Users } from "lucide-react";
+import { ALL_RECIPES, CRAFTING_STATIONS, RESOURCES, canCraft, craftItem, getRecipesByStation } from "@/components/shared/craftingData";
 import { POINTS_OF_INTEREST } from "@/components/shared/worldZones";
 
 const CATEGORY_ICONS = {
@@ -12,6 +12,8 @@ const CATEGORY_ICONS = {
   armor:      { icon: Shield,       color: "text-blue-400",   label: "Armor" },
   consumable: { icon: FlaskConical, color: "text-green-400",  label: "Consumables" },
   tool:       { icon: Wrench,       color: "text-orange-400", label: "Tools" },
+  furniture:  { icon: Home,         color: "text-amber-400",  label: "Furniture" },
+  guild_item: { icon: Users,        color: "text-purple-400", label: "Guild Items" },
 };
 
 const RARITY_COLORS = {
