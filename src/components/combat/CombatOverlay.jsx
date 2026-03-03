@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { calculateDerivedStats } from "@/components/shared/charUtils";
 import { getCharacterAbilities } from "@/components/shared/classDefinitions";
 import { base44 } from "@/api/base44Client";
+import { calcAttackDamage } from "./combatEngine";
 import DamageNumber from "./DamageNumber";
 import AbilityBar from "./AbilityBar";
 import CombatCharCard from "./CombatCharCard";

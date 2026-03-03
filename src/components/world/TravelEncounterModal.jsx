@@ -26,49 +26,34 @@ export default function TravelEncounterModal({ encounter, character, zone, onClo
   const handleFight = async () => {
     setPhase("combat");
     setLoading(true);
-    const log = [];
 
     const monsterHpBase = { goblin: 30, orc: 60, skeleton: 45, troll: 90, dragon: 200, wraith: 75, werewolf: 80, vampire: 100, basilisk: 120, kraken: 180 };
-    let monsterHp = (monsterHpBase[encounter.monster] || 40) + (zone?.danger || 1) * 10;
-    let playerHp = character.hp || character.max_hp || 100;
-    let rounds = 0;
-    let xpGained = encounter.xp || 30;
-    let goldGained = encounter.gold || 10;
-
-    while (playerHp > 0 && monsterHp > 0 && rounds < 15) {
-      rounds++;
-      const { damage: pDmg, isCrit } = calcPlayerAttack(character);
-      monsterHp -= pDmg;
-      log.push(`R${rounds}: You deal ${pDmg}${isCrit ? " 💥" : ""} dmg. Monster HP: ${Math.max(0, monsterHp)}`);
-      if (monsterHp <= 0) break;
-
-      if (checkEvasion(character)) {
-        log.push(`R${rounds}: You dodge the attack! 💨`);
-        continue;
-      }
-      const rawDmg = Math.floor(8 + (zone?.danger || 1) * 3 + Math.random() * 8);
-      const reducedDmg = applyDefenseReduction(rawDmg, character);
-      playerHp -= reducedDmg;
-      log.push(`R${rounds}: Enemy deals ${reducedDmg} dmg. Your HP: ${Math.max(0, playerHp)}`);
-    }
-
-    setCombatLog(log);
-
-    const won = monsterHp <= 0;
-    const newXp = (character.xp || 0) + (won ? xpGained : 0);
-    const updates = {
-      hp: Math.max(1, playerHp),
-      xp: newXp,
-      gold: won ? (character.gold || 0) + goldGained : (character.gold || 0),
+    const fakeMonster = {
+      name: encounter.monster,
+      level: Math.max(1, (zone?.danger || 1) * 2),
+      hp: (monsterHpBase[encounter.monster] || 40) + (zone?.danger || 1) * 10,
+      max_hp: (monsterHpBase[encounter.monster] || 40) + (zone?.danger || 1) * 10,
+      xp_reward: encounter.xp || 30,
+      gold_reward: encounter.gold || 10,
     };
 
-    if (won && shouldLevelUp({ ...character, xp: newXp })) {
-      const lvl = levelUpUpdates({ ...character, xp: newXp });
-      Object.assign(updates, lvl);
+    const derived = calculateDerivedStats(character);
+    const result = autoResolveCombat(character, derived, fakeMonster);
+    setCombatLog(result.log);
+
+    const newXp = (character.xp || 0) + result.xpGained;
+    const updates = {
+      hp: result.finalPlayerHP,
+      xp: newXp,
+      gold: result.won ? (character.gold || 0) + result.goldGained : (character.gold || 0),
+    };
+
+    if (result.won && shouldLevelUp({ ...character, xp: newXp })) {
+      Object.assign(updates, levelUpUpdates({ ...character, xp: newXp }));
     }
 
     await base44.entities.Character.update(character.id, updates);
-    setOutcome({ won, xp: won ? xpGained : 0, gold: won ? goldGained : 0, levelUp: updates.level > (character.level || 1) });
+    setOutcome({ won: result.won, xp: result.xpGained, gold: result.goldGained, levelUp: updates.level > (character.level || 1) });
     setPhase("outcome");
     setLoading(false);
     onResult(updates);
