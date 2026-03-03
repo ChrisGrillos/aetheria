@@ -3,7 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
-import { Zap, Shield, Flower2, Scroll, Skull, PartyPopper, Eye, Loader2 } from "lucide-react";
+import { Zap, Shield, Flower2, Scroll, Skull, PartyPopper, Eye, Loader2, Swords } from "lucide-react";
 
 const TYPE_CONFIG = {
   natural_disaster: { icon: "🌊", color: "border-blue-700 bg-blue-900/20", label: "Natural Disaster", iconC: Zap },
@@ -12,7 +12,7 @@ const TYPE_CONFIG = {
   npc_quest: { icon: "📜", color: "border-amber-700 bg-amber-900/20", label: "NPC Quest", iconC: Scroll },
   plague: { icon: "☣️", color: "border-yellow-700 bg-yellow-900/20", label: "Plague", iconC: Skull },
   festival: { icon: "🎉", color: "border-pink-700 bg-pink-900/20", label: "Festival", iconC: PartyPopper },
-  strange_omen: { icon: "🔮", color: "border-purple-700 bg-purple-900/20", label: "Strange Omen", iconC: Eye },
+  strange_omen: { icon: "🔮", color: "border-purple-700 bg-purple-900/20", label: "Strange Omen / Diplomatic", iconC: Eye },
   agent_quest: { icon: "🤖", color: "border-cyan-700 bg-cyan-900/20", label: "Agent Quest", iconC: Eye },
 };
 
@@ -52,40 +52,8 @@ export default function WorldEvents() {
 
   const generateEvent = async () => {
     setGenerating(true);
-    const result = await base44.integrations.Core.InvokeLLM({
-      prompt: `Generate a dramatic world event for "Agentic", an MMO where humans and AI agents coexist. 
-The event should be one of: natural_disaster, monster_invasion, resource_bloom, npc_quest, plague, festival, strange_omen.
-Make it feel meaningful and connected to the world's themes of AI/human coexistence and ethics.
-Also define a world_impact with: danger_level (0-10), resource_depletion (0-10, high for disasters), bonus_resources (0-10, high for blooms), impact_label (short string like "Danger Zone" or "Harvest Bonus").
-Pick a center tile x (5-55) and y (5-45) and generate 6-12 affected_tiles as {x,y} objects clustered around it.
-Return JSON with: title, description (2-3 sentences, in-world tone), event_type, severity (minor/moderate/major/catastrophic), affected_area (brief), reward_gold (10-150), reward_xp (10-100), requires_cooperation (boolean), world_impact (object), affected_tiles (array of {x,y}).`,
-      response_json_schema: {
-        type: "object",
-        properties: {
-          title: { type: "string" },
-          description: { type: "string" },
-          event_type: { type: "string" },
-          severity: { type: "string" },
-          affected_area: { type: "string" },
-          reward_gold: { type: "number" },
-          reward_xp: { type: "number" },
-          requires_cooperation: { type: "boolean" },
-          world_impact: { type: "object" },
-          affected_tiles: { type: "array", items: { type: "object" } },
-        }
-      }
-    });
-
-    const expires = new Date();
-    expires.setDate(expires.getDate() + 3);
-
-    await base44.entities.WorldEvent.create({
-      ...result,
-      status: "active",
-      participants: [],
-      expires_at: expires.toISOString(),
-    });
-
+    // Use the rich context-aware backend function
+    await base44.functions.invoke("generateWorldEvent", {});
     loadData();
     setGenerating(false);
   };
