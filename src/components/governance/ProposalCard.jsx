@@ -21,6 +21,7 @@ export default function ProposalCard({ proposal, myCharacter, hasVoted, myVote, 
   const [reasoning, setReasoning] = useState("");
   const [showVote, setShowVote] = useState(false);
   const [pendingChoice, setPendingChoice] = useState(null);
+  const [showAmend, setShowAmend] = useState(false);
 
   const total = (proposal.votes_for || 0) + (proposal.votes_against || 0);
   const forPct = total > 0 ? Math.round((proposal.votes_for || 0) / total * 100) : 0;
