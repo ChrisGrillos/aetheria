@@ -250,8 +250,24 @@ export default function World() {
             myCharacter={myCharacter}
             allCharacters={allCharacters}
             monsters={monsters}
-            onFastTravel={(tx, ty) => handleMove(tx, ty)}
+            onFastTravel={requestFastTravel}
           />
+          {fastTravelTarget && (
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-30
+              bg-gray-900/95 border border-amber-600 rounded-xl px-6 py-4 text-center pointer-events-auto"
+              onClick={cancelFastTravel}>
+              <p className="text-sm text-amber-400 font-bold mb-2">⚡ Fast Traveling...</p>
+              <div className="w-48 bg-gray-800 rounded-full h-3 mb-2">
+                <div className="bg-amber-500 h-3 rounded-full transition-all"
+                  style={{ width: `${fastTravelProgress}%` }} />
+              </div>
+              <p className="text-xs text-gray-500 mb-2">
+                To ({fastTravelTarget.x}, {fastTravelTarget.y}) · Click to cancel
+              </p>
+              <Button size="sm" variant="outline" className="border-gray-700 text-xs"
+                onClick={e => { e.stopPropagation(); cancelFastTravel(); }}>Cancel</Button>
+            </div>
+          )}
           {/* Zone info overlay bottom-left */}
           {viewPos && (
             <div className="absolute bottom-8 left-2 w-56">
