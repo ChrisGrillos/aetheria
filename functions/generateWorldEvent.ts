@@ -188,18 +188,21 @@ Return JSON:
     };
     const finalEventType = enumMap[result.event_type] || result.event_type || "strange_omen";
 
+    const wi = result.world_impact || {};
     const created = await base44.asServiceRole.entities.WorldEvent.create({
       title: result.title,
       description: result.description,
       event_type: finalEventType,
       severity: result.severity || "moderate",
       affected_area: result.affected_area,
-      reward_gold: result.reward_gold || 30,
-      reward_xp: result.reward_xp || 20,
+      reward_gold: Number(result.reward_gold) || 30,
+      reward_xp: Number(result.reward_xp) || 20,
       requires_cooperation: result.requires_cooperation ?? false,
       world_impact: {
-        ...(result.world_impact || {}),
-        impact_label: result.world_impact?.impact_label || category.replace(/_/g," "),
+        danger_level: Number(wi.danger_level) || 0,
+        resource_depletion: Number(wi.resource_depletion) || 0,
+        bonus_resources: Number(wi.bonus_resources) || 0,
+        impact_label: wi.impact_label || category.replace(/_/g," "),
         intervention_options: result.intervention_options || [],
         original_category: category,
       },
