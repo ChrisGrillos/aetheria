@@ -310,18 +310,20 @@ export default function CombatOverlay({ character, monster, onClose, onVictory, 
   // ─── Victory ──────────────────────────────────────────────────────────────
   const handleVictory = async (finalHP, finalEnergy) => {
     setPhase("victory");
-    const xpGain  = monster.xp_reward  || (monster.level || 1) * 20;
+    const xpGain   = monster.xp_reward  || (monster.level || 1) * 20;
     const goldGain = monster.gold_reward || (monster.level || 1) * 8;
     const zone = getZoneAt(character.x || 20, character.y || 18);
     const drop = rollLoot(monster, zone);
     setLoot(drop);
     addLog(`🏆 Victory! +${xpGain} XP, +${goldGain} gold!`);
+    if (drop) addLog(`💰 Loot: ${drop.emoji} ${drop.name} x${drop.qty}`);
 
     const updates = {
-      hp:     finalHP,
-      energy: finalEnergy ?? playerEnergy,
-      xp:     (character.xp   || 0) + xpGain,
-      gold:   (character.gold || 0) + goldGain,
+      hp:        finalHP,
+      energy:    finalEnergy ?? playerEnergy,
+      xp:        (character.xp   || 0) + xpGain,
+      gold:      (character.gold || 0) + goldGain,
+      inventory: drop ? addItemToInventory(character.inventory, drop) : (character.inventory || []),
     };
     await base44.entities.Character.update(character.id, updates);
     onVictory && onVictory(updates, drop);
