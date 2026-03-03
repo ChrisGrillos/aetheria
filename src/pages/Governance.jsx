@@ -5,6 +5,7 @@ import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
 import ProposalCard from "@/components/governance/ProposalCard.jsx";
 import NewProposalModal from "@/components/governance/NewProposalModal.jsx";
+import ChroniclePanel from "@/components/governance/ChroniclePanel.jsx";
 
 const CYCLE_DAYS = 120;
 const EPOCH_START = new Date("2026-01-01");

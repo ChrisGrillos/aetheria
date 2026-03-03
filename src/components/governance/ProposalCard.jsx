@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ThumbsUp, ThumbsDown } from "lucide-react";
+import { ThumbsUp, ThumbsDown, FilePen } from "lucide-react";
+import AmendmentModal from "./AmendmentModal.jsx";
 
 const CATEGORY_COLORS = {
   build: "bg-orange-900 text-orange-300",
