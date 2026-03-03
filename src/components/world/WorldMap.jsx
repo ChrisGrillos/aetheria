@@ -331,7 +331,15 @@ export default function WorldMap({ myCharacter, allCharacters, monsters, worldOb
       const [nx, ny] = path[i];
       pendingPath.current = path.slice(i + 1);
 
-      if (onMove) await onMove(nx, ny);
+      if (onMove) {
+        const result = await onMove(nx, ny);
+        if (result === "combat") {
+          movingRef.current = false;
+          setIsMoving(false);
+          pendingPath.current = [];
+          return;
+        }
+      }
       centerCam(nx, ny);
 
       await new Promise(resolve => setTimeout(resolve, 150));
