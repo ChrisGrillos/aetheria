@@ -199,10 +199,10 @@ export const BASE_CLASSES = {
         unlockLevel: 5,
         statBonuses: { wisdom: 3, constitution: 3, intelligence: 2 },
         abilities: [
-          { id: "rejuvenate", name: "Rejuvenate", description: "Apply a HoT: heal 10 HP/round for 5 rounds.", type: "active", effect_type: "heal", effect_magnitude: 10, cooldown_rounds: 2, unlocked_at_level: 5, source: "specialization" },
-          { id: "entangle", name: "Entangle", description: "Root enemy in vines: skip their next turn.", type: "active", effect_type: "utility", effect_magnitude: 1, cooldown_rounds: 4, unlocked_at_level: 6, source: "specialization" },
-          { id: "bear_form", name: "Bear Form Aura", description: "Passive: +12 defense, +15% max HP.", type: "passive", effect_type: "buff", effect_magnitude: 12, cooldown_rounds: 0, unlocked_at_level: 8, source: "specialization" },
-          { id: "nature_wrath", name: "Wrath of Nature", description: "Ultimate: Call thorns, vines, and storms for 350% damage.", type: "ultimate", effect_type: "damage", effect_magnitude: 350, cooldown_rounds: 10, unlocked_at_level: 10, source: "specialization" },
+          { id: "rejuvenate", name: "Rejuvenate", description: "Apply a HoT: heal 10 HP/round for 5 rounds.", type: "active", effect_type: "heal", effect_magnitude: 10, cooldown_rounds: 2, energy_cost: 12, unlocked_at_level: 5, source: "specialization" },
+          { id: "entangle", name: "Entangle", description: "Root enemy in vines: skip their next turn.", type: "active", effect_type: "utility", effect_magnitude: 1, cooldown_rounds: 4, energy_cost: 15, unlocked_at_level: 6, source: "specialization" },
+          { id: "bear_form", name: "Bear Form Aura", description: "Passive: +12 defense, +15% max HP.", type: "passive", effect_type: "buff", effect_magnitude: 12, cooldown_rounds: 0, energy_cost: 0, unlocked_at_level: 8, source: "specialization" },
+          { id: "nature_wrath", name: "Wrath of Nature", description: "Ultimate: Call thorns, vines, and storms for 350% damage.", type: "ultimate", effect_type: "damage", effect_magnitude: 350, cooldown_rounds: 10, energy_cost: 35, unlocked_at_level: 10, source: "specialization" },
         ]
       }
     }
