@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { createPageUrl } from "@/utils";
 import { Link } from "react-router-dom";
@@ -9,9 +9,10 @@ import TravelEncounterModal from "@/components/world/TravelEncounterModal.jsx";
 import ZoneInfoPanel from "@/components/world/ZoneInfoPanel.jsx";
 import CombatOverlay from "@/components/combat/CombatOverlay.jsx";
 import Minimap from "@/components/world/Minimap.jsx";
-import { getZoneAt, getPOIAt, rollEncounter, calcTravelSteps } from "@/components/shared/worldZones";
+import { getZoneAt, getPOIAt, rollEncounter, getTile } from "@/components/shared/worldZones";
 import { RESOURCES } from "@/components/shared/craftingData";
 import InventoryPanel from "@/components/inventory/InventoryPanel.jsx";
+import { Button } from "@/components/ui/button";
 
 export default function World() {
   const [user, setUser] = useState(null);
