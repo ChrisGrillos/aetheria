@@ -174,7 +174,7 @@ export default function World() {
 
   return (
     <div className="h-screen bg-gray-950 flex flex-col overflow-hidden">
-      <CharacterHUD character={myCharacter} />
+      <CharacterHUD character={myCharacter} onInventory={() => setShowInventory(true)} />
       <div className="flex flex-1 overflow-hidden">
         <div className="flex-1 relative">
           <WorldMap
