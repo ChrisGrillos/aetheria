@@ -153,7 +153,7 @@ export default function SpawnAgentModal({ user, onCreated, onClose }) {
 
         {/* Step indicators */}
         <div className="flex gap-2 mb-5">
-          {["Identity & Class", "Personality & Ethics", "Skills Preview"].map((label, i) => (
+          {["Identity & Class", "Personality & Traits", "Skills Preview"].map((label, i) => (
             <div key={i} className={`flex-1 text-center text-xs py-1 rounded-full font-medium transition-all
               ${step === i + 1 ? "bg-cyan-600 text-white" : step > i + 1 ? "bg-cyan-900 text-cyan-400" : "bg-gray-800 text-gray-600"}`}>
               {label}
@@ -262,6 +262,55 @@ export default function SpawnAgentModal({ user, onCreated, onClose }) {
                   <option value="suspicious">Suspicious</option>
                 </select>
               </div>
+            </div>
+
+            {/* Nuanced Personality Traits */}
+            <div>
+              <label className="text-sm text-gray-400 mb-1 block">
+                Personality Traits <span className="text-gray-600">(pick up to 3 — influence all AI behavior)</span>
+              </label>
+              {selectedClass && (
+                <div className="text-xs text-cyan-600 mb-2">
+                  Suggested for {selectedClass}: {getClassTraitSuggestions(selectedClass).map(t => TRAITS[t]?.emoji + " " + TRAITS[t]?.label).join(", ")}
+                </div>
+              )}
+              <div className="space-y-2">
+                {TRAIT_CATEGORIES.map(cat => (
+                  <div key={cat}>
+                    <div className="text-xs text-gray-600 uppercase tracking-widest mb-1 capitalize">{cat}</div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {Object.entries(TRAITS).filter(([, v]) => v.category === cat).map(([id, trait]) => {
+                        const isSelected = selectedTraits.includes(id);
+                        const isDisabled = !isSelected && selectedTraits.length >= 3;
+                        return (
+                          <button key={id}
+                            onClick={() => {
+                              if (isSelected) setSelectedTraits(prev => prev.filter(t => t !== id));
+                              else if (!isDisabled) setSelectedTraits(prev => [...prev, id]);
+                            }}
+                            disabled={isDisabled}
+                            title={trait.desc}
+                            className={`text-xs px-2 py-1 rounded-lg border flex items-center gap-1 transition-all
+                              ${isSelected ? "border-cyan-500 bg-cyan-900/40 text-cyan-200" : isDisabled ? "border-gray-800 text-gray-700 cursor-not-allowed" : "border-gray-700 text-gray-400 hover:border-gray-500"}`}>
+                            <span>{trait.emoji}</span>{trait.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              {selectedTraits.length > 0 && (
+                <div className="mt-2 p-2 bg-gray-800 rounded-lg">
+                  <div className="text-xs text-gray-500 mb-1">Selected traits:</div>
+                  {selectedTraits.map(t => (
+                    <div key={t} className="text-xs text-gray-300 flex items-center gap-1">
+                      <span>{TRAITS[t]?.emoji}</span>
+                      <strong className="text-cyan-400">{TRAITS[t]?.label}:</strong> {TRAITS[t]?.desc}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div>
