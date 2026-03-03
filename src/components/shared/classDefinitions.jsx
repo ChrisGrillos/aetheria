@@ -238,10 +238,10 @@ export const BASE_CLASSES = {
         unlockLevel: 5,
         statBonuses: { charisma: 5, wisdom: 3, intelligence: 1 },
         abilities: [
-          { id: "treaty", name: "Peace Treaty", description: "Negotiate an end to combat, preventing further attacks.", type: "active", effect_type: "utility", effect_magnitude: 0, cooldown_rounds: 8, unlocked_at_level: 5, source: "specialization" },
-          { id: "inspire", name: "Inspire", description: "+25% to all skills for 3 rounds.", type: "active", effect_type: "buff", effect_magnitude: 25, cooldown_rounds: 5, unlocked_at_level: 6, source: "specialization" },
-          { id: "charismatic_leader", name: "Charismatic Leader", description: "Passive: +5 to all ally attack and defense.", type: "passive", effect_type: "buff", effect_magnitude: 5, cooldown_rounds: 0, unlocked_at_level: 8, source: "specialization" },
-          { id: "grand_speech", name: "Grand Speech", description: "Ultimate: Stun all enemies for 2 rounds with your words.", type: "ultimate", effect_type: "utility", effect_magnitude: 2, cooldown_rounds: 12, unlocked_at_level: 10, source: "specialization" },
+          { id: "treaty", name: "Peace Treaty", description: "Negotiate an end to combat, preventing further attacks.", type: "active", effect_type: "utility", effect_magnitude: 0, cooldown_rounds: 8, energy_cost: 20, unlocked_at_level: 5, source: "specialization" },
+          { id: "inspire", name: "Inspire", description: "+25% to all skills for 3 rounds.", type: "active", effect_type: "buff", effect_magnitude: 25, cooldown_rounds: 5, energy_cost: 18, unlocked_at_level: 6, source: "specialization" },
+          { id: "charismatic_leader", name: "Charismatic Leader", description: "Passive: +5 to all ally attack and defense.", type: "passive", effect_type: "buff", effect_magnitude: 5, cooldown_rounds: 0, energy_cost: 0, unlocked_at_level: 8, source: "specialization" },
+          { id: "grand_speech", name: "Grand Speech", description: "Ultimate: Stun all enemies for 2 rounds with your words.", type: "ultimate", effect_type: "utility", effect_magnitude: 2, cooldown_rounds: 12, energy_cost: 35, unlocked_at_level: 10, source: "specialization" },
         ]
       },
       smuggler: {
