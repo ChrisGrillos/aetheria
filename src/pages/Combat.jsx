@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
 import { Sword, Shield, Heart } from "lucide-react";
+import { calcPlayerAttack, applyDefenseReduction, checkEvasion, calculateDerivedStats, xpToNextLevel, levelUpUpdates, shouldLevelUp } from "@/components/shared/charUtils";
 
 const MONSTER_EMOJI = {
   goblin: "👺", orc: "👹", dragon: "🐉", skeleton: "💀",
@@ -29,11 +30,6 @@ export default function Combat() {
     setMonsters(mons);
   };
 
-  const calcDamage = (attacker, isPlayer) => {
-    const base = isPlayer ? (attacker.stats?.strength || 10) : 8;
-    return Math.floor(base / 2 + Math.random() * (base / 2)) + 1;
-  };
-
   const handleAttack = async (monster) => {
     if (!myCharacter || fighting) return;
     setFighting(monster.id);
@@ -45,26 +41,45 @@ export default function Combat() {
 
     while (playerHp > 0 && monsterHp > 0 && rounds < 20) {
       rounds++;
-      const playerDmg = calcDamage(myCharacter, true);
+
+      // Player attacks using derived stats (crit, attack_power, defense)
+      const { damage: playerDmg, isCrit } = calcPlayerAttack(myCharacter);
       monsterHp -= playerDmg;
-      log.push(`Round ${rounds}: You deal ${playerDmg} damage to ${monster.name}. (Monster HP: ${Math.max(0, monsterHp)})`);
+      log.push(`Round ${rounds}: You deal ${playerDmg}${isCrit ? " 💥CRIT" : ""} damage to ${monster.name}. (Monster HP: ${Math.max(0, monsterHp)})`);
 
       if (monsterHp <= 0) break;
 
-      const monsterDmg = calcDamage(monster, false);
-      playerHp -= monsterDmg;
-      log.push(`Round ${rounds}: ${monster.name} deals ${monsterDmg} damage to you. (Your HP: ${Math.max(0, playerHp)})`);
+      // Monster attacks — check player evasion first
+      if (checkEvasion(myCharacter)) {
+        log.push(`Round ${rounds}: You dodge ${monster.name}'s attack! 💨`);
+        continue;
+      }
+      const rawMonsterDmg = Math.floor(8 + monster.level * 2 + Math.random() * 10);
+      const reducedDmg = applyDefenseReduction(rawMonsterDmg, myCharacter);
+      playerHp -= reducedDmg;
+      log.push(`Round ${rounds}: ${monster.name} deals ${reducedDmg} damage (blocked ${rawMonsterDmg - reducedDmg}). (Your HP: ${Math.max(0, playerHp)})`);
     }
 
+    const xpGain  = monster.xp_reward || 25;
+    const goldGain = monster.gold_reward || 10;
+
     if (monsterHp <= 0) {
-      log.push(`✅ Victory! You defeated ${monster.name}! +${monster.xp_reward || 25}xp +${monster.gold_reward || 10}g`);
+      log.push(`✅ Victory! You defeated ${monster.name}! +${xpGain}xp +${goldGain}g`);
+      const newXp  = (myCharacter.xp || 0) + xpGain;
+      const newGold = (myCharacter.gold || 0) + goldGain;
+      let updates = { hp: Math.max(1, playerHp), xp: newXp, gold: newGold };
+
+      // Auto level-up check
+      const tempChar = { ...myCharacter, xp: newXp };
+      if (shouldLevelUp(tempChar)) {
+        const lvlUp = levelUpUpdates(tempChar);
+        updates = { ...updates, ...lvlUp };
+        log.push(`🎉 LEVEL UP! You are now level ${lvlUp.level}! (+3 stat points)`);
+      }
+
       await Promise.all([
         base44.entities.Monster.update(monster.id, { is_alive: false, hp: 0 }),
-        base44.entities.Character.update(myCharacter.id, {
-          hp: Math.max(1, playerHp),
-          xp: (myCharacter.xp || 0) + (monster.xp_reward || 25),
-          gold: (myCharacter.gold || 0) + (monster.gold_reward || 10)
-        })
+        base44.entities.Character.update(myCharacter.id, updates)
       ]);
     } else {
       log.push(`💀 Defeated by ${monster.name}. You need to rest.`);

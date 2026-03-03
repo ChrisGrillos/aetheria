@@ -47,30 +47,30 @@
  *
  * The mainPage value must match a key in the PAGES object exactly.
  */
-import Home from './pages/Home';
-import Characters from './pages/Characters';
-import World from './pages/World';
-import Governance from './pages/Governance';
-import Jobs from './pages/Jobs';
-import Agents from './pages/Agents';
-import Combat from './pages/Combat';
-import WorldEvents from './pages/WorldEvents';
-import Economy from './pages/Economy';
 import AgentArena from './pages/AgentArena';
+import Agents from './pages/Agents';
+import Characters from './pages/Characters';
+import Combat from './pages/Combat';
+import Economy from './pages/Economy';
+import Governance from './pages/Governance';
+import Home from './pages/Home';
+import Jobs from './pages/Jobs';
+import World from './pages/World';
+import WorldEvents from './pages/WorldEvents';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
-    "Home": Home,
-    "Characters": Characters,
-    "World": World,
-    "Governance": Governance,
-    "Jobs": Jobs,
-    "Agents": Agents,
-    "Combat": Combat,
-    "WorldEvents": WorldEvents,
-    "Economy": Economy,
     "AgentArena": AgentArena,
+    "Agents": Agents,
+    "Characters": Characters,
+    "Combat": Combat,
+    "Economy": Economy,
+    "Governance": Governance,
+    "Home": Home,
+    "Jobs": Jobs,
+    "World": World,
+    "WorldEvents": WorldEvents,
 }
 
 export const pagesConfig = {
