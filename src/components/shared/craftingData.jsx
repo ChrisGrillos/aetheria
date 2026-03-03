@@ -287,8 +287,83 @@ export const RECIPES = [
   },
 ];
 
+// ── FURNITURE RECIPES (crafted via workbench/forge) ─────────────────────────
+export const FURNITURE_RECIPES = [
+  {
+    id: "crafted_candle",        name: "Handmade Candle",     emoji: "🕯️",  category: "furniture",
+    station: "hand",             skill_required: 1,           xp_reward: 5,
+    ingredients: [{ id: "wood", qty: 1 }],
+    result: { furniture_id: "candle", rarity: "common" },
+    description: "A simple candle carved from wood and tallow.",
+  },
+  {
+    id: "crafted_bookshelf",     name: "Carved Bookshelf",    emoji: "📚",  category: "furniture",
+    station: "workbench",        skill_required: 8,           xp_reward: 30,
+    ingredients: [{ id: "wood", qty: 5 }, { id: "iron_ore", qty: 1 }],
+    result: { furniture_id: "bookshelf", rarity: "common" },
+    description: "A sturdy oak bookshelf. Provides a study bonus.",
+  },
+  {
+    id: "crafted_fireplace",     name: "Stone Fireplace",     emoji: "🔥",  category: "furniture",
+    station: "forge",            skill_required: 15,          xp_reward: 60,
+    ingredients: [{ id: "stone", qty: 8 }, { id: "iron_ore", qty: 2 }, { id: "coal", qty: 3 }],
+    result: { furniture_id: "fireplace", rarity: "uncommon" },
+    description: "A hand-built stone fireplace. Warms the home and restores HP on rest.",
+  },
+  {
+    id: "crafted_chest",         name: "Oak Storage Chest",   emoji: "📦",  category: "furniture",
+    station: "workbench",        skill_required: 5,           xp_reward: 20,
+    ingredients: [{ id: "wood", qty: 4 }, { id: "iron_ore", qty: 1 }],
+    result: { furniture_id: "chest", rarity: "common" },
+    description: "A lockable storage chest. Expands home storage.",
+  },
+  {
+    id: "crafted_vault",         name: "Iron Vault",          emoji: "🔒",  category: "furniture",
+    station: "forge",            skill_required: 30,          xp_reward: 120,
+    ingredients: [{ id: "iron_ore", qty: 8 }, { id: "gold_ore", qty: 2 }, { id: "coal", qty: 4 }],
+    result: { furniture_id: "vault", rarity: "rare" },
+    description: "A heavy iron vault for securing valuables.",
+  },
+  {
+    id: "crafted_throne",        name: "Dragon-Bone Throne",  emoji: "👑",  category: "furniture",
+    station: "workbench",        skill_required: 50,          xp_reward: 300,
+    specialization_bonus: "engineer",
+    ingredients: [{ id: "bone", qty: 10 }, { id: "dragon_scale", qty: 2 }, { id: "gold_ore", qty: 3 }],
+    result: { furniture_id: "throne", rarity: "legendary" },
+    description: "A throne of bone and dragonscale. Radiates power.",
+  },
+];
+
+// ── GUILD ITEM RECIPES ────────────────────────────────────────────────────────
+export const GUILD_RECIPES = [
+  {
+    id: "guild_banner_cloth",    name: "Guild Battle Banner", emoji: "🚩",  category: "guild_item",
+    station: "workbench",        skill_required: 12,          xp_reward: 50,
+    ingredients: [{ id: "leather", qty: 3 }, { id: "wood", qty: 2 }, { id: "iron_ore", qty: 1 }],
+    result: { guild_bonus: "war_score_bonus", magnitude: 5, rarity: "uncommon" },
+    description: "A battle banner carried into war. Grants +5 war score per raid.",
+  },
+  {
+    id: "siege_ballista",        name: "Siege Ballista",      emoji: "🏹",  category: "guild_item",
+    station: "forge",            skill_required: 40,          xp_reward: 200,
+    specialization_bonus: "engineer",
+    ingredients: [{ id: "wood", qty: 10 }, { id: "iron_ore", qty: 8 }, { id: "coal", qty: 5 }],
+    result: { guild_bonus: "siege_power", magnitude: 25, rarity: "rare" },
+    description: "A siege weapon. Dramatically increases raid victory chance.",
+  },
+  {
+    id: "guild_treasury_lock",   name: "Treasury Vault Lock", emoji: "🔐",  category: "guild_item",
+    station: "forge",            skill_required: 20,          xp_reward: 80,
+    ingredients: [{ id: "iron_ore", qty: 5 }, { id: "gold_ore", qty: 1 }],
+    result: { guild_bonus: "treasury_protection", magnitude: 50, rarity: "uncommon" },
+    description: "A master lock for the guild treasury. Harder to raid.",
+  },
+];
+
+export const ALL_RECIPES = [...RECIPES, ...FURNITURE_RECIPES, ...GUILD_RECIPES];
+
 export function getRecipesByStation(stationId) {
-  return RECIPES.filter(r => r.station === stationId);
+  return ALL_RECIPES.filter(r => r.station === stationId);
 }
 
 export function getRecipesByCategory(category) {
