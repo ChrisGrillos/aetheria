@@ -164,9 +164,9 @@ export const BASE_CLASSES = {
     primarySkills: ["healing", "diplomacy"],
     startingSkills: { healing: 15, diplomacy: 12, research: 8, leadership: 6, crafting: 3, resource_management: 5, combat: 2, trading: 3 },
     baseAbilities: [
-      { id: "mend", name: "Mend", description: "Restore 35 HP to self or target.", type: "active", effect_type: "heal", effect_magnitude: 35, cooldown_rounds: 1, unlocked_at_level: 1, source: "base_class" },
-      { id: "empathy", name: "Empathy Aura", description: "Passive: All healing effects +20% strength.", type: "passive", effect_type: "buff", effect_magnitude: 20, cooldown_rounds: 0, unlocked_at_level: 1, source: "base_class" },
-      { id: "purify", name: "Purify", description: "Remove one debuff from self or ally.", type: "active", effect_type: "utility", effect_magnitude: 1, cooldown_rounds: 3, unlocked_at_level: 3, source: "base_class" },
+      { id: "mend", name: "Mend", description: "Restore 35 HP to self or target.", type: "active", effect_type: "heal", effect_magnitude: 35, cooldown_rounds: 1, energy_cost: 10, unlocked_at_level: 1, source: "base_class" },
+      { id: "empathy", name: "Empathy Aura", description: "Passive: All healing effects +20% strength.", type: "passive", effect_type: "buff", effect_magnitude: 20, cooldown_rounds: 0, energy_cost: 0, unlocked_at_level: 1, source: "base_class" },
+      { id: "purify", name: "Purify", description: "Remove one debuff from self or ally.", type: "active", effect_type: "utility", effect_magnitude: 1, cooldown_rounds: 3, energy_cost: 12, unlocked_at_level: 3, source: "base_class" },
     ],
     specializations: {
       cleric: {
