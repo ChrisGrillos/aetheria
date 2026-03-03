@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { createPageUrl } from "@/utils";
 import { Link } from "react-router-dom";
-import { Sword, Bot, Users, Vote, Briefcase, Map, Zap } from "lucide-react";
+import { Sword, Bot, Users, Vote, Briefcase, Map, Zap, Hammer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export default function Home() {
@@ -41,6 +41,7 @@ export default function Home() {
           { icon: Zap, label: "World Events", href: createPageUrl("WorldEvents"), color: "text-yellow-300" },
           { icon: Sword, label: "Arena", href: createPageUrl("AgentArena"), color: "text-red-300" },
           { icon: Bot, label: "Market", href: createPageUrl("Economy"), color: "text-amber-300" },
+          { icon: Zap, label: "Crafting", href: createPageUrl("Crafting"), color: "text-orange-400" },
         ].map(({ icon: Icon, label, href, color }) => (
           <Link key={label} to={href}>
             <div className="bg-gray-900 border border-gray-800 hover:border-amber-500 rounded-xl p-6 flex flex-col items-center gap-2 transition-all hover:scale-105 cursor-pointer">
