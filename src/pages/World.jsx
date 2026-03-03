@@ -94,8 +94,44 @@ export default function World() {
     }
   };
 
+  const cancelFastTravel = useCallback(() => {
+    if (fastTravelRef.current) clearInterval(fastTravelRef.current);
+    setFastTravelTarget(null);
+    setFastTravelProgress(0);
+  }, []);
+
+  const requestFastTravel = useCallback((tx, ty) => {
+    if (combatMonster || fastTravelTarget) return;
+    if (getTile(tx, ty) === "water") return;
+
+    setFastTravelTarget({ x: tx, y: ty });
+    setFastTravelProgress(0);
+
+    let elapsed = 0;
+    const interval = setInterval(() => {
+      elapsed += 100;
+      setFastTravelProgress(Math.min(100, (elapsed / 3000) * 100));
+
+      if (elapsed >= 3000) {
+        clearInterval(interval);
+        setMyCharacter(prev => {
+          if (!prev) return prev;
+          const updated = { ...prev, x: tx, y: ty };
+          setAllCharacters(all => all.map(c => c.id === prev.id ? updated : c));
+          base44.entities.Character.update(prev.id, { x: tx, y: ty });
+          return updated;
+        });
+        setFastTravelTarget(null);
+        setFastTravelProgress(0);
+      }
+    }, 100);
+
+    fastTravelRef.current = interval;
+  }, [combatMonster, fastTravelTarget]);
+
   const handleMove = useCallback(async (newX, newY) => {
     if (!myCharacter) return;
+    cancelFastTravel();
 
     const zone = getZoneAt(newX, newY);
     const poi  = getPOIAt(newX, newY);
