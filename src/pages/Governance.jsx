@@ -73,6 +73,15 @@ export default function Governance() {
     }
     const all = await base44.entities.GovernanceProposal.list("-created_date", 50);
     setProposals(all);
+    // Surge detection
+    const allVotes = await base44.entities.Vote.list("-created_date", 500);
+    const warnings = [];
+    all.filter(p => p.status === "active").forEach(p => {
+      const fiveMinAgo = Date.now() - 5 * 60 * 1000;
+      const recent = allVotes.filter(v => v.proposal_id === p.id && new Date(v.created_date).getTime() > fiveMinAgo);
+      if (recent.length >= 20) warnings.push({ proposalId: p.id, title: p.title, count: recent.length });
+    });
+    setSurgeWarnings(warnings);
   };
 
   const handleVote = async (proposalId, choice, reasoning = "") => {
