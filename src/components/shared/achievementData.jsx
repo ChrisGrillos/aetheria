@@ -108,6 +108,11 @@ export const TITLES = {
     name: "Novice Fighter",
     description: "Won your first combat",
   },
+  "Level 5 Champion": {
+    id: "level_5_champion",
+    name: "Level 5 Champion",
+    description: "Reached level 5",
+  },
   "Seasoned Warrior": {
     id: "seasoned_warrior",
     name: "Seasoned Warrior",
@@ -132,6 +137,31 @@ export const TITLES = {
     id: "honored_friend",
     name: "Honored Friend",
     description: "Earned the love of a faction",
+  },
+  "Monster Slayer": {
+    id: "monster_slayer",
+    name: "Monster Slayer",
+    description: "Defeated a boss-tier monster",
+  },
+  "Quest Veteran": {
+    id: "quest_veteran",
+    name: "Quest Veteran",
+    description: "Completed many quests",
+  },
+  "Skill Master": {
+    id: "skill_master",
+    name: "Skill Master",
+    description: "Mastered a skill to level 50+",
+  },
+  "World Explorer": {
+    id: "world_explorer",
+    name: "World Explorer",
+    description: "Visited all zones of the world",
+  },
+  "Wealthy Tycoon": {
+    id: "wealthy_tycoon",
+    name: "Wealthy Tycoon",
+    description: "Accumulated massive wealth",
   },
 };
 
