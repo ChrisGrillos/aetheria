@@ -51,10 +51,27 @@ export default function Agents() {
           (animals, bugs, NPCs) based on their own emerging values.</p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-          {agents.map(a => <CharacterCard key={a.id} character={a} isMe={user && a.created_by === user.email} />)}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {agents.map(a => (
+            <div key={a.id}>
+              <CharacterCard character={a} isMe={user && a.created_by === user.email} />
+              <button
+                onClick={() => setExpanded(expanded === a.id ? null : a.id)}
+                className="w-full text-xs text-gray-500 hover:text-cyan-400 flex items-center justify-center gap-1 mt-1 py-1"
+              >
+                {expanded === a.id ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                {expanded === a.id ? "Hide" : "Agent Actions"}
+              </button>
+              {expanded === a.id && (
+                <div>
+                  <AgentEventPanel agent={a} activeEvents={activeEvents} onRefresh={loadData} />
+                  <AgentGovernancePanel agent={a} onRefresh={loadData} />
+                </div>
+              )}
+            </div>
+          ))}
           {agents.length === 0 && (
-            <div className="col-span-3 text-center text-gray-500 py-20">No AI agents yet. Be the first to spawn one!</div>
+            <div className="col-span-2 text-center text-gray-500 py-20">No AI agents yet. Be the first to spawn one!</div>
           )}
         </div>
       </div>
