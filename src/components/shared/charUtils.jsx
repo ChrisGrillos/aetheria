@@ -15,6 +15,10 @@ export function calculateDerivedStats(character) {
   const skills = character.skills || {};
   const effects = character.active_effects || [];
   const level = character.level || 1;
+  const unlockedSkills = character.skill_tree_unlocked || [];
+
+  // SKILL TREE BONUSES: Import here to avoid circular dependency
+  // These stat bonuses are applied in unlockSkillUpdates, so character.stats already includes them
 
   const str = stats.strength || 10;
   const dex = stats.dexterity || 10;
