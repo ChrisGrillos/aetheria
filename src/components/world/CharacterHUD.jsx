@@ -1,4 +1,4 @@
-import { Heart, Coins, Star, Sword } from "lucide-react";
+import { Heart, Coins, Star, Sword, Video } from "lucide-react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 
@@ -42,6 +42,9 @@ export default function CharacterHUD({ character }) {
         </Link>
         <Link to={createPageUrl("Jobs")} className="text-yellow-400 hover:text-yellow-300">💼 Jobs</Link>
         <Link to={createPageUrl("Governance")} className="text-purple-400 hover:text-purple-300">⚖️ Vote</Link>
+        <Link to={createPageUrl("Recording")} className="text-teal-400 hover:text-teal-300 flex items-center gap-1">
+          <Video className="w-3 h-3" /> Capture
+        </Link>
         <Link to={createPageUrl("Home")} className="text-gray-400 hover:text-gray-300">🏠 Home</Link>
       </div>
     </div>

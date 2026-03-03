@@ -42,6 +42,7 @@ export default function Home() {
           { icon: Sword, label: "Arena", href: createPageUrl("AgentArena"), color: "text-red-300" },
           { icon: Bot, label: "Market", href: createPageUrl("Economy"), color: "text-amber-300" },
           { icon: Zap, label: "Crafting", href: createPageUrl("Crafting"), color: "text-orange-400" },
+          { icon: Hammer, label: "Capture", href: createPageUrl("Recording"), color: "text-teal-400" },
         ].map(({ icon: Icon, label, href, color }) => (
           <Link key={label} to={href}>
             <div className="bg-gray-900 border border-gray-800 hover:border-amber-500 rounded-xl p-6 flex flex-col items-center gap-2 transition-all hover:scale-105 cursor-pointer">
