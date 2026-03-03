@@ -57,6 +57,7 @@ import Home from './pages/Home';
 import Jobs from './pages/Jobs';
 import World from './pages/World';
 import WorldEvents from './pages/WorldEvents';
+import Crafting from './pages/Crafting';
 import __Layout from './Layout.jsx';
 
 
@@ -71,6 +72,7 @@ export const PAGES = {
     "Jobs": Jobs,
     "World": World,
     "WorldEvents": WorldEvents,
+    "Crafting": Crafting,
 }
 
 export const pagesConfig = {
