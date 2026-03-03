@@ -13,6 +13,7 @@ import { getZoneAt, getPOIAt, rollEncounter, getTile } from "@/components/shared
 import { RESOURCES } from "@/components/shared/craftingData";
 import InventoryPanel from "@/components/inventory/InventoryPanel.jsx";
 import { Button } from "@/components/ui/button";
+import { checkAchievements } from "@/components/shared/achievementData";
 
 export default function World() {
   const [user, setUser] = useState(null);
