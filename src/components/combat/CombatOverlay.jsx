@@ -429,11 +429,7 @@ export default function CombatOverlay({ character, monster, onClose, onVictory, 
             {phase === "victory" && <div className="text-center py-2 text-green-400 font-black text-sm">🏆 VICTORY!</div>}
             {phase === "defeat"  && <div className="text-center py-2 text-red-400 font-black text-sm">💀 DEFEATED</div>}
             {loot && (
-              <LootPopup loot={loot} onTake={(item) => {
-                const inv = [...(character.inventory || []), item];
-                base44.entities.Character.update(character.id, { inventory: inv });
-                setLoot(null);
-              }} onDismiss={() => setLoot(null)} />
+              <LootPopup loot={loot} onDismiss={() => setLoot(null)} />
             )}
           </div>
 
