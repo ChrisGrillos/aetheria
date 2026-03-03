@@ -85,10 +85,10 @@ export const BASE_CLASSES = {
         unlockLevel: 5,
         statBonuses: { intelligence: 4, wisdom: 3, charisma: -2 },
         abilities: [
-          { id: "life_drain", name: "Life Drain", description: "Steal 30 HP from target. Heal yourself for amount drained.", type: "active", effect_type: "damage", effect_magnitude: 30, cooldown_rounds: 2, unlocked_at_level: 5, source: "specialization" },
-          { id: "curse", name: "Wither Curse", description: "Apply -25% to all enemy stats for 3 rounds.", type: "active", effect_type: "debuff", effect_magnitude: 25, cooldown_rounds: 4, unlocked_at_level: 6, source: "specialization" },
-          { id: "undying", name: "Undying", description: "Passive: Survive a killing blow once per combat.", type: "passive", effect_type: "utility", effect_magnitude: 1, cooldown_rounds: 0, unlocked_at_level: 8, source: "specialization" },
-          { id: "death_nova", name: "Death Nova", description: "Ultimate: Detonate all debuffs for massive damage.", type: "ultimate", effect_type: "damage", effect_magnitude: 400, cooldown_rounds: 10, unlocked_at_level: 10, source: "specialization" },
+          { id: "life_drain", name: "Life Drain", description: "Steal 30 HP from target. Heal yourself for amount drained.", type: "active", effect_type: "damage", effect_magnitude: 30, cooldown_rounds: 2, energy_cost: 15, unlocked_at_level: 5, source: "specialization" },
+          { id: "curse", name: "Wither Curse", description: "Apply -25% to all enemy stats for 3 rounds.", type: "active", effect_type: "debuff", effect_magnitude: 25, cooldown_rounds: 4, energy_cost: 18, unlocked_at_level: 6, source: "specialization" },
+          { id: "undying", name: "Undying", description: "Passive: Survive a killing blow once per combat.", type: "passive", effect_type: "utility", effect_magnitude: 1, cooldown_rounds: 0, energy_cost: 0, unlocked_at_level: 8, source: "specialization" },
+          { id: "death_nova", name: "Death Nova", description: "Ultimate: Detonate all debuffs for massive damage.", type: "ultimate", effect_type: "damage", effect_magnitude: 400, cooldown_rounds: 10, energy_cost: 38, unlocked_at_level: 10, source: "specialization" },
         ]
       },
       arcane_sage: {
