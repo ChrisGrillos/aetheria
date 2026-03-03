@@ -3,7 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, MessageCircle, Handshake, ShoppingBag, Scale, Shield } from "lucide-react";
-import { RESOURCES } from "@/components/shared/craftingData";
+import { traitTargetScore, pickActionByTraits, getDialogueTone, traitSuccessModifier, getTraitEvolutionFromAction } from "@/components/shared/agentTraits";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function buildTradeContext(agent, targetChar) {
@@ -16,17 +16,10 @@ function buildTradeContext(agent, targetChar) {
 }
 
 function pickDiplomaticAction(agent, targetChar) {
-  const motivation = (agent.agent_traits?.motivation || "").toLowerCase();
+  const traits    = agent.agent_traits?.personality_traits || [];
   const alignment = agent.agent_traits?.ethical_alignment || "true_neutral";
-  const targetGold = targetChar.gold || 0;
-
-  if (agent.base_class === "merchant" || motivation.includes("trade") || motivation.includes("wealth")) {
-    return "trade";
-  }
-  if (alignment.includes("lawful") && motivation.includes("peace")) return "non_aggression";
-  if (targetGold > 200 && alignment.includes("evil")) return "tribute";
-  if (motivation.includes("lead") || motivation.includes("alliance")) return "alliance";
-  return "trade";
+  // Trait-driven action takes priority
+  return pickActionByTraits(traits, alignment, targetChar);
 }
 
 const ACTION_CONFIG = {
@@ -68,13 +61,15 @@ export default function AgentDiplomacyTradePanel({ agent, onRefresh }) {
   // ── PICK best target character ────────────────────────────────────────────
   const pickTarget = () => {
     if (characters.length === 0) return null;
-    // Prefer characters with inventory, nearby position
+    const traits = agent.agent_traits?.personality_traits || [];
     const scored = characters.map(c => {
       let score = (c.inventory?.length || 0) * 3;
       const dx = Math.abs((c.x || 0) - (agent.x || 0));
       const dy = Math.abs((c.y || 0) - (agent.y || 0));
       score -= (dx + dy) * 0.5;
-      if (c.type === "ai_agent") score += 5; // Easier to negotiate with AI
+      if (c.type === "ai_agent") score += 5;
+      // Apply trait-based target preference
+      score += traitTargetScore(traits, c);
       return { char: c, score };
     }).sort((a, b) => b.score - a.score);
     return scored[0]?.char || null;
@@ -97,8 +92,11 @@ export default function AgentDiplomacyTradePanel({ agent, onRefresh }) {
       ? agentWants.map(i => `${i.qty}x ${i.name || i.id}`).join(", ")
       : "information or goodwill";
 
+    const traits = agent.agent_traits?.personality_traits || [];
+    const tone   = getDialogueTone(traits);
     const prompt = `You are ${agent.name}, a ${agent.base_class} AI character in "Agentic" fantasy MMO.
 Personality: ${agent.agent_traits?.motivation || "seeking adventure"}. Alignment: ${agent.agent_traits?.ethical_alignment || "neutral"}.
+Personality traits: ${traits.join(", ") || "none defined"}. Dialogue tone: ${tone}.
 You are initiating a "${action}" interaction with ${target.name} (Lv.${target.level} ${target.base_class || target.class}).
 
 ${action === "trade" ? `You are offering: ${offerDesc}. You want: ${wantDesc}.` : ""}
@@ -107,16 +105,21 @@ ${action === "non_aggression" ? `You want to establish a peace pact and avoid co
 ${action === "resolve_dispute" ? `You want to settle a recent disagreement diplomatically.` : ""}
 ${action === "tribute" ? `You are demanding a tribute due to your superior strength.` : ""}
 
-Write an in-character opening dialogue (2-4 sentences). Be persuasive, personality-consistent. End with a clear proposal.`;
+Write an in-character opening dialogue (2-4 sentences). Be persuasive and let your personality traits shine through clearly. End with a clear proposal.`;
 
     const dialogueText = await base44.integrations.Core.InvokeLLM({ prompt });
 
-    // Determine outcome probabilistically (skill-based)
+    // Determine outcome probabilistically (skill + trait based)
     const diplomacySkill = agent.skills?.diplomacy || 1;
     const tradingSkill   = agent.skills?.trading    || 1;
     const relevantSkill  = action === "trade" ? tradingSkill : diplomacySkill;
-    const successChance  = 0.4 + (relevantSkill / 200); // 40-90%
+    const traitMod       = traitSuccessModifier(traits, action);
+    const successChance  = Math.min(0.9, 0.4 + (relevantSkill / 200) + traitMod);
     const success        = Math.random() < successChance;
+
+    // Trait evolution — may gain/lose traits through actions
+    const { gained: gainedTraits, removed: removedTraits } = getTraitEvolutionFromAction(action, success, traits);
+    const updatedTraits = [...traits.filter(t => !removedTraits.includes(t)), ...gainedTraits];
 
     // Skill gain
     const skillKey = action === "trade" ? "trading" : "diplomacy";
@@ -154,15 +157,18 @@ Write an in-character opening dialogue (2-4 sentences). Be persuasive, personali
         if (idx >= 0) { newInv[idx].qty -= 1; if (newInv[idx].qty <= 0) newInv.splice(idx, 1); }
       });
       await base44.entities.Character.update(agent.id, { inventory: newInv, skills: newSkills,
+        agent_traits: { ...(agent.agent_traits || {}), personality_traits: updatedTraits },
         last_message: `Trade accepted with ${target.name}: got ${agentWants.map(i=>i.name||i.id).join(", ")}` });
     } else {
       await base44.entities.Character.update(agent.id, { skills: newSkills,
+        agent_traits: { ...(agent.agent_traits || {}), personality_traits: updatedTraits },
         last_message: `${actionCfg.emoji} ${action} with ${target.name}: ${success ? "accepted" : "rejected"}` });
     }
+    const traitMsg = gainedTraits.length > 0 ? ` | Gained trait: ${gainedTraits.join(",")}` : removedTraits.length > 0 ? ` | Lost trait: ${removedTraits.join(",")}` : "";
 
     setDialogue({ action, actionCfg, target, text: dialogueText, success });
     setProposals(prev => [proposal, ...prev.slice(0, 9)]);
-    addLog(`${actionCfg.emoji} [${action}] → ${target.name}: ${success ? "✅ Accepted" : "❌ Rejected"} | ${skillKey} +${skillGain}`);
+    addLog(`${actionCfg.emoji} [${action}] → ${target.name}: ${success ? "✅ Accepted" : "❌ Rejected"} | ${skillKey} +${skillGain}${traitMsg}`);
     setBusy(false); setActiveAction(null);
     onRefresh();
   };
