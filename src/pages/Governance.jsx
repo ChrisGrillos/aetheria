@@ -118,20 +118,25 @@ export default function Governance() {
           ))}
         </div>
 
-        <div className="space-y-4">
-          {filtered.map(p => (
-            <ProposalCard
-              key={p.id}
-              proposal={p}
-              myCharacter={myCharacter}
-              hasVoted={myVotes.some(v => v.proposal_id === p.id)}
-              myVote={myVotes.find(v => v.proposal_id === p.id)}
-              onVote={handleVote}
-            />
-          ))}
-          {filtered.length === 0 && (
-            <div className="text-center text-gray-500 py-16">No proposals in this category.</div>
-          )}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 space-y-4">
+            {filtered.map(p => (
+              <ProposalCard
+                key={p.id}
+                proposal={p}
+                myCharacter={myCharacter}
+                hasVoted={myVotes.some(v => v.proposal_id === p.id)}
+                myVote={myVotes.find(v => v.proposal_id === p.id)}
+                onVote={handleVote}
+              />
+            ))}
+            {filtered.length === 0 && (
+              <div className="text-center text-gray-500 py-16">No proposals in this category.</div>
+            )}
+          </div>
+          <div className="lg:col-span-1">
+            <ChroniclePanel />
+          </div>
         </div>
       </div>
 
