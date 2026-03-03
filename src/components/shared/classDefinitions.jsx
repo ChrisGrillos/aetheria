@@ -266,9 +266,9 @@ export const BASE_CLASSES = {
     primarySkills: ["crafting", "resource_management"],
     startingSkills: { crafting: 15, resource_management: 12, trading: 6, research: 5, combat: 4, diplomacy: 4, healing: 2, leadership: 4 },
     baseAbilities: [
-      { id: "crafters_touch", name: "Crafter's Touch", description: "Passive: +20% quality on all crafted items.", type: "passive", effect_type: "utility", effect_magnitude: 20, cooldown_rounds: 0, unlocked_at_level: 1, source: "base_class" },
-      { id: "repair", name: "Field Repair", description: "Restore 15 HP and reduce a debuff duration by 1.", type: "active", effect_type: "heal", effect_magnitude: 15, cooldown_rounds: 2, unlocked_at_level: 1, source: "base_class" },
-      { id: "improvised_weapon", name: "Improvised Weapon", description: "Craft a weapon mid-battle: +15 attack power for 2 rounds.", type: "active", effect_type: "buff", effect_magnitude: 15, cooldown_rounds: 5, unlocked_at_level: 3, source: "base_class" },
+      { id: "crafters_touch", name: "Crafter's Touch", description: "Passive: +20% quality on all crafted items.", type: "passive", effect_type: "utility", effect_magnitude: 20, cooldown_rounds: 0, energy_cost: 0, unlocked_at_level: 1, source: "base_class" },
+      { id: "repair", name: "Field Repair", description: "Restore 15 HP and reduce a debuff duration by 1.", type: "active", effect_type: "heal", effect_magnitude: 15, cooldown_rounds: 2, energy_cost: 10, unlocked_at_level: 1, source: "base_class" },
+      { id: "improvised_weapon", name: "Improvised Weapon", description: "Craft a weapon mid-battle: +15 attack power for 2 rounds.", type: "active", effect_type: "buff", effect_magnitude: 15, cooldown_rounds: 5, energy_cost: 15, unlocked_at_level: 3, source: "base_class" },
     ],
     specializations: {
       engineer: {
