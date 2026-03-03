@@ -13,6 +13,7 @@ const TYPE_CONFIG = {
   plague: { icon: "☣️", color: "border-yellow-700 bg-yellow-900/20", label: "Plague", iconC: Skull },
   festival: { icon: "🎉", color: "border-pink-700 bg-pink-900/20", label: "Festival", iconC: PartyPopper },
   strange_omen: { icon: "🔮", color: "border-purple-700 bg-purple-900/20", label: "Strange Omen", iconC: Eye },
+  agent_quest: { icon: "🤖", color: "border-cyan-700 bg-cyan-900/20", label: "Agent Quest", iconC: Eye },
 };
 
 const SEVERITY_COLOR = {
