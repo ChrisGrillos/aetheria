@@ -3,6 +3,8 @@ import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { X } from "lucide-react";
+import { calculateDerivedStats, xpToNextLevel } from "@/components/shared/charUtils";
+import { getCharacterAbilities, BASE_CLASSES } from "@/components/shared/classDefinitions";
 
 const CLASSES = [
   { id: "warrior", emoji: "⚔️", label: "Warrior", desc: "STR+4, CON+2. Frontline fighter." },
@@ -37,12 +39,17 @@ export default function CreateCharacterModal({ user, onCreated, onClose }) {
   const handleCreate = async () => {
     if (!name.trim() || !selectedClass) return;
     setSaving(true);
-    const stats = CLASS_STATS[selectedClass];
-    const maxHp = 10 + (stats.constitution - 10) * 2;
+    const baseClassDef = BASE_CLASSES[selectedClass];
+    const stats = baseClassDef?.primaryStats || CLASS_STATS[selectedClass];
+    const maxHp = 100 + (stats.constitution - 10) * 5;
+    const charDraft = { stats, level: 1, skills: baseClassDef?.startingSkills || {}, active_effects: [], base_class: selectedClass };
+    const derived = calculateDerivedStats(charDraft);
+    const abilities = getCharacterAbilities(selectedClass, null, 1);
     await base44.entities.Character.create({
       name: name.trim(),
       type: "human",
       class: selectedClass,
+      base_class: selectedClass,
       avatar_color: avatarColor,
       avatar_emoji: CLASSES.find(c => c.id === selectedClass)?.emoji,
       x: Math.floor(Math.random() * 40) + 5,
@@ -50,6 +57,11 @@ export default function CreateCharacterModal({ user, onCreated, onClose }) {
       level: 1, xp: 0, gold: 50,
       hp: maxHp, max_hp: maxHp,
       stats,
+      skills: baseClassDef?.startingSkills || {},
+      derived_stats: derived,
+      abilities,
+      active_effects: [],
+      stat_points: 0,
       is_online: true,
       status: "idle"
     });
