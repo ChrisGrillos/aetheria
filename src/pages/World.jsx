@@ -28,6 +28,9 @@ export default function World() {
   const [viewPos, setViewPos] = useState(null);
   const [combatMonster, setCombatMonster] = useState(null);
   const [showInventory, setShowInventory] = useState(false);
+  const [fastTravelTarget, setFastTravelTarget] = useState(null);
+  const [fastTravelProgress, setFastTravelProgress] = useState(0);
+  const fastTravelRef = useRef(null);
 
   useEffect(() => {
     loadWorld();
