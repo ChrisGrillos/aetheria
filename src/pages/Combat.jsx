@@ -118,14 +118,32 @@ export default function Combat() {
           )}
         </div>
 
-        {myCharacter && (
-          <div className="bg-gray-900 border border-gray-700 rounded-xl p-4 mb-6 flex gap-6">
-            <div className="flex items-center gap-2 text-green-400"><Heart className="w-4 h-4" /> {myCharacter.hp}/{myCharacter.max_hp}</div>
-            <div className="flex items-center gap-2 text-amber-400">💰 {myCharacter.gold}g</div>
-            <div className="flex items-center gap-2 text-purple-400">⭐ {myCharacter.xp} XP</div>
-            <div className="flex items-center gap-2 text-blue-400">Lv.{myCharacter.level} {myCharacter.class}</div>
-          </div>
-        )}
+        {myCharacter && (() => {
+          const derived = calculateDerivedStats(myCharacter);
+          const xpNeeded = xpToNextLevel(myCharacter.level || 1);
+          const xpPct = Math.min(100, Math.floor(((myCharacter.xp || 0) / xpNeeded) * 100));
+          return (
+            <div className="bg-gray-900 border border-gray-700 rounded-xl p-4 mb-6">
+              <div className="flex flex-wrap gap-4 mb-3">
+                <div className="flex items-center gap-2 text-green-400"><Heart className="w-4 h-4" /> {myCharacter.hp}/{myCharacter.max_hp}</div>
+                <div className="flex items-center gap-2 text-amber-400">💰 {myCharacter.gold}g</div>
+                <div className="flex items-center gap-2 text-purple-400">⭐ {myCharacter.xp}/{xpNeeded} XP</div>
+                <div className="flex items-center gap-2 text-blue-400">Lv.{myCharacter.level} {myCharacter.base_class || myCharacter.class}</div>
+                {myCharacter.specialization && <div className="text-purple-300 text-sm">✦ {myCharacter.specialization.replace(/_/g," ")}</div>}
+              </div>
+              {/* XP bar */}
+              <div className="h-1.5 bg-gray-800 rounded-full mb-3 overflow-hidden">
+                <div className="h-full bg-purple-500 rounded-full transition-all" style={{ width: `${xpPct}%` }} />
+              </div>
+              <div className="grid grid-cols-4 gap-2 text-xs">
+                <div className="bg-red-900/20 rounded-lg p-1.5 text-center"><div className="text-red-400 font-bold">{derived.attack_power}</div><div className="text-gray-600">ATK</div></div>
+                <div className="bg-blue-900/20 rounded-lg p-1.5 text-center"><div className="text-blue-400 font-bold">{derived.defense}</div><div className="text-gray-600">DEF</div></div>
+                <div className="bg-yellow-900/20 rounded-lg p-1.5 text-center"><div className="text-yellow-400 font-bold">{derived.critical_hit_chance}%</div><div className="text-gray-600">CRIT</div></div>
+                <div className="bg-green-900/20 rounded-lg p-1.5 text-center"><div className="text-green-400 font-bold">{derived.evasion}%</div><div className="text-gray-600">EVA</div></div>
+              </div>
+            </div>
+          );
+        })()}
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
           {monsters.filter(m => m.is_alive).map(monster => (
