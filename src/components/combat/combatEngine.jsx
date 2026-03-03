@@ -2,6 +2,14 @@ import { shouldLevelUp, levelUpUpdates } from "@/components/shared/charUtils";
 
 /**
  * Shared combat resolution engine used by both CombatOverlay and TravelEncounterModal.
+ *
+ * ABILITY SCALING CONVENTION:
+ * effect_magnitude is a MULTIPLIER expressed as percentage of base damage.
+ *   100 = 1.0x (normal attack)
+ *   150 = 1.5x (+50% damage)
+ *   200 = 2.0x (double damage)
+ *   500 = 5.0x
+ * Buff/heal/debuff magnitudes are flat amounts, not multipliers.
  */
 
 export function calcAttackDamage(attacker, defender, ability = null) {
