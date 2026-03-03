@@ -43,6 +43,7 @@ export default function Home() {
           { icon: Bot, label: "Market", href: createPageUrl("Economy"), color: "text-amber-300" },
           { icon: Zap, label: "Crafting", href: createPageUrl("Crafting"), color: "text-orange-400" },
           { icon: Video, label: "Capture", href: createPageUrl("Recording"), color: "text-teal-400" },
+          { icon: Map, label: "World Map", href: createPageUrl("WorldMapView"), color: "text-emerald-400" },
           { icon: Zap, label: "Housing", href: createPageUrl("Housing"), color: "text-yellow-300" },
           { icon: Shield, label: "Guilds", href: createPageUrl("Guilds"), color: "text-purple-400" },
         ].map(({ icon: Icon, label, href, color }) => (
