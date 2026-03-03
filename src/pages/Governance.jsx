@@ -190,6 +190,7 @@ export default function Governance() {
                 hasVoted={myVotes.some(v => v.proposal_id === p.id)}
                 myVote={myVotes.find(v => v.proposal_id === p.id)}
                 onVote={handleVote}
+                surgeWarning={surgeWarnings.find(w => w.proposalId === p.id)}
               />
             ))}
             {filtered.length === 0 && (
