@@ -35,7 +35,7 @@ const CLASS_EMOJI = {
   merchant: "💰", craftsman: "🔨", fighter: "🥊", magician: "✨"
 };
 
-export default function WorldMap({ myCharacter, allCharacters, monsters, worldObjects, onMove }) {
+export default function WorldMap({ myCharacter, allCharacters, monsters, worldObjects, onMove, activeEvents = [] }) {
   const canvasRef = useRef(null);
 
   const draw = useCallback(() => {
