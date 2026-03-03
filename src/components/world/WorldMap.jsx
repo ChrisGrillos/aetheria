@@ -57,6 +57,9 @@ export default function WorldMap({ myCharacter, allCharacters, monsters, worldOb
       }
     }
 
+    // Draw event overlays
+    drawEventOverlays(ctx, activeEvents, TILE_SIZE);
+
     // Draw world objects
     worldObjects.forEach(obj => {
       ctx.font = `${TILE_SIZE - 2}px serif`;
@@ -104,7 +107,7 @@ export default function WorldMap({ myCharacter, allCharacters, monsters, worldOb
       ctx.textBaseline = "middle";
       ctx.fillText(myCharacter.avatar_emoji || CLASS_EMOJI[myCharacter.class] || "🧑", px, py);
     }
-  }, [myCharacter, allCharacters, monsters, worldObjects]);
+  }, [myCharacter, allCharacters, monsters, worldObjects, activeEvents]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
