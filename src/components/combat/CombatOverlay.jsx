@@ -9,6 +9,7 @@ import AbilityBar from "./AbilityBar";
 import CombatCharCard from "./CombatCharCard";
 import LootPopup from "./LootPopup";
 import { rollLoot } from "@/components/shared/lootTables";
+import { getZoneAt } from "@/components/shared/worldZones";
 
 const MONSTER_EMOJI = {
   goblin: "👺", orc: "👹", dragon: "🐉", skeleton: "💀",
@@ -199,7 +200,8 @@ export default function CombatOverlay({ character, monster, onClose, onVictory, 
     setPhase("victory");
     const xpGain   = monster.xp_reward || (monster.level || 1) * 20;
     const goldGain  = monster.gold_reward || (monster.level || 1) * 8;
-    const drop = rollLoot(monster, getZoneAt ? null : null);
+    const zone = getZoneAt(character.x || 20, character.y || 18);
+    const drop = rollLoot(monster, zone);
     setLoot(drop);
     addLog(`🏆 Victory! +${xpGain} XP, +${goldGain} gold!`);
 
