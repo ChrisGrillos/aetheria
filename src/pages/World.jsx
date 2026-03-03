@@ -288,10 +288,11 @@ export default function World() {
           character={myCharacter}
           monster={combatMonster}
           onClose={() => setCombatMonster(null)}
-          onVictory={async (updates) => {
-            const updated = { ...myCharacter, ...updates };
-            setMyCharacter(updated);
-            // Persist monster death to DB so all players see it
+          onVictory={async (updates, drop) => {
+            // Apply all updates (hp, xp, gold, energy, inventory) to local state
+            setMyCharacter(prev => ({ ...prev, ...updates }));
+            setAllCharacters(prev => prev.map(c => c.id === myCharacter.id ? { ...c, ...updates } : c));
+            // Persist monster death
             await base44.entities.Monster.update(combatMonster.id, {
               is_alive: false,
               hp: 0,
