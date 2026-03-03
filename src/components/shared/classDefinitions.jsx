@@ -62,9 +62,9 @@ export const BASE_CLASSES = {
     primarySkills: ["research", "diplomacy"],
     startingSkills: { research: 15, diplomacy: 10, healing: 5, combat: 3, crafting: 6, resource_management: 4, trading: 4, leadership: 5 },
     baseAbilities: [
-      { id: "fireball", name: "Fireball", description: "Launch a magical bolt for 2x intelligence damage.", type: "active", effect_type: "damage", effect_magnitude: 200, cooldown_rounds: 2, unlocked_at_level: 1, source: "base_class" },
-      { id: "arcane_insight", name: "Arcane Insight", description: "Passive: +10% research & crafting skill effectiveness.", type: "passive", effect_type: "buff", effect_magnitude: 10, cooldown_rounds: 0, unlocked_at_level: 1, source: "base_class" },
-      { id: "frost_nova", name: "Frost Nova", description: "Freeze enemy: apply slow debuff -20 evasion for 2 rounds.", type: "active", effect_type: "debuff", effect_magnitude: 20, cooldown_rounds: 4, unlocked_at_level: 3, source: "base_class" },
+      { id: "fireball", name: "Fireball", description: "Launch a magical bolt for 2x intelligence damage.", type: "active", effect_type: "damage", effect_magnitude: 200, cooldown_rounds: 2, energy_cost: 12, unlocked_at_level: 1, source: "base_class" },
+      { id: "arcane_insight", name: "Arcane Insight", description: "Passive: +10% research & crafting skill effectiveness.", type: "passive", effect_type: "buff", effect_magnitude: 10, cooldown_rounds: 0, energy_cost: 0, unlocked_at_level: 1, source: "base_class" },
+      { id: "frost_nova", name: "Frost Nova", description: "Freeze enemy: apply slow debuff -20 evasion for 2 rounds.", type: "active", effect_type: "debuff", effect_magnitude: 20, cooldown_rounds: 4, energy_cost: 18, unlocked_at_level: 3, source: "base_class" },
     ],
     specializations: {
       elementalist: {
