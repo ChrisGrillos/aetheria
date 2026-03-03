@@ -187,10 +187,10 @@ export const BASE_CLASSES = {
         unlockLevel: 5,
         statBonuses: { wisdom: 4, intelligence: 3, strength: -1 },
         abilities: [
-          { id: "totem_heal", name: "Healing Totem", description: "Place a totem that heals 15 HP per round for 3 rounds.", type: "active", effect_type: "heal", effect_magnitude: 15, cooldown_rounds: 4, unlocked_at_level: 5, source: "specialization" },
-          { id: "lightning_bolt", name: "Lightning Bolt", description: "Strike for 100% intelligence-based damage.", type: "active", effect_type: "damage", effect_magnitude: 100, cooldown_rounds: 2, unlocked_at_level: 6, source: "specialization" },
-          { id: "spirit_walk", name: "Spirit Walk", description: "Passive: +15% evasion and healing power.", type: "passive", effect_type: "buff", effect_magnitude: 15, cooldown_rounds: 0, unlocked_at_level: 8, source: "specialization" },
-          { id: "chain_heal", name: "Chain Heal", description: "Ultimate: Heal entire party for 60 HP each.", type: "ultimate", effect_type: "heal", effect_magnitude: 60, cooldown_rounds: 10, unlocked_at_level: 10, source: "specialization" },
+          { id: "totem_heal", name: "Healing Totem", description: "Place a totem that heals 15 HP per round for 3 rounds.", type: "active", effect_type: "heal", effect_magnitude: 15, cooldown_rounds: 4, energy_cost: 15, unlocked_at_level: 5, source: "specialization" },
+          { id: "lightning_bolt", name: "Lightning Bolt", description: "Strike for 100% intelligence-based damage.", type: "active", effect_type: "damage", effect_magnitude: 100, cooldown_rounds: 2, energy_cost: 12, unlocked_at_level: 6, source: "specialization" },
+          { id: "spirit_walk", name: "Spirit Walk", description: "Passive: +15% evasion and healing power.", type: "passive", effect_type: "buff", effect_magnitude: 15, cooldown_rounds: 0, energy_cost: 0, unlocked_at_level: 8, source: "specialization" },
+          { id: "chain_heal", name: "Chain Heal", description: "Ultimate: Heal entire party for 60 HP each.", type: "ultimate", effect_type: "heal", effect_magnitude: 60, cooldown_rounds: 10, energy_cost: 35, unlocked_at_level: 10, source: "specialization" },
         ]
       },
       druid: {
