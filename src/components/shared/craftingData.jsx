@@ -381,8 +381,23 @@ export function canCraft(recipe, inventory, craftingSkill) {
   return { can: true, reason: "" };
 }
 
+/**
+ * Calculate quality tier based on skill vs requirement.
+ * Returns: "poor" | "normal" | "fine" | "masterwork"
+ */
+export function calcQuality(craftingSkill, recipe, hasSpecBonus) {
+  if (hasSpecBonus) return "masterwork";
+  const ratio = craftingSkill / Math.max(recipe.skill_required, 1);
+  if (ratio >= 3) return "fine";
+  if (ratio >= 1.5) return "normal";
+  return "poor";
+}
+
+/** Quality multipliers for numeric stat bonuses */
+const QUALITY_MULT = { poor: 0.75, normal: 1.0, fine: 1.15, masterwork: 1.35 };
+
 /** Apply crafting to inventory: remove ingredients, add result item. */
-export function craftItem(recipe, inventory, hasSpecBonus) {
+export function craftItem(recipe, inventory, hasSpecBonus, craftingSkill = 1) {
   let inv = [...(inventory || [])];
 
   // Remove ingredients
@@ -394,14 +409,14 @@ export function craftItem(recipe, inventory, hasSpecBonus) {
     }
   }
 
-  // Quality modifier for specialization bonus
-  const quality = hasSpecBonus ? "masterwork" : "normal";
+  // Quality modifier based on skill level and specialization
+  const quality = calcQuality(craftingSkill, recipe, hasSpecBonus);
+  const mult = QUALITY_MULT[quality] || 1.0;
   const result = { ...recipe.result };
-  if (hasSpecBonus) {
-    // 25% bonus to all numeric stats
+  if (mult !== 1.0) {
     for (const key of Object.keys(result)) {
-      if (typeof result[key] === "number" && key !== "durability") {
-        result[key] = Math.floor(result[key] * 1.25);
+      if (typeof result[key] === "number" && !["durability", "duration"].includes(key)) {
+        result[key] = Math.floor(result[key] * mult);
       }
     }
   }
