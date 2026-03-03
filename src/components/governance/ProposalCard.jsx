@@ -83,10 +83,22 @@ export default function ProposalCard({ proposal, myCharacter, hasVoted, myVote, 
         </div>
       </div>
 
+      {surgeWarning && (
+        <div className="mb-2 bg-yellow-950 border border-yellow-700 rounded-lg px-3 py-1.5 text-xs text-yellow-300 flex items-center gap-2">
+          ⚠️ Unusual voting activity ({surgeWarning.count} votes in 5 min) — under review.
+        </div>
+      )}
+
       <div className="mb-3">
         <div className="flex justify-between text-xs text-gray-400 mb-1">
-          <span className="text-green-400">👍 {proposal.votes_for || 0} for ({forPct}%)</span>
-          <span className="text-red-400">👎 {proposal.votes_against || 0} against</span>
+          <span className="text-green-400">
+            👍 {proposal.votes_for || 0} for ({forPct}%)
+            {proposal.weighted_for > 0 && <span className="text-gray-500 ml-1">· Power: {(proposal.weighted_for || 0).toFixed(1)}</span>}
+          </span>
+          <span className="text-red-400">
+            👎 {proposal.votes_against || 0} against
+            {proposal.weighted_against > 0 && <span className="text-gray-500 ml-1">· Power: {(proposal.weighted_against || 0).toFixed(1)}</span>}
+          </span>
         </div>
         <div className="w-full bg-gray-800 rounded-full h-2">
           <div className="bg-green-500 h-2 rounded-full transition-all" style={{ width: `${forPct}%` }} />
@@ -94,16 +106,28 @@ export default function ProposalCard({ proposal, myCharacter, hasVoted, myVote, 
       </div>
 
       {myCharacter && !hasVoted && proposal.status === "active" && (
-        <div className="flex gap-2 flex-wrap">
-          <Button size="sm" onClick={() => handleVoteClick("for")} className="bg-green-700 hover:bg-green-600 text-white font-bold flex gap-1">
-            <ThumbsUp className="w-3 h-3" /> Vote For
-          </Button>
-          <Button size="sm" onClick={() => handleVoteClick("against")} className="bg-red-800 hover:bg-red-700 text-white font-bold flex gap-1">
-            <ThumbsDown className="w-3 h-3" /> Vote Against
-          </Button>
-          <Button size="sm" variant="outline" onClick={() => setShowAmend(true)} className="border-purple-700 text-purple-300 hover:bg-purple-900/30 flex gap-1">
-            <FilePen className="w-3 h-3" /> Amend
-          </Button>
+        <div className="space-y-2">
+          {!eligible && (
+            <div className="text-xs text-yellow-400 bg-yellow-950/50 border border-yellow-800 rounded px-2 py-1.5">
+              {errors.join(" ")}
+            </div>
+          )}
+          <div className="flex gap-2 flex-wrap items-center">
+            <Button size="sm" onClick={() => handleVoteClick("for")} disabled={!eligible}
+              className="bg-green-700 hover:bg-green-600 text-white font-bold flex gap-1 disabled:opacity-40">
+              <ThumbsUp className="w-3 h-3" /> Vote For
+            </Button>
+            <Button size="sm" onClick={() => handleVoteClick("against")} disabled={!eligible}
+              className="bg-red-800 hover:bg-red-700 text-white font-bold flex gap-1 disabled:opacity-40">
+              <ThumbsDown className="w-3 h-3" /> Vote Against
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => setShowAmend(true)} className="border-purple-700 text-purple-300 hover:bg-purple-900/30 flex gap-1">
+              <FilePen className="w-3 h-3" /> Amend
+            </Button>
+            {eligible && (
+              <span className="text-xs text-gray-500 ml-auto">⚖️ Power: {votingPower}</span>
+            )}
+          </div>
         </div>
       )}
 
