@@ -51,7 +51,10 @@ export default function CharacterHUD({ character, onInventory, onUpdateCharacter
         <div className="flex items-center gap-1.5 min-w-0">
           <span className="text-xl leading-none">{character.avatar_emoji || "🧑"}</span>
           <div className="min-w-0">
-            <div className="text-xs font-black text-amber-400 leading-tight truncate">{character.name}</div>
+            <div className="text-xs font-black text-amber-400 leading-tight truncate">
+              {character.name}
+              {character.active_title && <span className="ml-1 text-purple-400 font-semibold">«{character.active_title}»</span>}
+            </div>
             <div className="text-xs text-gray-600 capitalize leading-tight">Lv.{character.level || 1} {character.base_class || character.class}</div>
           </div>
         </div>
