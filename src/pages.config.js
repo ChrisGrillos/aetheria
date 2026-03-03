@@ -56,9 +56,10 @@ import Economy from './pages/Economy';
 import Governance from './pages/Governance';
 import Home from './pages/Home';
 import Jobs from './pages/Jobs';
+import Recording from './pages/Recording';
 import World from './pages/World';
 import WorldEvents from './pages/WorldEvents';
-import Recording from './pages/Recording';
+import Housing from './pages/Housing';
 import __Layout from './Layout.jsx';
 
 
@@ -72,9 +73,10 @@ export const PAGES = {
     "Governance": Governance,
     "Home": Home,
     "Jobs": Jobs,
+    "Recording": Recording,
     "World": World,
     "WorldEvents": WorldEvents,
-    "Recording": Recording,
+    "Housing": Housing,
 }
 
 export const pagesConfig = {
