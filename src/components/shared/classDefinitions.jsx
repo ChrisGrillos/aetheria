@@ -215,9 +215,9 @@ export const BASE_CLASSES = {
     primarySkills: ["trading", "diplomacy"],
     startingSkills: { trading: 15, diplomacy: 12, resource_management: 8, leadership: 6, research: 4, combat: 2, healing: 2, crafting: 3 },
     baseAbilities: [
-      { id: "haggle", name: "Master Haggle", description: "Passive: +20% gold from trades and jobs.", type: "passive", effect_type: "utility", effect_magnitude: 20, cooldown_rounds: 0, unlocked_at_level: 1, source: "base_class" },
-      { id: "silver_tongue", name: "Silver Tongue", description: "Charm enemy: reduce their attack by 20% for 2 rounds.", type: "active", effect_type: "debuff", effect_magnitude: 20, cooldown_rounds: 3, unlocked_at_level: 1, source: "base_class" },
-      { id: "bribe", name: "Bribe", description: "Spend 15 gold to end combat immediately.", type: "active", effect_type: "utility", effect_magnitude: 15, cooldown_rounds: 6, unlocked_at_level: 3, source: "base_class" },
+      { id: "haggle", name: "Master Haggle", description: "Passive: +20% gold from trades and jobs.", type: "passive", effect_type: "utility", effect_magnitude: 20, cooldown_rounds: 0, energy_cost: 0, unlocked_at_level: 1, source: "base_class" },
+      { id: "silver_tongue", name: "Silver Tongue", description: "Charm enemy: reduce their attack by 20% for 2 rounds.", type: "active", effect_type: "debuff", effect_magnitude: 20, cooldown_rounds: 3, energy_cost: 12, unlocked_at_level: 1, source: "base_class" },
+      { id: "bribe", name: "Bribe", description: "Spend 15 gold to end combat immediately.", type: "active", effect_type: "utility", effect_magnitude: 15, cooldown_rounds: 6, energy_cost: 15, unlocked_at_level: 3, source: "base_class" },
     ],
     specializations: {
       tycoon: {
