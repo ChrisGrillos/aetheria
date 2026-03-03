@@ -250,10 +250,10 @@ export const BASE_CLASSES = {
         unlockLevel: 5,
         statBonuses: { dexterity: 4, charisma: 3, constitution: -1 },
         abilities: [
-          { id: "pickpocket", name: "Pickpocket", description: "Steal 10-25 gold from enemy.", type: "active", effect_type: "utility", effect_magnitude: 25, cooldown_rounds: 3, unlocked_at_level: 5, source: "specialization" },
-          { id: "smokebomb", name: "Smoke Bomb", description: "+50 evasion for 2 rounds.", type: "active", effect_type: "buff", effect_magnitude: 50, cooldown_rounds: 4, unlocked_at_level: 6, source: "specialization" },
-          { id: "black_market", name: "Black Market", description: "Passive: Find rare items at 30% reduced cost.", type: "passive", effect_type: "utility", effect_magnitude: 30, cooldown_rounds: 0, unlocked_at_level: 8, source: "specialization" },
-          { id: "heist", name: "The Great Heist", description: "Ultimate: Rob entire enemy inventory.", type: "ultimate", effect_type: "utility", effect_magnitude: 100, cooldown_rounds: 12, unlocked_at_level: 10, source: "specialization" },
+          { id: "pickpocket", name: "Pickpocket", description: "Steal 10-25 gold from enemy.", type: "active", effect_type: "utility", effect_magnitude: 25, cooldown_rounds: 3, energy_cost: 12, unlocked_at_level: 5, source: "specialization" },
+          { id: "smokebomb", name: "Smoke Bomb", description: "+50 evasion for 2 rounds.", type: "active", effect_type: "buff", effect_magnitude: 50, cooldown_rounds: 4, energy_cost: 18, unlocked_at_level: 6, source: "specialization" },
+          { id: "black_market", name: "Black Market", description: "Passive: Find rare items at 30% reduced cost.", type: "passive", effect_type: "utility", effect_magnitude: 30, cooldown_rounds: 0, energy_cost: 0, unlocked_at_level: 8, source: "specialization" },
+          { id: "heist", name: "The Great Heist", description: "Ultimate: Rob entire enemy inventory.", type: "ultimate", effect_type: "utility", effect_magnitude: 100, cooldown_rounds: 12, energy_cost: 38, unlocked_at_level: 10, source: "specialization" },
         ]
       }
     }
