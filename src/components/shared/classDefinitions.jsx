@@ -301,10 +301,10 @@ export const BASE_CLASSES = {
         unlockLevel: 5,
         statBonuses: { intelligence: 3, strength: 3, constitution: 2 },
         abilities: [
-          { id: "rune_weapon", name: "Rune Weapon", description: "+30 attack power for 4 rounds from a runic inscription.", type: "active", effect_type: "buff", effect_magnitude: 30, cooldown_rounds: 4, unlocked_at_level: 5, source: "specialization" },
-          { id: "rune_shield", name: "Rune Shield", description: "+30 defense and absorb 20 damage for 3 rounds.", type: "active", effect_type: "buff", effect_magnitude: 30, cooldown_rounds: 4, unlocked_at_level: 6, source: "specialization" },
-          { id: "ancient_runes", name: "Ancient Runes", description: "Passive: Craft items with +25% power and 10% chance of legendary quality.", type: "passive", effect_type: "utility", effect_magnitude: 25, cooldown_rounds: 0, unlocked_at_level: 8, source: "specialization" },
-          { id: "rune_bomb", name: "Rune Bomb", description: "Ultimate: Explode runes for 4x magic damage.", type: "ultimate", effect_type: "damage", effect_magnitude: 400, cooldown_rounds: 10, unlocked_at_level: 10, source: "specialization" },
+          { id: "rune_weapon", name: "Rune Weapon", description: "+30 attack power for 4 rounds from a runic inscription.", type: "active", effect_type: "buff", effect_magnitude: 30, cooldown_rounds: 4, energy_cost: 18, unlocked_at_level: 5, source: "specialization" },
+          { id: "rune_shield", name: "Rune Shield", description: "+30 defense and absorb 20 damage for 3 rounds.", type: "active", effect_type: "buff", effect_magnitude: 30, cooldown_rounds: 4, energy_cost: 18, unlocked_at_level: 6, source: "specialization" },
+          { id: "ancient_runes", name: "Ancient Runes", description: "Passive: Craft items with +25% power and 10% chance of legendary quality.", type: "passive", effect_type: "utility", effect_magnitude: 25, cooldown_rounds: 0, energy_cost: 0, unlocked_at_level: 8, source: "specialization" },
+          { id: "rune_bomb", name: "Rune Bomb", description: "Ultimate: Explode runes for 4x magic damage.", type: "ultimate", effect_type: "damage", effect_magnitude: 400, cooldown_rounds: 10, energy_cost: 38, unlocked_at_level: 10, source: "specialization" },
         ]
       }
     }
