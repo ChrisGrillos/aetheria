@@ -174,7 +174,14 @@ export default function World() {
 
   return (
     <div className="h-screen bg-gray-950 flex flex-col overflow-hidden">
-      <CharacterHUD character={myCharacter} onInventory={() => setShowInventory(true)} />
+      <CharacterHUD
+        character={myCharacter}
+        onInventory={() => setShowInventory(true)}
+        onUpdateCharacter={(updated) => {
+          setMyCharacter(updated);
+          setAllCharacters(prev => prev.map(c => c.id === updated.id ? updated : c));
+        }}
+      />
       <div className="flex flex-1 overflow-hidden">
         <div className="flex-1 relative">
           <WorldMap
