@@ -11,6 +11,7 @@ import CombatCharCard from "./CombatCharCard";
 import LootPopup from "./LootPopup";
 import { rollLoot } from "@/components/shared/lootTables";
 import { getZoneAt } from "@/components/shared/worldZones";
+import { addItemToInventory } from "@/components/shared/inventoryUtils";
 
 const MONSTER_EMOJI = {
   goblin: "👺", orc: "👹", dragon: "🐉", skeleton: "💀",
