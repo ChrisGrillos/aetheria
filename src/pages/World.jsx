@@ -7,6 +7,7 @@ import ChatPanel from "@/components/world/ChatPanel.jsx";
 import CharacterHUD from "@/components/world/CharacterHUD.jsx";
 import TravelEncounterModal from "@/components/world/TravelEncounterModal.jsx";
 import ZoneInfoPanel from "@/components/world/ZoneInfoPanel.jsx";
+import CombatOverlay from "@/components/combat/CombatOverlay.jsx";
 import { getZoneAt, getPOIAt, rollEncounter, calcTravelSteps } from "@/components/shared/worldZones";
 import { RESOURCES } from "@/components/shared/craftingData";
 
@@ -22,6 +23,7 @@ export default function World() {
   const [encounter, setEncounter] = useState(null);
   const [encounterZone, setEncounterZone] = useState(null);
   const [viewPos, setViewPos] = useState(null);
+  const [combatMonster, setCombatMonster] = useState(null);
 
   useEffect(() => {
     loadWorld();
@@ -171,6 +173,7 @@ export default function World() {
             worldObjects={worldObjects}
             onMove={handleMove}
             activeEvents={activeEvents}
+            onMonsterClick={(monster) => setCombatMonster(monster)}
           />
           {/* Zone info overlay bottom-left */}
           {viewPos && (
@@ -181,6 +184,26 @@ export default function World() {
         </div>
         <ChatPanel messages={messages} onSend={handleSendMessage} myCharacter={myCharacter} />
       </div>
+
+      {combatMonster && myCharacter && (
+        <CombatOverlay
+          character={myCharacter}
+          monster={combatMonster}
+          onClose={() => setCombatMonster(null)}
+          onVictory={(updates) => {
+            const updated = { ...myCharacter, ...updates };
+            setMyCharacter(updated);
+            setMonsters(prev => prev.map(m => m.id === combatMonster.id ? { ...m, is_alive: false } : m));
+            setCombatMonster(null);
+          }}
+          onDefeat={() => {
+            const respawned = { ...myCharacter, x: 30, y: 25, hp: Math.floor((myCharacter.max_hp || 100) * 0.5), gold: Math.floor((myCharacter.gold || 0) * 0.9) };
+            setMyCharacter(respawned);
+            base44.entities.Character.update(myCharacter.id, { x: 30, y: 25, hp: respawned.hp, gold: respawned.gold });
+            setCombatMonster(null);
+          }}
+        />
+      )}
 
       {encounter && myCharacter && (
         <TravelEncounterModal
