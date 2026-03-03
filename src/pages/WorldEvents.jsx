@@ -225,6 +225,29 @@ Return JSON: outcome (string), spawn_quest (boolean), quest_title (string or nul
                   {event.initiated_by_agent_name && (
                     <div className="mt-2 text-xs text-cyan-400">🤖 Initiated by agent: {event.initiated_by_agent_name}</div>
                   )}
+
+                  {/* Intervention Options */}
+                  {event.world_impact?.intervention_options?.length > 0 && event.status === "active" && (
+                    <div className="mt-3 pt-3 border-t border-gray-700">
+                      <div className="text-xs text-gray-500 mb-2 uppercase tracking-widest">Intervention Options</div>
+                      <div className="flex flex-wrap gap-2">
+                        {event.world_impact.intervention_options.map((opt, i) => (
+                          <span key={i} className="text-xs bg-gray-800 border border-gray-700 text-gray-300 px-2 py-1 rounded-lg">
+                            {["⚔️","🤝","🔍"][i % 3]} {opt}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {event.world_impact?.original_category && event.world_impact.original_category !== event.event_type && (
+                    <div className="mt-2 text-xs text-purple-400">
+                      {event.world_impact.original_category === "diplomatic_incident" && "🏛️ Diplomatic Incident"}
+                      {event.world_impact.original_category === "bandit_cartel" && "🗡️ Bandit Cartel"}
+                      {event.world_impact.original_category === "guild_conflict" && "⚔️ Guild Conflict"}
+                    </div>
+                  )}
+
                   {event.outcome && (
                     <div className="mt-3 pt-3 border-t border-gray-700 text-xs text-gray-400 italic">
                       Outcome: {event.outcome}
