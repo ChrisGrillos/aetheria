@@ -277,10 +277,10 @@ export const BASE_CLASSES = {
         unlockLevel: 5,
         statBonuses: { intelligence: 4, dexterity: 3, strength: 1 },
         abilities: [
-          { id: "turret", name: "Deploy Turret", description: "Place a turret dealing 40% attack each round for 3 rounds.", type: "active", effect_type: "damage", effect_magnitude: 40, cooldown_rounds: 5, unlocked_at_level: 5, source: "specialization" },
-          { id: "explosive", name: "Explosive Device", description: "Detonate for 200% damage.", type: "active", effect_type: "damage", effect_magnitude: 200, cooldown_rounds: 5, unlocked_at_level: 6, source: "specialization" },
-          { id: "overclock", name: "Overclock", description: "Passive: +20 attack power and craft quality.", type: "passive", effect_type: "buff", effect_magnitude: 20, cooldown_rounds: 0, unlocked_at_level: 8, source: "specialization" },
-          { id: "mech_suit", name: "Mech Suit", description: "Ultimate: +100 defense and +50 attack for 3 rounds.", type: "ultimate", effect_type: "buff", effect_magnitude: 100, cooldown_rounds: 12, unlocked_at_level: 10, source: "specialization" },
+          { id: "turret", name: "Deploy Turret", description: "Place a turret dealing 40% attack each round for 3 rounds.", type: "active", effect_type: "damage", effect_magnitude: 40, cooldown_rounds: 5, energy_cost: 18, unlocked_at_level: 5, source: "specialization" },
+          { id: "explosive", name: "Explosive Device", description: "Detonate for 200% damage.", type: "active", effect_type: "damage", effect_magnitude: 200, cooldown_rounds: 5, energy_cost: 22, unlocked_at_level: 6, source: "specialization" },
+          { id: "overclock", name: "Overclock", description: "Passive: +20 attack power and craft quality.", type: "passive", effect_type: "buff", effect_magnitude: 20, cooldown_rounds: 0, energy_cost: 0, unlocked_at_level: 8, source: "specialization" },
+          { id: "mech_suit", name: "Mech Suit", description: "Ultimate: +100 defense and +50 attack for 3 rounds.", type: "ultimate", effect_type: "buff", effect_magnitude: 100, cooldown_rounds: 12, energy_cost: 40, unlocked_at_level: 10, source: "specialization" },
         ]
       },
       alchemist: {
