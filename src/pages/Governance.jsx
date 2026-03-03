@@ -3,6 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/components/ui/use-toast";
 import ProposalCard from "@/components/governance/ProposalCard.jsx";
 import NewProposalModal from "@/components/governance/NewProposalModal.jsx";
 import ChroniclePanel from "@/components/governance/ChroniclePanel.jsx";
