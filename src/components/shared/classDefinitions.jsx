@@ -73,10 +73,10 @@ export const BASE_CLASSES = {
         unlockLevel: 5,
         statBonuses: { intelligence: 5, wisdom: 2, constitution: -1 },
         abilities: [
-          { id: "chain_lightning", name: "Chain Lightning", description: "Lightning jumps between enemies, 150% magic damage each.", type: "active", effect_type: "damage", effect_magnitude: 150, cooldown_rounds: 4, unlocked_at_level: 5, source: "specialization" },
-          { id: "blizzard", name: "Blizzard", description: "Summon a blizzard: -30 evasion and attack to enemies for 3 rounds.", type: "active", effect_type: "debuff", effect_magnitude: 30, cooldown_rounds: 5, unlocked_at_level: 6, source: "specialization" },
-          { id: "elemental_mastery", name: "Elemental Mastery", description: "Passive: +20 magic power.", type: "passive", effect_type: "buff", effect_magnitude: 20, cooldown_rounds: 0, unlocked_at_level: 8, source: "specialization" },
-          { id: "meteor", name: "Meteor Strike", description: "Ultimate: Call a meteor for 6x magic damage.", type: "ultimate", effect_type: "damage", effect_magnitude: 600, cooldown_rounds: 10, unlocked_at_level: 10, source: "specialization" },
+          { id: "chain_lightning", name: "Chain Lightning", description: "Lightning jumps between enemies, 150% magic damage each.", type: "active", effect_type: "damage", effect_magnitude: 150, cooldown_rounds: 4, energy_cost: 20, unlocked_at_level: 5, source: "specialization" },
+          { id: "blizzard", name: "Blizzard", description: "Summon a blizzard: -30 evasion and attack to enemies for 3 rounds.", type: "active", effect_type: "debuff", effect_magnitude: 30, cooldown_rounds: 5, energy_cost: 22, unlocked_at_level: 6, source: "specialization" },
+          { id: "elemental_mastery", name: "Elemental Mastery", description: "Passive: +20 magic power.", type: "passive", effect_type: "buff", effect_magnitude: 20, cooldown_rounds: 0, energy_cost: 0, unlocked_at_level: 8, source: "specialization" },
+          { id: "meteor", name: "Meteor Strike", description: "Ultimate: Call a meteor for 6x magic damage.", type: "ultimate", effect_type: "damage", effect_magnitude: 600, cooldown_rounds: 10, energy_cost: 40, unlocked_at_level: 10, source: "specialization" },
         ]
       },
       necromancer: {
