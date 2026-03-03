@@ -22,10 +22,10 @@ export const BASE_CLASSES = {
         unlockLevel: 5,
         statBonuses: { strength: 2, wisdom: 3, constitution: 2 },
         abilities: [
-          { id: "divine_smite", name: "Divine Smite", description: "Deal holy damage equal to 2x attack power.", type: "active", effect_type: "damage", effect_magnitude: 200, cooldown_rounds: 4, unlocked_at_level: 5, source: "specialization" },
-          { id: "lay_on_hands", name: "Lay on Hands", description: "Heal self or ally for 40 HP.", type: "active", effect_type: "heal", effect_magnitude: 40, cooldown_rounds: 3, unlocked_at_level: 6, source: "specialization" },
-          { id: "holy_aura", name: "Holy Aura", description: "Passive +10 defense and +5 healing power.", type: "passive", effect_type: "buff", effect_magnitude: 10, cooldown_rounds: 0, unlocked_at_level: 8, source: "specialization" },
-          { id: "judgment", name: "Judgment", description: "Ultimate: Strike for 3x damage and apply a weakness debuff.", type: "ultimate", effect_type: "damage", effect_magnitude: 300, cooldown_rounds: 8, unlocked_at_level: 10, source: "specialization" },
+          { id: "divine_smite", name: "Divine Smite", description: "Deal holy damage equal to 2x attack power.", type: "active", effect_type: "damage", effect_magnitude: 200, cooldown_rounds: 4, energy_cost: 20, unlocked_at_level: 5, source: "specialization" },
+          { id: "lay_on_hands", name: "Lay on Hands", description: "Heal self or ally for 40 HP.", type: "active", effect_type: "heal", effect_magnitude: 40, cooldown_rounds: 3, energy_cost: 15, unlocked_at_level: 6, source: "specialization" },
+          { id: "holy_aura", name: "Holy Aura", description: "Passive +10 defense and +5 healing power.", type: "passive", effect_type: "buff", effect_magnitude: 10, cooldown_rounds: 0, energy_cost: 0, unlocked_at_level: 8, source: "specialization" },
+          { id: "judgment", name: "Judgment", description: "Ultimate: Strike for 3x damage and apply a weakness debuff.", type: "ultimate", effect_type: "damage", effect_magnitude: 300, cooldown_rounds: 8, energy_cost: 35, unlocked_at_level: 10, source: "specialization" },
         ]
       },
       berserker: {
