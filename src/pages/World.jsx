@@ -160,7 +160,12 @@ export default function World() {
       hpUpdate = myCharacter.max_hp || 100;
     }
 
-    const updates = { x: newX, y: newY };
+    // Regen energy on movement (out of combat)
+    const wisdomMax = 50 + ((myCharacter.stats?.wisdom || 10) * 2);
+    const curEnergy = myCharacter.energy ?? wisdomMax;
+    const newEnergy = Math.min(wisdomMax, curEnergy + 5);
+
+    const updates = { x: newX, y: newY, energy: newEnergy };
     if (inventoryUpdates) updates.inventory = inventoryUpdates;
     if (hpUpdate !== null) updates.hp = hpUpdate;
 
