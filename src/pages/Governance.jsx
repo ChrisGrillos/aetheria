@@ -27,12 +27,36 @@ function getCycleEndDate() {
   return end;
 }
 
+function canVote(character) {
+  const errors = [];
+  if ((character.level || 1) < 2) errors.push("Your character must be at least level 2 to vote.");
+  const ageHours = (Date.now() - new Date(character.created_date).getTime()) / (1000 * 60 * 60);
+  if (ageHours < 24) {
+    const hoursLeft = Math.ceil(24 - ageHours);
+    errors.push(`Character must be 24h old. ${hoursLeft}h remaining.`);
+  }
+  return { eligible: errors.length === 0, errors };
+}
+
+function calcVotingPower(character) {
+  let power = 1.0;
+  power += (character.level || 1) * 0.1;
+  const daysActive = Math.floor((Date.now() - new Date(character.created_date).getTime()) / (1000 * 60 * 60 * 24));
+  power += daysActive * 0.05;
+  power += (character.jobs_completed || 0) * 0.02;
+  power += (character.combats_won || 0) * 0.01;
+  power += character.guild_id ? 0.5 : 0;
+  return Math.min(5.0, Math.round(power * 100) / 100);
+}
+
 export default function Governance() {
   const [proposals, setProposals] = useState([]);
   const [myCharacter, setMyCharacter] = useState(null);
   const [myVotes, setMyVotes] = useState([]);
   const [showNew, setShowNew] = useState(false);
   const [filter, setFilter] = useState("active");
+  const [surgeWarnings, setSurgeWarnings] = useState([]);
+  const { toast } = useToast();
 
   useEffect(() => { loadData(); }, []);
 
