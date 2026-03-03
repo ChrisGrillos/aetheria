@@ -54,6 +54,7 @@ import Combat from './pages/Combat';
 import Crafting from './pages/Crafting';
 import Economy from './pages/Economy';
 import Experimentation from './pages/Experimentation';
+import GMDashboard from './pages/GMDashboard';
 import Governance from './pages/Governance';
 import Guilds from './pages/Guilds';
 import Home from './pages/Home';
@@ -63,7 +64,6 @@ import Recording from './pages/Recording';
 import World from './pages/World';
 import WorldEvents from './pages/WorldEvents';
 import WorldMapView from './pages/WorldMapView';
-import GMDashboard from './pages/GMDashboard';
 import __Layout from './Layout.jsx';
 
 
@@ -75,6 +75,7 @@ export const PAGES = {
     "Crafting": Crafting,
     "Economy": Economy,
     "Experimentation": Experimentation,
+    "GMDashboard": GMDashboard,
     "Governance": Governance,
     "Guilds": Guilds,
     "Home": Home,
@@ -84,7 +85,6 @@ export const PAGES = {
     "World": World,
     "WorldEvents": WorldEvents,
     "WorldMapView": WorldMapView,
-    "GMDashboard": GMDashboard,
 }
 
 export const pagesConfig = {
