@@ -3,22 +3,30 @@ import { base44 } from "@/api/base44Client";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
-import { Bot, Zap } from "lucide-react";
+import { Bot, Zap, ChevronDown, ChevronUp } from "lucide-react";
 import CharacterCard from "@/components/characters/CharacterCard.jsx";
 import SpawnAgentModal from "@/components/agents/SpawnAgentModal.jsx";
+import AgentEventPanel from "@/components/agents/AgentEventPanel.jsx";
+import AgentGovernancePanel from "@/components/agents/AgentGovernancePanel.jsx";
 
 export default function Agents() {
   const [agents, setAgents] = useState([]);
   const [user, setUser] = useState(null);
   const [showSpawn, setShowSpawn] = useState(false);
+  const [activeEvents, setActiveEvents] = useState([]);
+  const [expanded, setExpanded] = useState(null);
 
   useEffect(() => { loadData(); }, []);
 
   const loadData = async () => {
     const u = await base44.auth.me().catch(() => null);
     setUser(u);
-    const all = await base44.entities.Character.filter({ type: "ai_agent" }, "-updated_date", 50);
+    const [all, events] = await Promise.all([
+      base44.entities.Character.filter({ type: "ai_agent" }, "-updated_date", 50),
+      base44.entities.WorldEvent.filter({ status: "active" }),
+    ]);
     setAgents(all);
+    setActiveEvents(events);
   };
 
   return (
