@@ -11,7 +11,7 @@ export const BASE_CLASSES = {
     primarySkills: ["combat", "leadership"],
     startingSkills: { combat: 15, leadership: 8, diplomacy: 3, resource_management: 3, research: 2, healing: 1, crafting: 2, trading: 2 },
     baseAbilities: [
-      { id: "warrior_strike", name: "Power Strike", description: "+50% attack damage this round.", type: "active", effect_type: "damage", effect_magnitude: 50, cooldown_rounds: 3, energy_cost: 15, unlocked_at_level: 1, source: "base_class" },
+      { id: "warrior_strike", name: "Power Strike", description: "+50% attack damage this round.", type: "active", effect_type: "damage", effect_magnitude: 150, cooldown_rounds: 3, energy_cost: 15, unlocked_at_level: 1, source: "base_class" },
       { id: "warrior_passive", name: "Battle Hardened", description: "+5 defense permanently.", type: "passive", effect_type: "buff", effect_magnitude: 5, cooldown_rounds: 0, energy_cost: 0, unlocked_at_level: 1, source: "base_class" },
       { id: "warrior_taunt", name: "Battle Cry", description: "Raise party morale, buff allies attack +10% for 3 rounds.", type: "active", effect_type: "buff", effect_magnitude: 10, cooldown_rounds: 5, energy_cost: 20, unlocked_at_level: 3, source: "base_class" },
     ],

@@ -1,13 +1,31 @@
-import { ZONES } from "@/components/shared/worldZones";
+const ZONE_DROPS = {
+  dark_forest:       ["herb", "wood", "bone", "mushroom"],
+  iron_hills:        ["iron_ore", "stone", "coal"],
+  cursed_swamp:      ["poison_herb", "slime", "bone", "mushroom"],
+  golden_plains:     ["wheat", "wood", "herb", "leather"],
+  volcanic_badlands: ["fire_crystal", "obsidian", "sulfur"],
+  coastal_ruins:     ["stone", "sea_salt", "ancient_relic"],
+  town_center:       ["wood", "stone", "herb"],
+};
 
-const COMMON_DROPS = [
-  { id: "herb",      name: "Forest Herb",     emoji: "🌿", category: "resource" },
-  { id: "wood",      name: "Wood",             emoji: "🪵", category: "resource" },
-  { id: "stone",     name: "Stone",            emoji: "🪨", category: "resource" },
-  { id: "leather",   name: "Leather Scrap",   emoji: "🟫", category: "resource" },
-  { id: "bone",      name: "Bone Fragment",   emoji: "🦴", category: "resource" },
-  { id: "iron_ore",  name: "Iron Ore",        emoji: "⚫", category: "resource" },
-];
+const ZONE_COMMON_DROPS = {
+  herb:         { id: "herb",         name: "Forest Herb",     emoji: "🌿", category: "resource" },
+  wood:         { id: "wood",         name: "Wood",            emoji: "🪵", category: "resource" },
+  stone:        { id: "stone",        name: "Stone",           emoji: "🪨", category: "resource" },
+  leather:      { id: "leather",      name: "Leather Scrap",   emoji: "🟫", category: "resource" },
+  bone:         { id: "bone",         name: "Bone Fragment",   emoji: "🦴", category: "resource" },
+  iron_ore:     { id: "iron_ore",     name: "Iron Ore",        emoji: "⚫", category: "resource" },
+  mushroom:     { id: "mushroom",     name: "Glowing Mushroom",emoji: "🍄", category: "resource" },
+  coal:         { id: "coal",         name: "Coal",            emoji: "⬛", category: "resource" },
+  wheat:        { id: "wheat",        name: "Wheat",           emoji: "🌾", category: "resource" },
+  poison_herb:  { id: "poison_herb",  name: "Poison Herb",     emoji: "☠️", category: "resource" },
+  slime:        { id: "slime",        name: "Slime",           emoji: "🟢", category: "resource" },
+  fire_crystal: { id: "fire_crystal", name: "Fire Crystal",    emoji: "💎", category: "resource" },
+  obsidian:     { id: "obsidian",     name: "Obsidian",        emoji: "🖤", category: "resource" },
+  sulfur:       { id: "sulfur",       name: "Sulfur",          emoji: "🌋", category: "resource" },
+  sea_salt:     { id: "sea_salt",     name: "Sea Salt",        emoji: "🧂", category: "resource" },
+  ancient_relic:{ id: "ancient_relic",name: "Ancient Relic",   emoji: "🏺", category: "material" },
+};
 
 const UNCOMMON_DROPS = [
   { id: "health_potion",  name: "Health Potion",     emoji: "🧪", category: "consumable", heals: 40 },
