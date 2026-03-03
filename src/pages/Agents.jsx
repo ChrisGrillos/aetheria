@@ -12,6 +12,7 @@ import AgentQuestPanel from "@/components/agents/AgentQuestPanel.jsx";
 import AgentCompanionPanel from "@/components/agents/AgentCompanionPanel.jsx";
 import AgentHousingGuildPanel from "@/components/agents/AgentHousingGuildPanel.jsx";
 import AgentDiplomacyTradePanel from "@/components/agents/AgentDiplomacyTradePanel.jsx";
+import AgentExperimentPanel from "@/components/experimentation/AgentExperimentPanel.jsx";
 
 export default function Agents() {
   const [agents, setAgents] = useState([]);
@@ -74,6 +75,7 @@ export default function Agents() {
                   <AgentCompanionPanel agent={a} allAgents={agents} onRefresh={loadData} />
                   <AgentHousingGuildPanel agent={a} onRefresh={loadData} />
                   <AgentDiplomacyTradePanel agent={a} onRefresh={loadData} />
+                  <AgentExperimentPanel agent={a} onRefresh={loadData} />
                 </div>
               )}
             </div>

@@ -46,6 +46,7 @@ export default function Home() {
           { icon: Map, label: "World Map", href: createPageUrl("WorldMapView"), color: "text-emerald-400" },
           { icon: Zap, label: "Housing", href: createPageUrl("Housing"), color: "text-yellow-300" },
           { icon: Shield, label: "Guilds", href: createPageUrl("Guilds"), color: "text-purple-400" },
+          { icon: Zap, label: "Experiments", href: createPageUrl("Experimentation"), color: "text-lime-400" },
         ].map(({ icon: Icon, label, href, color }) => (
           <Link key={label} to={href}>
             <div className="bg-gray-900 border border-gray-800 hover:border-amber-500 rounded-xl p-6 flex flex-col items-center gap-2 transition-all hover:scale-105 cursor-pointer">
