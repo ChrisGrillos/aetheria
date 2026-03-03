@@ -34,10 +34,10 @@ export const BASE_CLASSES = {
         unlockLevel: 5,
         statBonuses: { strength: 5, dexterity: 2, constitution: -1 },
         abilities: [
-          { id: "rage", name: "Berserker Rage", description: "Enter rage: +80% attack, -20 defense for 3 rounds.", type: "active", effect_type: "buff", effect_magnitude: 80, cooldown_rounds: 6, unlocked_at_level: 5, source: "specialization" },
-          { id: "whirlwind", name: "Whirlwind", description: "Attack all enemies, dealing 60% damage each.", type: "active", effect_type: "damage", effect_magnitude: 60, cooldown_rounds: 4, unlocked_at_level: 6, source: "specialization" },
-          { id: "bloodlust", name: "Bloodlust", description: "Passive: Gain 5% attack for each round in combat.", type: "passive", effect_type: "buff", effect_magnitude: 5, cooldown_rounds: 0, unlocked_at_level: 8, source: "specialization" },
-          { id: "annihilate", name: "Annihilate", description: "Ultimate: Deal 5x damage. Lose 30 HP.", type: "ultimate", effect_type: "damage", effect_magnitude: 500, cooldown_rounds: 10, unlocked_at_level: 10, source: "specialization" },
+          { id: "rage", name: "Berserker Rage", description: "Enter rage: +80% attack, -20 defense for 3 rounds.", type: "active", effect_type: "buff", effect_magnitude: 80, cooldown_rounds: 6, energy_cost: 25, unlocked_at_level: 5, source: "specialization" },
+          { id: "whirlwind", name: "Whirlwind", description: "Attack all enemies, dealing 60% damage each.", type: "active", effect_type: "damage", effect_magnitude: 60, cooldown_rounds: 4, energy_cost: 18, unlocked_at_level: 6, source: "specialization" },
+          { id: "bloodlust", name: "Bloodlust", description: "Passive: Gain 5 attack for each round in combat.", type: "passive", effect_type: "buff", effect_magnitude: 5, cooldown_rounds: 0, energy_cost: 0, unlocked_at_level: 8, source: "specialization" },
+          { id: "annihilate", name: "Annihilate", description: "Ultimate: Deal 5x damage. Lose 30 HP.", type: "ultimate", effect_type: "damage", effect_magnitude: 500, cooldown_rounds: 10, energy_cost: 40, unlocked_at_level: 10, source: "specialization" },
         ]
       },
       knight: {
