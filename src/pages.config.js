@@ -54,6 +54,7 @@ import Governance from './pages/Governance';
 import Jobs from './pages/Jobs';
 import Agents from './pages/Agents';
 import Combat from './pages/Combat';
+import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
@@ -69,4 +70,5 @@ export const PAGES = {
 export const pagesConfig = {
     mainPage: "Home",
     Pages: PAGES,
+    Layout: __Layout,
 };
