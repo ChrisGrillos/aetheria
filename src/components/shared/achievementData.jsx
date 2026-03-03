@@ -60,6 +60,46 @@ export const ACHIEVEMENTS = {
     icon_color: "text-red-500",
     title_unlocked: "Honored Friend",
   },
+  boss_defeated: {
+    id: "boss_defeated",
+    name: "Boss Hunter",
+    description: "Defeat a boss-tier monster",
+    emoji: "💀",
+    icon_color: "text-orange-600",
+    title_unlocked: "Monster Slayer",
+  },
+  quest_master: {
+    id: "quest_master",
+    name: "Quest Master",
+    description: "Complete 5 quests or job postings",
+    emoji: "📜",
+    icon_color: "text-indigo-500",
+    title_unlocked: "Quest Veteran",
+  },
+  master_skill: {
+    id: "master_skill",
+    name: "Master",
+    description: "Master any skill to level 50+",
+    emoji: "🎯",
+    icon_color: "text-cyan-500",
+    title_unlocked: "Skill Master",
+  },
+  explorer: {
+    id: "explorer",
+    name: "Explorer",
+    description: "Visit all 7 zones",
+    emoji: "🗺️",
+    icon_color: "text-teal-500",
+    title_unlocked: "World Explorer",
+  },
+  wealth_master: {
+    id: "wealth_master",
+    name: "Tycoon",
+    description: "Accumulate 5000 gold",
+    emoji: "💎",
+    icon_color: "text-yellow-400",
+    title_unlocked: "Wealthy Tycoon",
+  },
 };
 
 export const TITLES = {
