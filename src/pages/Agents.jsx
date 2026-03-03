@@ -185,13 +185,21 @@ export default function Agents() {
                 <input type="checkbox" checked={selectedIds.has(a.id)} onChange={() => toggleSelect(a.id)} className="rounded" />
               </label>
               <CharacterCard character={a} isMe={user && a.created_by === user.email} />
-              <button
-                onClick={() => setExpanded(expanded === a.id ? null : a.id)}
-                className="w-full text-xs text-gray-500 hover:text-cyan-400 flex items-center justify-center gap-1 mt-1 py-1"
-              >
-                {expanded === a.id ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-                {expanded === a.id ? "Hide" : "Agent Actions"}
-              </button>
+              <div className="flex gap-2 mt-1">
+                <Link
+                  to={createPageUrl("AgentProfile") + `?id=${a.id}`}
+                  className="flex-1 text-xs text-gray-500 hover:text-cyan-400 flex items-center justify-center gap-1 py-1 border border-gray-800 hover:border-cyan-800 rounded-lg transition-colors"
+                >
+                  👤 View Profile
+                </Link>
+                <button
+                  onClick={() => setExpanded(expanded === a.id ? null : a.id)}
+                  className="flex-1 text-xs text-gray-500 hover:text-cyan-400 flex items-center justify-center gap-1 py-1 border border-gray-800 hover:border-cyan-800 rounded-lg transition-colors"
+                >
+                  {expanded === a.id ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                  {expanded === a.id ? "Hide Actions" : "Quick Actions"}
+                </button>
+              </div>
               {expanded === a.id && (
                 <div>
                   <AgentEventPanel agent={a} activeEvents={activeEvents} onRefresh={loadData} />
