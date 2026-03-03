@@ -46,10 +46,10 @@ export const BASE_CLASSES = {
         unlockLevel: 5,
         statBonuses: { strength: 2, constitution: 4, charisma: 1 },
         abilities: [
-          { id: "shield_wall", name: "Shield Wall", description: "+30 defense for 2 rounds.", type: "active", effect_type: "buff", effect_magnitude: 30, cooldown_rounds: 4, unlocked_at_level: 5, source: "specialization" },
-          { id: "challenge", name: "Challenge", description: "Force enemy to target you, reduce their attack by 15%.", type: "active", effect_type: "debuff", effect_magnitude: 15, cooldown_rounds: 3, unlocked_at_level: 6, source: "specialization" },
-          { id: "fortress", name: "Fortress Stance", description: "Passive: +8 defense when below 50% HP.", type: "passive", effect_type: "buff", effect_magnitude: 8, cooldown_rounds: 0, unlocked_at_level: 8, source: "specialization" },
-          { id: "unbreakable", name: "Unbreakable", description: "Ultimate: Become immune to damage for 2 rounds.", type: "ultimate", effect_type: "buff", effect_magnitude: 100, cooldown_rounds: 10, unlocked_at_level: 10, source: "specialization" },
+          { id: "shield_wall", name: "Shield Wall", description: "+30 defense for 2 rounds.", type: "active", effect_type: "buff", effect_magnitude: 30, cooldown_rounds: 4, energy_cost: 18, unlocked_at_level: 5, source: "specialization" },
+          { id: "challenge", name: "Challenge", description: "Force enemy to target you, reduce their attack by 15%.", type: "active", effect_type: "debuff", effect_magnitude: 15, cooldown_rounds: 3, energy_cost: 15, unlocked_at_level: 6, source: "specialization" },
+          { id: "fortress", name: "Fortress Stance", description: "Passive: +8 defense when below 50% HP.", type: "passive", effect_type: "buff", effect_magnitude: 8, cooldown_rounds: 0, energy_cost: 0, unlocked_at_level: 8, source: "specialization" },
+          { id: "unbreakable", name: "Unbreakable", description: "Ultimate: Become immune to damage for 2 rounds.", type: "ultimate", effect_type: "buff", effect_magnitude: 100, cooldown_rounds: 10, energy_cost: 35, unlocked_at_level: 10, source: "specialization" },
         ]
       }
     }
