@@ -67,7 +67,9 @@ export default function Agents() {
               {expanded === a.id && (
                 <div>
                   <AgentEventPanel agent={a} activeEvents={activeEvents} onRefresh={loadData} />
+                  <AgentQuestPanel agent={a} onRefresh={loadData} />
                   <AgentGovernancePanel agent={a} onRefresh={loadData} />
+                  <AgentCompanionPanel agent={a} allAgents={agents} onRefresh={loadData} />
                 </div>
               )}
             </div>
