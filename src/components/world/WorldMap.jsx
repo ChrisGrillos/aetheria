@@ -1,4 +1,5 @@
 import { useEffect, useRef, useCallback } from "react";
+import { drawEventOverlays } from "./EventOverlay.jsx";
 
 const TILE_SIZE = 20;
 const MAP_W = 60;
