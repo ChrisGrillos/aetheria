@@ -218,6 +218,62 @@ export function checkAchievements(character, previousCharacter = null) {
     }
   }
 
+  // Dragon Slayer (defeating a dragon boss)
+  if (!unlocked.includes("defeat_dragon") && character.boss_defeats_dragon > (previousCharacter?.boss_defeats_dragon || 0)) {
+    newAchievements.push("defeat_dragon");
+    if (!newTitles.includes("Dragon Slayer")) {
+      newTitles.push("Dragon Slayer");
+    }
+  }
+
+  // Boss Hunter (any boss defeated)
+  const totalBossDefeats = (character.boss_defeats || 0) + (character.boss_defeats_dragon || 0);
+  const prevTotalBossDefeats = (previousCharacter?.boss_defeats || 0) + (previousCharacter?.boss_defeats_dragon || 0);
+  if (!unlocked.includes("boss_defeated") && totalBossDefeats >= 1 && totalBossDefeats > prevTotalBossDefeats) {
+    newAchievements.push("boss_defeated");
+    if (!newTitles.includes("Monster Slayer")) {
+      newTitles.push("Monster Slayer");
+    }
+  }
+
+  // Quest Master (5+ quests completed)
+  const questsCompleted = (character.quests_completed || 0);
+  const prevQuestsCompleted = (previousCharacter?.quests_completed || 0);
+  if (!unlocked.includes("quest_master") && questsCompleted >= 5 && questsCompleted > prevQuestsCompleted) {
+    newAchievements.push("quest_master");
+    if (!newTitles.includes("Quest Veteran")) {
+      newTitles.push("Quest Veteran");
+    }
+  }
+
+  // Master a Skill (any skill to 50+)
+  const skills = character.skills || {};
+  const prevSkills = previousCharacter?.skills || {};
+  const hasMasteredSkill = Object.entries(skills).some(([key, val]) => val >= 50 && (prevSkills[key] || 0) < 50);
+  if (!unlocked.includes("master_skill") && hasMasteredSkill) {
+    newAchievements.push("master_skill");
+    if (!newTitles.includes("Skill Master")) {
+      newTitles.push("Skill Master");
+    }
+  }
+
+  // Explorer (visited all 7 zones)
+  const zonesVisited = new Set(character.zones_visited || []);
+  if (!unlocked.includes("explorer") && zonesVisited.size >= 7) {
+    newAchievements.push("explorer");
+    if (!newTitles.includes("World Explorer")) {
+      newTitles.push("World Explorer");
+    }
+  }
+
+  // Wealth Master (5000 gold)
+  if (!unlocked.includes("wealth_master") && (character.gold || 0) >= 5000) {
+    newAchievements.push("wealth_master");
+    if (!newTitles.includes("Wealthy Tycoon")) {
+      newTitles.push("Wealthy Tycoon");
+    }
+  }
+
   if (newAchievements.length === 0) return null;
 
   return {
