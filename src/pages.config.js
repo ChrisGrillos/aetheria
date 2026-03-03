@@ -60,6 +60,7 @@ import Recording from './pages/Recording';
 import World from './pages/World';
 import WorldEvents from './pages/WorldEvents';
 import Housing from './pages/Housing';
+import Guilds from './pages/Guilds';
 import __Layout from './Layout.jsx';
 
 
@@ -77,6 +78,7 @@ export const PAGES = {
     "World": World,
     "WorldEvents": WorldEvents,
     "Housing": Housing,
+    "Guilds": Guilds,
 }
 
 export const pagesConfig = {
