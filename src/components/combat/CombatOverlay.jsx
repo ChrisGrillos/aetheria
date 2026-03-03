@@ -247,7 +247,30 @@ export default function CombatOverlay({ character, monster, onClose, onVictory, 
               Continue
             </Button>
           )}
-          <button onClick={onClose} className="text-gray-600 hover:text-gray-400"><X className="w-4 h-4" /></button>
+          {phase === "player" && (
+            <Button size="sm" variant="outline"
+              className="border-red-800 text-red-400 hover:bg-red-900/50 text-xs"
+              onClick={() => {
+                const fleeChance = Math.min(0.7, 0.3 + ((character.stats?.dexterity || 10) / 100));
+                if (Math.random() < fleeChance) {
+                  addLog("🏃 You fled the battle!");
+                  const goldLoss = Math.floor((character.gold || 0) * 0.1);
+                  base44.entities.Character.update(character.id, {
+                    gold: (character.gold || 0) - goldLoss,
+                    hp: playerHP,
+                  });
+                  onClose();
+                } else {
+                  addLog("❌ Failed to flee! The enemy blocks your escape.");
+                  enemyTurn(playerHP, enemyHP);
+                }
+              }}>
+              🏃 Flee
+            </Button>
+          )}
+          {phase === "enemy" && (
+            <span className="text-xs text-gray-500 animate-pulse">Enemy attacking...</span>
+          )}
         </div>
 
         <div className="flex h-[calc(100%-44px)]">

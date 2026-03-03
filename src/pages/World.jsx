@@ -214,10 +214,15 @@ export default function World() {
           character={myCharacter}
           monster={combatMonster}
           onClose={() => setCombatMonster(null)}
-          onVictory={(updates) => {
+          onVictory={async (updates) => {
             const updated = { ...myCharacter, ...updates };
             setMyCharacter(updated);
-            setMonsters(prev => prev.map(m => m.id === combatMonster.id ? { ...m, is_alive: false } : m));
+            // Persist monster death to DB so all players see it
+            await base44.entities.Monster.update(combatMonster.id, {
+              is_alive: false,
+              hp: 0,
+            });
+            setMonsters(prev => prev.map(m => m.id === combatMonster.id ? { ...m, is_alive: false, hp: 0 } : m));
             setCombatMonster(null);
           }}
           onDefeat={() => {

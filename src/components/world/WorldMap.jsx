@@ -320,26 +320,26 @@ export default function WorldMap({ myCharacter, allCharacters, monsters, worldOb
     if (myCharacter) centerCam(myCharacter.x, myCharacter.y);
   }, [myCharacter?.x, myCharacter?.y]);
 
-  // Step-by-step movement along path
-  const walkPath = useCallback((path) => {
+  // Step-by-step movement along path — sequential async to avoid race conditions
+  const walkPath = useCallback(async (path) => {
     if (!path.length) { movingRef.current = false; setIsMoving(false); pendingPath.current = []; return; }
     movingRef.current = true;
     setIsMoving(true);
-    let i = 0;
-    const stepInterval = setInterval(() => {
-      if (i >= path.length) {
-        clearInterval(stepInterval);
-        movingRef.current = false;
-        setIsMoving(false);
-        pendingPath.current = [];
-        return;
-      }
+
+    for (let i = 0; i < path.length; i++) {
+      if (!movingRef.current) break; // allow cancellation
       const [nx, ny] = path[i];
       pendingPath.current = path.slice(i + 1);
-      i++;
-      onMove && onMove(nx, ny);
+
+      if (onMove) await onMove(nx, ny);
       centerCam(nx, ny);
-    }, 150);
+
+      await new Promise(resolve => setTimeout(resolve, 150));
+    }
+
+    movingRef.current = false;
+    setIsMoving(false);
+    pendingPath.current = [];
   }, [onMove]);
 
   const handleClick = (e) => {

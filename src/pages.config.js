@@ -48,6 +48,7 @@
  * The mainPage value must match a key in the PAGES object exactly.
  */
 import AgentArena from './pages/AgentArena';
+import AgentProfile from './pages/AgentProfile';
 import Agents from './pages/Agents';
 import Characters from './pages/Characters';
 import Combat from './pages/Combat';
@@ -64,12 +65,12 @@ import Recording from './pages/Recording';
 import World from './pages/World';
 import WorldEvents from './pages/WorldEvents';
 import WorldMapView from './pages/WorldMapView';
-import AgentProfile from './pages/AgentProfile';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
     "AgentArena": AgentArena,
+    "AgentProfile": AgentProfile,
     "Agents": Agents,
     "Characters": Characters,
     "Combat": Combat,
@@ -86,7 +87,6 @@ export const PAGES = {
     "World": World,
     "WorldEvents": WorldEvents,
     "WorldMapView": WorldMapView,
-    "AgentProfile": AgentProfile,
 }
 
 export const pagesConfig = {
