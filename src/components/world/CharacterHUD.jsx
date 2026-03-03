@@ -6,8 +6,18 @@ import { calculateDerivedStats } from "@/components/shared/charUtils";
 
 function XPToNextLevel(level) { return Math.floor(100 * Math.pow(level, 1.5)); }
 
-export default function CharacterHUD({ character, onInventory }) {
+export default function CharacterHUD({ character, onInventory, onUpdateCharacter }) {
   const [menuOpen, setMenuOpen] = useState(false);
+
+  const usePotion = async (potion) => {
+    if (!character) return;
+    const newHP = Math.min(character.max_hp || 100, (character.hp || 100) + (potion.heals || potion.heal || 0));
+    const newInv = (character.inventory || []).map(i =>
+      i.id === potion.id ? { ...i, qty: (i.qty || 1) - 1 } : i
+    ).filter(i => (i.qty || 1) > 0);
+    await base44.entities.Character.update(character.id, { hp: newHP, inventory: newInv });
+    if (onUpdateCharacter) onUpdateCharacter({ ...character, hp: newHP, inventory: newInv });
+  };
 
   const xpPct   = Math.min(100, ((character.xp || 0) % XPToNextLevel(character.level || 1)) / XPToNextLevel(character.level || 1) * 100);
   const hpPct   = Math.min(100, ((character.hp || 100) / (character.max_hp || 100)) * 100);
