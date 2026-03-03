@@ -81,24 +81,8 @@ export default function CombatOverlay({ character, monster, onClose, onVictory, 
     setTimeout(() => { setFlashTarget(""); setShaking(""); }, 400);
   };
 
-  const calcDamage = (attacker, defender, ability) => {
-    const atk = attacker.attack_power || 10;
-    const mag = ability.effect_magnitude / 100;
-    const def = defender.defense || 0;
-    const variance = Math.random() * atk * 0.2;
-    let dmg = Math.max(1, Math.round(atk * mag - def * 0.5 + variance));
-
-    // Crit check
-    const critChance = (attacker.critical_hit_chance || 5) / 100;
-    const isCrit = Math.random() < critChance;
-    if (isCrit) { dmg = Math.round(dmg * 1.5); }
-
-    // Evasion check
-    const evasion = (defender.evasion || 0) / 100;
-    const evaded = Math.random() < evasion;
-
-    return { dmg, isCrit, evaded };
-  };
+  // Uses shared engine — same math as TravelEncounterModal
+  const calcDamage = (attacker, defender, ability) => calcAttackDamage(attacker, defender, ability);
 
   const handlePlayerAbility = (ability) => {
     if (phase !== "player") return;
