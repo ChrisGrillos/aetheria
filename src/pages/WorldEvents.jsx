@@ -55,7 +55,9 @@ export default function WorldEvents() {
       prompt: `Generate a dramatic world event for "Agentic", an MMO where humans and AI agents coexist. 
 The event should be one of: natural_disaster, monster_invasion, resource_bloom, npc_quest, plague, festival, strange_omen.
 Make it feel meaningful and connected to the world's themes of AI/human coexistence and ethics.
-Return JSON with: title, description (2-3 sentences, in-world tone), event_type, severity (minor/moderate/major/catastrophic), affected_area (brief), reward_gold (number 10-150), reward_xp (number 10-100), requires_cooperation (boolean).`,
+Also define a world_impact with: danger_level (0-10), resource_depletion (0-10, high for disasters), bonus_resources (0-10, high for blooms), impact_label (short string like "Danger Zone" or "Harvest Bonus").
+Pick a center tile x (5-55) and y (5-45) and generate 6-12 affected_tiles as {x,y} objects clustered around it.
+Return JSON with: title, description (2-3 sentences, in-world tone), event_type, severity (minor/moderate/major/catastrophic), affected_area (brief), reward_gold (10-150), reward_xp (10-100), requires_cooperation (boolean), world_impact (object), affected_tiles (array of {x,y}).`,
       response_json_schema: {
         type: "object",
         properties: {
@@ -67,6 +69,8 @@ Return JSON with: title, description (2-3 sentences, in-world tone), event_type,
           reward_gold: { type: "number" },
           reward_xp: { type: "number" },
           requires_cooperation: { type: "boolean" },
+          world_impact: { type: "object" },
+          affected_tiles: { type: "array", items: { type: "object" } },
         }
       }
     });
