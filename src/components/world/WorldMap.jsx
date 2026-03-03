@@ -1,28 +1,6 @@
 import { useEffect, useRef, useCallback } from "react";
 import { drawEventOverlays } from "./EventOverlay.jsx";
-
-const TILE_SIZE = 20;
-const MAP_W = 60;
-const MAP_H = 50;
-
-const TERRAIN_COLORS = {
-  grass: "#2d5a27",
-  forest: "#1a3d1a",
-  water: "#1a3d6e",
-  stone: "#4a4a4a",
-  sand: "#8b7355",
-};
-
-// Simple deterministic terrain generation
-function getTile(x, y) {
-  const hash = (x * 73 + y * 31 + x * y * 7) % 100;
-  if (x < 3 || y < 3 || x >= MAP_W - 3 || y >= MAP_H - 3) return "water";
-  if (hash < 5) return "water";
-  if (hash < 15) return "forest";
-  if (hash < 20) return "stone";
-  if (hash < 25) return "sand";
-  return "grass";
-}
+import { ZONES, POINTS_OF_INTEREST, TERRAIN_COLORS, getTile, MAP_W, MAP_H, TILE_SIZE } from "@/components/shared/worldZones";
 
 const MONSTER_EMOJI = {
   goblin: "👺", orc: "👹", dragon: "🐉", skeleton: "💀",
@@ -42,25 +20,45 @@ export default function WorldMap({ myCharacter, allCharacters, monsters, worldOb
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
-    const W = canvas.width;
-    const H = canvas.height;
 
     // Draw terrain
     for (let ty = 0; ty < MAP_H; ty++) {
       for (let tx = 0; tx < MAP_W; tx++) {
         const tile = getTile(tx, ty);
-        ctx.fillStyle = TERRAIN_COLORS[tile];
+        ctx.fillStyle = TERRAIN_COLORS[tile] || "#2d5a27";
         ctx.fillRect(tx * TILE_SIZE, ty * TILE_SIZE, TILE_SIZE, TILE_SIZE);
-        // grid lines
-        ctx.strokeStyle = "rgba(0,0,0,0.15)";
+        ctx.strokeStyle = "rgba(0,0,0,0.1)";
         ctx.strokeRect(tx * TILE_SIZE, ty * TILE_SIZE, TILE_SIZE, TILE_SIZE);
       }
     }
 
+    // Draw zone name overlays (translucent banners)
+    ZONES.forEach(zone => {
+      ctx.fillStyle = "rgba(0,0,0,0.3)";
+      ctx.fillRect(zone.x * TILE_SIZE, zone.y * TILE_SIZE, zone.w * TILE_SIZE, 14);
+      ctx.font = "bold 9px sans-serif";
+      ctx.fillStyle = "#ffffff";
+      ctx.textAlign = "left";
+      ctx.textBaseline = "top";
+      ctx.fillText(`${zone.emoji} ${zone.name}`, zone.x * TILE_SIZE + 3, zone.y * TILE_SIZE + 2);
+    });
+
     // Draw event overlays
     drawEventOverlays(ctx, activeEvents, TILE_SIZE);
 
-    // Draw world objects
+    // Draw Points of Interest
+    POINTS_OF_INTEREST.forEach(poi => {
+      ctx.font = `${TILE_SIZE - 2}px serif`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(poi.emoji, poi.x * TILE_SIZE + TILE_SIZE / 2, poi.y * TILE_SIZE + TILE_SIZE / 2);
+      // POI name on hover-like small label
+      ctx.font = "7px sans-serif";
+      ctx.fillStyle = "#ffffffaa";
+      ctx.fillText(poi.name, poi.x * TILE_SIZE + TILE_SIZE / 2, poi.y * TILE_SIZE + TILE_SIZE + 4);
+    });
+
+    // Draw world objects (from DB)
     worldObjects.forEach(obj => {
       ctx.font = `${TILE_SIZE - 2}px serif`;
       ctx.textAlign = "center";
@@ -85,7 +83,6 @@ export default function WorldMap({ myCharacter, allCharacters, monsters, worldOb
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       ctx.fillText(c.avatar_emoji || (c.type === "ai_agent" ? "🤖" : "🧑"), px, py);
-      // Name tag
       ctx.font = "8px sans-serif";
       ctx.fillStyle = c.type === "ai_agent" ? "#67e8f9" : "#fbbf24";
       ctx.fillText(c.name, px, py + TILE_SIZE);
@@ -95,7 +92,6 @@ export default function WorldMap({ myCharacter, allCharacters, monsters, worldOb
     if (myCharacter) {
       const px = myCharacter.x * TILE_SIZE + TILE_SIZE / 2;
       const py = myCharacter.y * TILE_SIZE + TILE_SIZE / 2;
-      // Highlight ring
       ctx.strokeStyle = "#fbbf24";
       ctx.lineWidth = 2;
       ctx.beginPath();
@@ -123,10 +119,8 @@ export default function WorldMap({ myCharacter, allCharacters, monsters, worldOb
     const rect = canvas.getBoundingClientRect();
     const scaleX = canvas.width / rect.width;
     const scaleY = canvas.height / rect.height;
-    const clickX = (e.clientX - rect.left) * scaleX;
-    const clickY = (e.clientY - rect.top) * scaleY;
-    const tileX = Math.floor(clickX / TILE_SIZE);
-    const tileY = Math.floor(clickY / TILE_SIZE);
+    const tileX = Math.floor(((e.clientX - rect.left) * scaleX) / TILE_SIZE);
+    const tileY = Math.floor(((e.clientY - rect.top) * scaleY) / TILE_SIZE);
     if (tileX >= 0 && tileX < MAP_W && tileY >= 0 && tileY < MAP_H) {
       const tile = getTile(tileX, tileY);
       if (tile !== "water") onMove(tileX, tileY);
@@ -134,7 +128,7 @@ export default function WorldMap({ myCharacter, allCharacters, monsters, worldOb
   };
 
   return (
-    <div className="w-full h-full overflow-auto bg-gray-950">
+    <div className="w-full h-full overflow-auto bg-gray-950 relative">
       <canvas
         ref={canvasRef}
         onClick={handleClick}
