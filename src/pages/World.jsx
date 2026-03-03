@@ -35,6 +35,14 @@ export default function World() {
   }, []);
 
   useEffect(() => {
+    const handler = (e) => {
+      if (e.key === "i" || e.key === "I") setShowInventory(v => !v);
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, []);
+
+  useEffect(() => {
     if (!myCharacter) return;
     const unsub = base44.entities.ChatMessage.subscribe(event => {
       if (event.type === "create") {
