@@ -1,5 +1,9 @@
+import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
-import { Bot, User, Sword, Heart, Coins } from "lucide-react";
+import { Bot, User, Sword, Heart, Coins, ChevronDown, ChevronUp } from "lucide-react";
+import DerivedStatsPanel from "./DerivedStatsPanel";
+import AbilitiesPanel from "./AbilitiesPanel";
+import SpecializationPicker from "./SpecializationPicker";
 
 const CLASS_EMOJI = {
   warrior: "⚔️", hunter: "🏹", healer: "💚", wizard: "🧙",
@@ -11,8 +15,10 @@ const STAT_COLOR = {
   wisdom: "text-purple-400", constitution: "text-orange-400", charisma: "text-pink-400"
 };
 
-export default function CharacterCard({ character, isMe }) {
+export default function CharacterCard({ character, isMe, onRefresh }) {
+  const [showDeep, setShowDeep] = useState(false);
   const isAI = character.type === "ai_agent";
+  const classId = character.base_class || character.class;
   return (
     <div className={`bg-gray-900 border rounded-xl p-4 transition-all hover:scale-[1.02]
       ${isMe ? "border-amber-500" : isAI ? "border-cyan-800" : "border-gray-700"}`}>
@@ -80,9 +86,33 @@ export default function CharacterCard({ character, isMe }) {
         </div>
       )}
 
+      {/* Specialization badge */}
+      {character.specialization && (
+        <div className="mt-2 text-xs text-purple-300 font-medium">
+          ✦ {character.specialization.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase())}
+        </div>
+      )}
+
       {character.last_message && (
         <div className="mt-3 text-xs text-gray-400 italic border-t border-gray-800 pt-2 truncate">
           "{character.last_message}"
+        </div>
+      )}
+
+      {/* Toggle deeper stats */}
+      <button
+        onClick={() => setShowDeep(s => !s)}
+        className="w-full mt-2 text-xs text-gray-600 hover:text-gray-400 flex items-center justify-center gap-1 py-1 border-t border-gray-800"
+      >
+        {showDeep ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+        {showDeep ? "Hide Details" : "Stats & Abilities"}
+      </button>
+
+      {showDeep && (
+        <div>
+          <DerivedStatsPanel character={character} />
+          <AbilitiesPanel character={character} />
+          <SpecializationPicker character={character} onUpdated={onRefresh} />
         </div>
       )}
     </div>
