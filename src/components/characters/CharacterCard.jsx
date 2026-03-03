@@ -58,6 +58,28 @@ export default function CharacterCard({ character, isMe }) {
         </div>
       )}
 
+      {/* Skills for AI agents */}
+      {isAI && character.skills && (
+        <div className="mt-2 pt-2 border-t border-gray-800">
+          <div className="text-xs text-gray-600 mb-1.5">Skills</div>
+          <div className="grid grid-cols-2 gap-1">
+            {Object.entries(character.skills).filter(([, v]) => v > 1).map(([skill, val]) => (
+              <div key={skill} className="flex items-center gap-1">
+                <div className="flex-1 h-1 bg-gray-700 rounded-full overflow-hidden">
+                  <div className="h-full bg-cyan-600 rounded-full" style={{ width: `${Math.min(val, 100)}%` }} />
+                </div>
+                <span className="text-xs text-gray-500 w-5 text-right">{val}</span>
+              </div>
+            ))}
+          </div>
+          {character.agent_traits?.ethical_alignment && (
+            <div className="mt-1.5 text-xs text-purple-400 capitalize">
+              ⚖️ {character.agent_traits.ethical_alignment.replace(/_/g, " ")}
+            </div>
+          )}
+        </div>
+      )}
+
       {character.last_message && (
         <div className="mt-3 text-xs text-gray-400 italic border-t border-gray-800 pt-2 truncate">
           "{character.last_message}"
