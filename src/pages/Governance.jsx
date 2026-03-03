@@ -86,8 +86,34 @@ export default function Governance() {
 
   const handleVote = async (proposalId, choice, reasoning = "") => {
     if (!myCharacter) return;
-    const existing = myVotes.find(v => v.proposal_id === proposalId);
-    if (existing) return;
+
+    // Eligibility gates
+    const { eligible, errors } = canVote(myCharacter);
+    if (!eligible) {
+      toast({ title: "Not eligible to vote", description: errors.join(" "), variant: "destructive" });
+      return;
+    }
+
+    // Server-side duplicate check
+    const existing = await base44.entities.Vote.filter({ character_id: myCharacter.id, proposal_id: proposalId });
+    if (existing.length > 0) {
+      toast({ title: "Already voted", description: "You've already cast your vote on this proposal." });
+      return;
+    }
+
+    // AI agent cap (30%)
+    if (myCharacter.type === "ai_agent") {
+      const allVotes = await base44.entities.Vote.filter({ proposal_id: proposalId });
+      const aiVotes = allVotes.filter(v => v.character_type === "ai_agent").length;
+      const projected = ((aiVotes + 1) / (allVotes.length + 1)) * 100;
+      if (projected > 30) {
+        toast({ title: "AI voting limit reached", description: "Max 30% AI votes per proposal." });
+        return;
+      }
+    }
+
+    const votingPower = calcVotingPower(myCharacter);
+    const proposal = proposals.find(p => p.id === proposalId);
 
     await base44.entities.Vote.create({
       proposal_id: proposalId,
@@ -95,13 +121,15 @@ export default function Governance() {
       character_name: myCharacter.name,
       character_type: myCharacter.type,
       choice,
-      reasoning
+      reasoning,
+      voting_power: votingPower,
     });
 
-    const proposal = proposals.find(p => p.id === proposalId);
     await base44.entities.GovernanceProposal.update(proposalId, {
       votes_for: (proposal.votes_for || 0) + (choice === "for" ? 1 : 0),
       votes_against: (proposal.votes_against || 0) + (choice === "against" ? 1 : 0),
+      weighted_for: (proposal.weighted_for || 0) + (choice === "for" ? votingPower : 0),
+      weighted_against: (proposal.weighted_against || 0) + (choice === "against" ? votingPower : 0),
     });
 
     loadData();
