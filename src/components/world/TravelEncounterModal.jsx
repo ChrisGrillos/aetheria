@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { base44 } from "@/api/base44Client";
-import { calcPlayerAttack, applyDefenseReduction, checkEvasion, shouldLevelUp, levelUpUpdates } from "@/components/shared/charUtils";
+import { calculateDerivedStats, shouldLevelUp, levelUpUpdates } from "@/components/shared/charUtils";
+import { autoResolveCombat } from "@/components/combat/combatEngine";
 import { Sword, Package, MessageCircle, X } from "lucide-react";
 
 const NPC_OUTCOMES = {
