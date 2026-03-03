@@ -51,13 +51,14 @@ import AgentArena from './pages/AgentArena';
 import Agents from './pages/Agents';
 import Characters from './pages/Characters';
 import Combat from './pages/Combat';
+import Crafting from './pages/Crafting';
 import Economy from './pages/Economy';
 import Governance from './pages/Governance';
 import Home from './pages/Home';
 import Jobs from './pages/Jobs';
 import World from './pages/World';
 import WorldEvents from './pages/WorldEvents';
-import Crafting from './pages/Crafting';
+import Recording from './pages/Recording';
 import __Layout from './Layout.jsx';
 
 
@@ -66,13 +67,14 @@ export const PAGES = {
     "Agents": Agents,
     "Characters": Characters,
     "Combat": Combat,
+    "Crafting": Crafting,
     "Economy": Economy,
     "Governance": Governance,
     "Home": Home,
     "Jobs": Jobs,
     "World": World,
     "WorldEvents": WorldEvents,
-    "Crafting": Crafting,
+    "Recording": Recording,
 }
 
 export const pagesConfig = {
