@@ -94,6 +94,27 @@ export default function CharacterCard({ character, isMe, onRefresh }) {
         </div>
       )}
 
+      {/* Achievements & Titles */}
+      {(character.achievements?.length > 0 || character.titles?.length > 0) && (
+        <div className="mt-2 pt-2 border-t border-gray-800 text-xs">
+          {character.achievements?.length > 0 && (
+            <div className="mb-1">
+              <span className="text-gray-600">Achievements: {character.achievements.length}</span>
+            </div>
+          )}
+          {character.titles?.length > 0 && (
+            <div className="flex flex-wrap gap-1">
+              {character.titles.map((title, i) => (
+                <span key={i} className={`px-1.5 py-0.5 rounded text-xs
+                  ${character.active_title === title ? 'bg-purple-600 text-white font-bold' : 'bg-gray-800 text-purple-300'}`}>
+                  {title}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
       {character.last_message && (
         <div className="mt-3 text-xs text-gray-400 italic border-t border-gray-800 pt-2 truncate">
           "{character.last_message}"
