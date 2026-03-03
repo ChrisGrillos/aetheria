@@ -55,6 +55,8 @@ import Jobs from './pages/Jobs';
 import Agents from './pages/Agents';
 import Combat from './pages/Combat';
 import WorldEvents from './pages/WorldEvents';
+import Economy from './pages/Economy';
+import AgentArena from './pages/AgentArena';
 import __Layout from './Layout.jsx';
 
 
@@ -67,6 +69,8 @@ export const PAGES = {
     "Agents": Agents,
     "Combat": Combat,
     "WorldEvents": WorldEvents,
+    "Economy": Economy,
+    "AgentArena": AgentArena,
 }
 
 export const pagesConfig = {
