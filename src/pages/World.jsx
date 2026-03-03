@@ -5,6 +5,10 @@ import { Link } from "react-router-dom";
 import WorldMap from "@/components/world/WorldMap.jsx";
 import ChatPanel from "@/components/world/ChatPanel.jsx";
 import CharacterHUD from "@/components/world/CharacterHUD.jsx";
+import TravelEncounterModal from "@/components/world/TravelEncounterModal.jsx";
+import ZoneInfoPanel from "@/components/world/ZoneInfoPanel.jsx";
+import { getZoneAt, getPOIAt, rollEncounter, calcTravelSteps } from "@/components/shared/worldZones";
+import { RESOURCES } from "@/components/shared/craftingData";
 
 export default function World() {
   const [user, setUser] = useState(null);
@@ -15,6 +19,9 @@ export default function World() {
   const [messages, setMessages] = useState([]);
   const [activeEvents, setActiveEvents] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [encounter, setEncounter] = useState(null);
+  const [encounterZone, setEncounterZone] = useState(null);
+  const [viewPos, setViewPos] = useState(null);
 
   useEffect(() => {
     loadWorld();
@@ -72,10 +79,49 @@ export default function World() {
 
   const handleMove = useCallback(async (newX, newY) => {
     if (!myCharacter) return;
-    const updated = { ...myCharacter, x: newX, y: newY };
+
+    const zone = getZoneAt(newX, newY);
+    const poi  = getPOIAt(newX, newY);
+    setViewPos({ x: newX, y: newY });
+
+    // Gather resource from POI resource nodes
+    let inventoryUpdates = null;
+    if (poi?.type === "resource_node" && poi.resource) {
+      const res = RESOURCES[poi.resource];
+      if (res) {
+        const inv = [...(myCharacter.inventory || [])];
+        const idx = inv.findIndex(i => i.id === poi.resource);
+        const qty = 1 + Math.floor(Math.random() * 2);
+        if (idx >= 0) inv[idx] = { ...inv[idx], qty: (inv[idx].qty || 0) + qty };
+        else inv.push({ id: poi.resource, name: res.name, emoji: res.emoji, qty });
+        inventoryUpdates = inv;
+      }
+    }
+
+    // POI rest/heal
+    let hpUpdate = null;
+    if (poi?.type === "rest" && poi.hp_restore) {
+      hpUpdate = Math.min(myCharacter.max_hp || 100, (myCharacter.hp || 100) + poi.hp_restore);
+    }
+    if (poi?.type === "heal_station") {
+      hpUpdate = myCharacter.max_hp || 100;
+    }
+
+    const updates = { x: newX, y: newY };
+    if (inventoryUpdates) updates.inventory = inventoryUpdates;
+    if (hpUpdate !== null) updates.hp = hpUpdate;
+
+    const updated = { ...myCharacter, ...updates };
     setMyCharacter(updated);
     setAllCharacters(prev => prev.map(c => c.id === myCharacter.id ? updated : c));
-    await base44.entities.Character.update(myCharacter.id, { x: newX, y: newY });
+    await base44.entities.Character.update(myCharacter.id, updates);
+
+    // Roll for random encounter after moving
+    const enc = rollEncounter(zone);
+    if (enc) {
+      setEncounter(enc);
+      setEncounterZone(zone);
+    }
   }, [myCharacter]);
 
   const handleSendMessage = async (text, channel = "global") => {
@@ -126,9 +172,31 @@ export default function World() {
             onMove={handleMove}
             activeEvents={activeEvents}
           />
+          {/* Zone info overlay bottom-left */}
+          {viewPos && (
+            <div className="absolute bottom-2 left-2 w-56">
+              <ZoneInfoPanel x={viewPos.x} y={viewPos.y} />
+            </div>
+          )}
         </div>
         <ChatPanel messages={messages} onSend={handleSendMessage} myCharacter={myCharacter} />
       </div>
+
+      {encounter && myCharacter && (
+        <TravelEncounterModal
+          encounter={encounter}
+          character={myCharacter}
+          zone={encounterZone}
+          onClose={() => setEncounter(null)}
+          onResult={(updates) => {
+            if (Object.keys(updates).length > 0) {
+              const updated = { ...myCharacter, ...updates };
+              setMyCharacter(updated);
+            }
+            setEncounter(null);
+          }}
+        />
+      )}
     </div>
   );
 }
