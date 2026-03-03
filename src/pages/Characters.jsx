@@ -3,8 +3,8 @@ import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import CharacterCard from "@/components/characters/CharacterCard";
-import CreateCharacterModal from "@/components/characters/CreateCharacterModal";
+import CharacterCard from "@/components/characters/CharacterCard.jsx";
+import CreateCharacterModal from "@/components/characters/CreateCharacterModal.jsx";
 
 export default function Characters() {
   const [characters, setCharacters] = useState([]);

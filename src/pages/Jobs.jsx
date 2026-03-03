@@ -5,7 +5,7 @@ import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Briefcase, Coins, Star } from "lucide-react";
-import NewJobModal from "@/components/jobs/NewJobModal";
+import NewJobModal from "@/components/jobs/NewJobModal.jsx";
 
 const JOB_ICONS = {
   farming: "🌾", mining: "⛏️", crafting: "🔨", guarding: "🛡️",

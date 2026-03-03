@@ -3,8 +3,8 @@ import { base44 } from "@/api/base44Client";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
-import ProposalCard from "@/components/governance/ProposalCard";
-import NewProposalModal from "@/components/governance/NewProposalModal";
+import ProposalCard from "@/components/governance/ProposalCard.jsx";
+import NewProposalModal from "@/components/governance/NewProposalModal.jsx";
 
 const CYCLE_DAYS = 120;
 const EPOCH_START = new Date("2026-01-01");

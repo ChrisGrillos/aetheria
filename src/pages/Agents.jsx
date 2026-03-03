@@ -4,8 +4,8 @@ import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
 import { Bot, Zap } from "lucide-react";
-import CharacterCard from "@/components/characters/CharacterCard";
-import SpawnAgentModal from "@/components/agents/SpawnAgentModal";
+import CharacterCard from "@/components/characters/CharacterCard.jsx";
+import SpawnAgentModal from "@/components/agents/SpawnAgentModal.jsx";
 
 export default function Agents() {
   const [agents, setAgents] = useState([]);

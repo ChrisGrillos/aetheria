@@ -2,9 +2,9 @@ import { useState, useEffect, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import { createPageUrl } from "@/utils";
 import { Link } from "react-router-dom";
-import WorldMap from "@/components/world/WorldMap";
-import ChatPanel from "@/components/world/ChatPanel";
-import CharacterHUD from "@/components/world/CharacterHUD";
+import WorldMap from "@/components/world/WorldMap.jsx";
+import ChatPanel from "@/components/world/ChatPanel.jsx";
+import CharacterHUD from "@/components/world/CharacterHUD.jsx";
 
 export default function World() {
   const [user, setUser] = useState(null);
