@@ -383,63 +383,64 @@ export default function World() {
               </p>
               <Button size="sm" variant="outline" className="border-gray-700 text-xs"
                 onClick={e => { e.stopPropagation(); cancelFastTravel(); }}>Cancel</Button>
-            </div>
-          )}
-          {/* Ability hotbar — anchored bottom-center */}
-          <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-20 pointer-events-auto">
-            <AbilityHotbar
-              abilities={characterAbilities}
-              cooldowns={cooldowns}
-              onUseAbility={(slot) => {
-                const ab = characterAbilities[slot];
-                if (ab && activeTarget?.entity) startCombat(activeTarget.entity);
-              }}
-              autoAttacking={autoAttacking}
+          </div>
+        )}
+
+        {/* Ability hotbar — bottom-center */}
+        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-20 pointer-events-auto">
+          <AbilityHotbar
+            abilities={characterAbilities}
+            cooldowns={cooldowns}
+            onUseAbility={(slot) => {
+              const ab = characterAbilities[slot];
+              if (ab && activeTarget?.entity) startCombat(activeTarget.entity);
+            }}
+            autoAttacking={autoAttacking}
+          />
+        </div>
+
+        {/* Group window — top-left */}
+        <GroupWindow
+          myCharacter={myCharacter}
+          allCharacters={allCharacters}
+          onMoveFollower={null}
+        />
+
+        {/* Target frame — top-center, authoritative, single instance */}
+        {activeTarget && myCharacter && (
+          <div className="absolute top-12 left-1/2 -translate-x-1/2 z-[25] pointer-events-auto">
+            <TargetFrame
+              target={activeTarget}
+              myCharacter={myCharacter}
+              combatMode={combatMode}
+              x={myCharacter.x}
+              y={myCharacter.y}
+              onEngage={(entity) => startCombat(entity)}
+              onInteract={null}
+              onClear={() => { clearTarget(); clearActiveTarget(); }}
             />
           </div>
+        )}
 
-          {/* Group window (replaces PartyFollower) */}
-          <GroupWindow
-            myCharacter={myCharacter}
-            allCharacters={allCharacters}
-            onMoveFollower={null}
-          />
+        {/* Zone info — bottom-left */}
+        {viewPos && (
+          <div className="absolute bottom-8 left-2 w-56">
+            <ZoneInfoPanel x={viewPos.x} y={viewPos.y} />
+          </div>
+        )}
 
-          {/* Target frame — authoritative: reads from activeTarget */}
-          {activeTarget && myCharacter && (
-            <div className="absolute top-12 left-1/2 -translate-x-1/2 z-[25] pointer-events-auto">
-              <TargetFrame
-                target={activeTarget}
-                myCharacter={myCharacter}
-                combatMode={combatMode}
-                x={myCharacter.x}
-                y={myCharacter.y}
-                onEngage={(entity) => startCombat(entity)}
-                onInteract={null}
-                onClear={() => { clearTarget(); clearActiveTarget(); }}
-              />
-            </div>
-          )}
-
-          {/* Zone info overlay bottom-left */}
-          {viewPos && (
-            <div className="absolute bottom-8 left-2 w-56">
-              <ZoneInfoPanel x={viewPos.x} y={viewPos.y} />
-            </div>
-          )}
-
-          {/* Combat mode indicator — bottom-right */}
-          {myCharacter && (
-            <div className="absolute bottom-24 right-2 z-20 pointer-events-none">
-              <CombatModeIndicator
-                combatMode={combatMode}
-                characterX={myCharacter.x}
-                characterY={myCharacter.y}
-              />
-            </div>
-          )}
-        </div>
-        <ChatDock messages={messages} onSend={handleSendMessage} myCharacter={myCharacter} />
+        {/* Combat mode indicator — bottom-right, single instance */}
+        {myCharacter && (
+          <div className="absolute bottom-24 right-2 z-20 pointer-events-none">
+            <CombatModeIndicator
+              combatMode={combatMode}
+              characterX={myCharacter.x}
+              characterY={myCharacter.y}
+            />
+          </div>
+        )}
+      </div>
+      <ChatDock messages={messages} onSend={handleSendMessage} myCharacter={myCharacter} />
       </div>
 
       {combatMonster && myCharacter && (
