@@ -134,10 +134,10 @@ export default function NPCPanel({ npcType, zoneName, character, onClose, onInte
     <Sheet open={true} onOpenChange={(v) => { if (!v) onClose(); }}>
       <SheetContent
         side="right"
-        className="bg-gray-900 border-l border-amber-800 text-white w-full sm:w-80 overflow-y-auto"
+        className="bg-gray-900/95 border-l border-amber-800 text-white w-full sm:w-80 overflow-y-auto backdrop-blur-sm"
       >
-        <SheetHeader className="text-left mb-4">
-          <SheetTitle className="flex items-center gap-2 text-xl text-amber-400">
+        <SheetHeader className="text-left mb-3">
+           <SheetTitle className="flex items-center gap-2 text-lg text-amber-400">
             <span className="text-3xl">{npcInfo.emoji}</span>
             <div>
               <div className="text-white">{npcInfo.name}</div>
@@ -149,14 +149,14 @@ export default function NPCPanel({ npcType, zoneName, character, onClose, onInte
         {!result ? (
           <div className="space-y-4">
             {/* Dialogue */}
-            <div className="bg-gray-800 rounded-lg p-3 border border-gray-700">
-              <p className="text-sm text-gray-300 italic">"{npcInfo.dialogue}"</p>
+            <div className="bg-gray-800/50 rounded-lg p-2 border border-gray-700 text-xs mb-2">
+              <p className="text-gray-300 italic">"{npcInfo.dialogue}"</p>
             </div>
 
             {/* Rewards preview */}
             {Object.keys(rewards).length > 0 && (
-              <div className="bg-gray-800 rounded-lg p-3 border border-gray-700 text-xs space-y-1">
-                <p className="text-gray-500 uppercase tracking-wider font-bold">Available rewards:</p>
+              <div className="bg-gray-800/50 rounded-lg p-2 border border-gray-700 text-[11px] space-y-0.5 mb-2">
+                <p className="text-gray-500 uppercase tracking-wider font-bold text-xs">Rewards:</p>
                 {rewards.xp && <p className="text-purple-400">✦ +{rewards.xp} XP</p>}
                 {rewards.gold && (
                   <p className="text-amber-400">💰 +{rewards.gold[0]}-{rewards.gold[1]} gold</p>
@@ -168,57 +168,61 @@ export default function NPCPanel({ npcType, zoneName, character, onClose, onInte
             )}
 
             {/* Action buttons */}
-            <div className="flex gap-2 flex-wrap">
+            <div className="flex gap-1.5 flex-wrap text-sm">
               {npcInfo.actions?.includes("trade") && (
                 <Button
+                  size="sm"
                   onClick={() => handleInteract("trade")}
                   disabled={loading}
-                  className="bg-blue-700 hover:bg-blue-600 gap-1 text-sm"
+                  className="bg-blue-700 hover:bg-blue-600 gap-1 h-8 text-xs"
                 >
-                  <Gift className="w-4 h-4" /> Trade
+                  <Gift className="w-3 h-3" /> Trade
                 </Button>
               )}
               {npcInfo.actions?.includes("quest") && (
                 <Button
+                  size="sm"
                   onClick={() => handleInteract("quest")}
                   disabled={loading}
-                  className="bg-green-700 hover:bg-green-600 gap-1 text-sm"
+                  className="bg-green-700 hover:bg-green-600 gap-1 h-8 text-xs"
                 >
-                  <Scroll className="w-4 h-4" /> Quest
+                  <Scroll className="w-3 h-3" /> Quest
                 </Button>
               )}
               {npcInfo.actions?.includes("talk") && (
                 <Button
+                  size="sm"
                   onClick={() => handleInteract("talk")}
                   disabled={loading}
-                  className="bg-purple-700 hover:bg-purple-600 gap-1 text-sm"
+                  className="bg-purple-700 hover:bg-purple-600 gap-1 h-8 text-xs"
                 >
-                  <MessageCircle className="w-4 h-4" /> Talk
+                  <MessageCircle className="w-3 h-3" /> Talk
                 </Button>
               )}
               <Button
+                size="sm"
                 onClick={onClose}
                 variant="outline"
-                className="border-gray-600 text-gray-300 ml-auto text-sm"
+                className="border-gray-600 text-gray-300 ml-auto h-8 text-xs gap-1"
               >
-                <X className="w-4 h-4" /> Leave
+                <X className="w-3 h-3" /> Leave
               </Button>
             </div>
           </div>
         ) : (
-          <div className="text-center space-y-3">
+          <div className="text-center space-y-2">
             <div className="text-3xl">💬</div>
-            <p className="text-gray-300">{result.message}</p>
+            <p className="text-gray-300 text-xs">{result.message}</p>
             {result.rewards?.xp && (
-              <p className="text-purple-400 text-sm">+{result.rewards.xp} XP gained</p>
+              <p className="text-purple-400 text-xs">+{result.rewards.xp} XP</p>
             )}
             {result.rewards?.gold && (
-              <p className="text-amber-400 text-sm">+{result.rewards.gold} gold gained</p>
+              <p className="text-amber-400 text-xs">+{result.rewards.gold} gold</p>
             )}
             {result.rewards?.inventory && (
-              <p className="text-green-400 text-sm">📦 Items received</p>
+              <p className="text-green-400 text-xs">📦 Item received</p>
             )}
-            <p className="text-xs text-gray-500">Closing...</p>
+            <p className="text-[10px] text-gray-500 mt-2">Closing...</p>
           </div>
         )}
       </SheetContent>
