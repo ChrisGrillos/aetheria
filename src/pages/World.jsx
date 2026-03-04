@@ -303,8 +303,8 @@ export default function World() {
             worldObjects={worldObjects}
             activeEvents={activeEvents}
             onMove={handleMove}
-            onMonsterClick={(monster) => setCombatMonster(monster)}
-            sceneSettings={sceneSettings}
+            onMonsterClick={(monster) => { lockTarget(monster); setCombatMonster(monster); }}
+              sceneSettings={sceneSettings}
           />
         )}
 
