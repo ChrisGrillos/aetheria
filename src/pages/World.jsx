@@ -395,6 +395,17 @@ export default function World() {
               <ZoneInfoPanel x={viewPos.x} y={viewPos.y} />
             </div>
           )}
+
+          {/* Combat mode indicator — top center */}
+          {myCharacter && (
+            <div className="absolute top-2 left-1/2 -translate-x-1/2 z-20 pointer-events-none">
+              <CombatModeIndicator
+                combatMode={combatMode}
+                characterX={myCharacter.x}
+                characterY={myCharacter.y}
+              />
+            </div>
+          )}
         </div>
         <ChatDock messages={messages} onSend={handleSendMessage} myCharacter={myCharacter} />
       </div>
