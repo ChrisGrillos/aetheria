@@ -254,3 +254,8 @@ export const CLASS_FIT_LABELS = {
 
 // ─── MAX REROLLS ──────────────────────────────────────────────────────────────
 export const MAX_REROLLS = 5;
+
+/** Safely get race data by ID, defaulting to human */
+export function getRace(raceId) {
+  return RACES[raceId] || RACES.human;
+}
