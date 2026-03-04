@@ -444,73 +444,73 @@ export default function World() {
     </div>
 
     {combatMonster && myCharacter && (
-        <CombatOverlay
-          character={myCharacter}
-          monster={combatMonster}
-          onClose={() => { setCombatMonster(null); clearActiveTarget(); clearTarget(); }}
-          onVictory={async (updates) => {
-            const achievementUpdates = checkAchievements({ ...myCharacter, ...updates }, myCharacter);
-            const finalUpdates = { ...updates, ...achievementUpdates };
-            const updatedChar = { ...myCharacter, ...finalUpdates };
-            setMyCharacter(updatedChar);
-            setAllCharacters(prev => prev.map(c => c.id === myCharacter.id ? updatedChar : c));
-            await base44.entities.Monster.update(combatMonster.id, { is_alive: false, hp: 0 });
-            await base44.entities.Character.update(myCharacter.id, finalUpdates);
-            setMonsters(prev => prev.map(m => m.id === combatMonster.id ? { ...m, is_alive: false, hp: 0 } : m));
-            setCombatMonster(null);
-            clearActiveTarget();
-            clearTarget();
-          }}
-          onDefeat={() => {
-            const zone = getZoneAt(myCharacter.x, myCharacter.y);
-            const { updates: deathUpdates } = handleDeath(myCharacter, zone?.id, true);
-            const respawned = { ...myCharacter, ...deathUpdates };
-            setMyCharacter(respawned);
-            setAllCharacters(prev => prev.map(c => c.id === myCharacter.id ? respawned : c));
-            base44.entities.Character.update(myCharacter.id, deathUpdates);
-            setCombatMonster(null);
-            clearActiveTarget();
-            clearTarget();
-          }}
-        />
-      )}
+      <CombatOverlay
+        character={myCharacter}
+        monster={combatMonster}
+        onClose={() => { setCombatMonster(null); clearActiveTarget(); clearTarget(); }}
+        onVictory={async (updates) => {
+          const achievementUpdates = checkAchievements({ ...myCharacter, ...updates }, myCharacter);
+          const finalUpdates = { ...updates, ...achievementUpdates };
+          const updatedChar = { ...myCharacter, ...finalUpdates };
+          setMyCharacter(updatedChar);
+          setAllCharacters(prev => prev.map(c => c.id === myCharacter.id ? updatedChar : c));
+          await base44.entities.Monster.update(combatMonster.id, { is_alive: false, hp: 0 });
+          await base44.entities.Character.update(myCharacter.id, finalUpdates);
+          setMonsters(prev => prev.map(m => m.id === combatMonster.id ? { ...m, is_alive: false, hp: 0 } : m));
+          setCombatMonster(null);
+          clearActiveTarget();
+          clearTarget();
+        }}
+        onDefeat={() => {
+          const zone = getZoneAt(myCharacter.x, myCharacter.y);
+          const { updates: deathUpdates } = handleDeath(myCharacter, zone?.id, true);
+          const respawned = { ...myCharacter, ...deathUpdates };
+          setMyCharacter(respawned);
+          setAllCharacters(prev => prev.map(c => c.id === myCharacter.id ? respawned : c));
+          base44.entities.Character.update(myCharacter.id, deathUpdates);
+          setCombatMonster(null);
+          clearActiveTarget();
+          clearTarget();
+        }}
+      />
+    )}
 
-      {showInventory && myCharacter && (
-        <InventoryPanel
-          open={showInventory}
-          onClose={() => setShowInventory(false)}
-          character={myCharacter}
-          onUpdate={(updated) => {
+    {showInventory && myCharacter && (
+      <InventoryPanel
+        open={showInventory}
+        onClose={() => setShowInventory(false)}
+        character={myCharacter}
+        onUpdate={(updated) => {
+          setMyCharacter(updated);
+          setAllCharacters(prev => prev.map(c => c.id === updated.id ? updated : c));
+        }}
+      />
+    )}
+
+    {npcDialogue && myCharacter && (
+      <NPCDialogue
+        npcType={npcDialogue.npcType}
+        zoneName={npcDialogue.zoneName}
+        character={myCharacter}
+        onClose={() => setNpcDialogue(null)}
+      />
+    )}
+
+    {encounter && myCharacter && (
+      <TravelEncounterModal
+        encounter={encounter}
+        character={myCharacter}
+        zone={encounterZone}
+        onClose={() => setEncounter(null)}
+        onResult={(updates) => {
+          if (Object.keys(updates).length > 0) {
+            const updated = { ...myCharacter, ...updates };
             setMyCharacter(updated);
-            setAllCharacters(prev => prev.map(c => c.id === updated.id ? updated : c));
-          }}
-        />
-      )}
-
-      {npcDialogue && myCharacter && (
-        <NPCDialogue
-          npcType={npcDialogue.npcType}
-          zoneName={npcDialogue.zoneName}
-          character={myCharacter}
-          onClose={() => setNpcDialogue(null)}
-        />
-      )}
-
-      {encounter && myCharacter && (
-        <TravelEncounterModal
-          encounter={encounter}
-          character={myCharacter}
-          zone={encounterZone}
-          onClose={() => setEncounter(null)}
-          onResult={(updates) => {
-            if (Object.keys(updates).length > 0) {
-              const updated = { ...myCharacter, ...updates };
-              setMyCharacter(updated);
-            }
-            setEncounter(null);
-          }}
-        />
-      )}
-    </div>
+          }
+          setEncounter(null);
+        }}
+      />
+    )}
+  </div>
   );
 }
