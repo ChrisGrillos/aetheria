@@ -114,11 +114,9 @@ export function canAttack(attacker, target, zone, relationshipState = {}) {
 
   // Player attacking player in frontier/siege
   if (attacker.type === "human" && target.type === "human") {
-    // Only if both are PvP-flagged OR guild at war
     const attackerFlagged = relationshipState.attackerPvPFlag || false;
     const targetFlagged = relationshipState.targetPvPFlag || false;
     const atWar = relationshipState.warStatus === "active";
-
     if (!atWar && (!attackerFlagged || !targetFlagged)) {
       return { canAttack: false, reason: "Target not PvP-flagged" };
     }
@@ -127,8 +125,7 @@ export function canAttack(attacker, target, zone, relationshipState = {}) {
 
   // Player attacking AI agent
   if (attacker.type === "human" && target.type === "ai_agent") {
-    // AI agents are killable in frontier zones
-    if (zone?.type === ZONE_TYPES.FRONTIER || zone?.type === ZONE_TYPES.SIEGE) {
+    if (zoneConfig?.type === ZONE_TYPES.FRONTIER || zoneConfig?.type === ZONE_TYPES.SIEGE) {
       return { canAttack: true, reason: "Can attack AI in frontier/siege zones" };
     }
     return { canAttack: false, reason: "Cannot attack AI in safe zone" };
@@ -144,7 +141,6 @@ export function canAttack(attacker, target, zone, relationshipState = {}) {
 
   // AI attacking AI
   if (attacker.type === "ai_agent" && target.type === "ai_agent") {
-    // Guild wars, factional conflict
     if (relationshipState.warStatus === "active") {
       return { canAttack: true, reason: "Guilds at war" };
     }
