@@ -44,23 +44,37 @@ export default function CharacterHUD({ character, onInventory, onUpdateCharacter
     { href: createPageUrl("Home"),      label: "🏠 Home",    color: "text-gray-400" },
   ];
 
+  const race = getRace(character.race || "human");
+  const raceColor = {
+    human: "text-amber-500", elf: "text-cyan-400", dwarf: "text-orange-400",
+    halfling: "text-green-400", orc: "text-red-400", half_giant: "text-purple-400",
+  }[character.race || "human"] || "text-amber-500";
+
   return (
     <div className="bg-gray-900 border-b border-gray-800 px-3 py-1.5 shrink-0 relative z-30">
       {/* Main Row */}
       <div className="flex items-center gap-3 flex-wrap">
-        {/* Identity */}
-        <div className="flex items-center gap-1.5 min-w-0">
-          <span className="text-xl leading-none">{character.avatar_emoji || "🧑"}</span>
+
+        {/* Identity block */}
+        <div className="flex items-center gap-2 min-w-0">
+          {/* Avatar with race ring */}
+          <div className={`relative w-9 h-9 rounded-full flex items-center justify-center text-lg border-2 bg-gray-800 ${
+            character.race && character.race !== "human" ? `border-opacity-70` : "border-amber-700"
+          }`}
+            style={{ borderColor: {
+              human:"#d97706",elf:"#22d3ee",dwarf:"#f97316",halfling:"#4ade80",orc:"#f87171",half_giant:"#c084fc"
+            }[character.race||"human"] }}
+          >
+            {character.avatar_emoji || race.emoji || "🧑"}
+          </div>
           <div className="min-w-0">
-            <div className="text-xs font-black text-amber-400 leading-tight truncate">
+            <div className="text-xs font-black text-amber-400 leading-tight truncate flex items-center gap-1">
               {character.name}
-              {character.active_title && <span className="ml-1 text-purple-400 font-semibold">«{character.active_title}»</span>}
+              {character.active_title && <span className="text-purple-400 font-medium">«{character.active_title}»</span>}
             </div>
-            <div className="text-xs text-gray-600 capitalize leading-tight">
-              Lv.{character.level || 1} {character.base_class || character.class}
-              {character.race && character.race !== "human" && (
-                <span className="ml-1 text-gray-700">· {getRace(character.race).emoji} {getRace(character.race).name}</span>
-              )}
+            <div className="flex items-center gap-1 text-gray-600 leading-tight" style={{ fontSize: "10px" }}>
+              <span className="capitalize">Lv.{character.level||1} {character.base_class||character.class}</span>
+              <span className={`${raceColor} font-semibold`}>{race.emoji} {race.name}</span>
             </div>
           </div>
         </div>
@@ -68,9 +82,9 @@ export default function CharacterHUD({ character, onInventory, onUpdateCharacter
         {/* HP Bar */}
         <div className="flex items-center gap-1.5">
           <Heart className="w-3 h-3 text-red-400 flex-shrink-0" />
-          <div className="relative w-24 bg-gray-800 rounded-full h-3">
-            <div className={`${hpColor} h-3 rounded-full transition-all`} style={{ width: `${hpPct}%` }} />
-            <span className="absolute inset-0 flex items-center justify-center text-xs text-white font-bold" style={{ fontSize: "9px" }}>
+          <div className="relative w-24 bg-gray-800 rounded-full h-3 border border-gray-700">
+            <div className={`${hpColor} h-full rounded-full transition-all`} style={{ width: `${hpPct}%` }} />
+            <span className="absolute inset-0 flex items-center justify-center text-white font-bold" style={{ fontSize: "9px" }}>
               {character.hp}/{character.max_hp}
             </span>
           </div>
@@ -79,8 +93,8 @@ export default function CharacterHUD({ character, onInventory, onUpdateCharacter
         {/* Energy Bar */}
         <div className="flex items-center gap-1.5">
           <Zap className="w-3 h-3 text-blue-400 flex-shrink-0" />
-          <div className="relative w-20 bg-gray-800 rounded-full h-3">
-            <div className="bg-blue-500 h-3 rounded-full transition-all" style={{ width: `${energyPct}%` }} />
+          <div className="relative w-20 bg-gray-800 rounded-full h-3 border border-gray-700">
+            <div className="bg-blue-500 h-full rounded-full transition-all" style={{ width: `${energyPct}%` }} />
             <span className="absolute inset-0 flex items-center justify-center text-white font-bold" style={{ fontSize: "9px" }}>
               {energy}/{maxEnergy}
             </span>
@@ -90,44 +104,45 @@ export default function CharacterHUD({ character, onInventory, onUpdateCharacter
         {/* XP Bar */}
         <div className="flex items-center gap-1.5">
           <Star className="w-3 h-3 text-purple-400 flex-shrink-0" />
-          <div className="relative w-20 bg-gray-800 rounded-full h-3">
-            <div className="bg-purple-500 h-3 rounded-full transition-all" style={{ width: `${xpPct}%` }} />
+          <div className="relative w-20 bg-gray-800 rounded-full h-3 border border-gray-700">
+            <div className="bg-purple-500 h-full rounded-full transition-all" style={{ width: `${xpPct}%` }} />
           </div>
-          <span className="text-xs text-gray-500" style={{ fontSize: "10px" }}>{character.xp || 0}xp</span>
+          <span className="text-gray-500" style={{ fontSize: "10px" }}>{character.xp||0}xp</span>
         </div>
 
         {/* Gold */}
         <div className="flex items-center gap-1 text-amber-400 text-xs font-bold">
-          <Coins className="w-3 h-3" />{character.gold || 0}g
+          <Coins className="w-3 h-3" />{character.gold||0}g
         </div>
 
         {/* Buffs/Debuffs */}
-        <div className="flex items-center gap-0.5">
-          {buffs.map((b, i) => (
-            <span key={i} title={`${b.name} (${b.rounds_remaining}r)`} className="text-sm leading-none cursor-help">{b.emoji || "✨"}</span>
-          ))}
-          {debuffs.map((d, i) => (
-            <span key={i} title={`${d.name} (${d.rounds_remaining}r)`} className="text-sm leading-none cursor-help">{d.emoji || "💀"}</span>
-          ))}
-        </div>
+        {(buffs.length > 0 || debuffs.length > 0) && (
+          <div className="flex items-center gap-0.5">
+            {buffs.map((b, i) => (
+              <span key={i} title={`${b.name} (${b.rounds_remaining}r)`} className="text-sm leading-none cursor-help">{b.emoji || "✨"}</span>
+            ))}
+            {debuffs.map((d, i) => (
+              <span key={i} title={`${d.name} (${d.rounds_remaining}r)`} className="text-sm leading-none cursor-help">{d.emoji || "💀"}</span>
+            ))}
+          </div>
+        )}
 
         {/* Quick potions */}
         {potions.length > 0 && (
-        <div className="flex items-center gap-1">
-          {potions.map((p, i) => (
-            <button key={i} title={`Use ${p.name} (+${p.heals || p.heal} HP)`}
-              onClick={() => usePotion(p)}
-              className="text-sm leading-none bg-gray-800 hover:bg-gray-700 rounded px-1 border border-gray-700 transition-colors">
-              🧪
-            </button>
-          ))}
-        </div>
+          <div className="flex items-center gap-1">
+            {potions.map((p, i) => (
+              <button key={i} title={`Use ${p.name} (+${p.heals || p.heal} HP)`}
+                onClick={() => usePotion(p)}
+                className="text-sm leading-none bg-gray-800 hover:bg-gray-700 rounded px-1 border border-gray-700 transition-colors">
+                🧪
+              </button>
+            ))}
+          </div>
         )}
 
         {/* Inventory button */}
         {onInventory && (
-          <button onClick={onInventory}
-            className="text-gray-400 hover:text-amber-400 transition-colors" title="Inventory (I)">
+          <button onClick={onInventory} className="text-gray-400 hover:text-amber-400 transition-colors" title="Inventory (I)">
             <Package className="w-4 h-4" />
           </button>
         )}
