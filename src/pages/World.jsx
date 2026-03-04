@@ -159,6 +159,13 @@ export default function World() {
       }
     }
 
+    // NPC dialogue on POI visit
+    if (poi?.type === "npc" || ["rest","shop","mystery"].includes(poi?.type)) {
+      const npcTypeMap = { rest: "merchant", shop: "trader", mystery: "witch" };
+      const npcType = poi.npcType || npcTypeMap[poi.type] || "merchant";
+      setNpcDialogue({ npcType, zoneName: zone?.name || "Unknown" });
+    }
+
     // POI rest/heal
     let hpUpdate = null;
     if (poi?.type === "rest" && poi.hp_restore) {
