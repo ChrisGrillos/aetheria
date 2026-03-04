@@ -71,7 +71,7 @@ function tileToWorld(tx, ty) {
   return new THREE.Vector3(tx * TILE_SIZE, 0, ty * TILE_SIZE);
 }
 
-// buildPath and isPassable are imported from movementAuthority
+
 
 // ─── MESH BUILDERS ────────────────────────────────────────────────────────────
 
