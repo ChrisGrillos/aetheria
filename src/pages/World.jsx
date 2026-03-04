@@ -23,6 +23,7 @@ import InventoryPanel from "@/components/inventory/InventoryPanel.jsx";
 import { Button } from "@/components/ui/button";
 import { checkAchievements } from "@/components/shared/achievementData";
 import useInputController from "@/components/world/useInputController.jsx";
+import { useZoomController, ZOOM_LEVELS } from "@/components/world/useZoomController.js";
 import AbilityHotbar from "@/components/world/AbilityHotbar.jsx";
 import { COMBAT_MODE } from "@/components/shared/combatMode";
 import { isSafeZone } from "@/components/shared/worldRules";
@@ -46,6 +47,9 @@ export default function World() {
   const [viewMode, setViewMode] = useState("3d"); // "map" | "3d"
   const [sceneSettings, setSceneSettings] = useState({ showNameplates: true, showHealthBars: true, cameraDistance: 1.0 });
   const [npcDialogue, setNpcDialogue] = useState(null); // { npcType, zoneName }
+  
+  // ─── ZOOM CONTROLLER ─────────────────────────────────────────────────────────
+  const { getCurrentZoomConfig, zoomLevel } = useZoomController();
 
   // ─── AUTHORITATIVE TARGET STATE ─────────────────────────────────────────────
   // Single source of truth. No parallel lockedTarget / combatMonster / selectedTarget concepts.
@@ -350,18 +354,19 @@ export default function World() {
         </div>
 
         {/* 3D model-based world scene */}
-        {viewMode === "3d" && myCharacter && (
-          <WorldScene3D
-            myCharacter={myCharacter}
-            allCharacters={allCharacters}
-            monsters={monsters}
-            worldObjects={worldObjects}
-            activeEvents={activeEvents}
-            onMove={handleMove}
-            onMonsterClick={(monster) => selectTarget(monster, "monster")}
-              sceneSettings={sceneSettings}
-          />
-        )}
+         {viewMode === "3d" && myCharacter && (
+           <WorldScene3D
+             myCharacter={myCharacter}
+             allCharacters={allCharacters}
+             monsters={monsters}
+             worldObjects={worldObjects}
+             activeEvents={activeEvents}
+             onMove={handleMove}
+             onMonsterClick={(monster) => selectTarget(monster, "monster")}
+             sceneSettings={sceneSettings}
+             getCurrentZoomConfig={getCurrentZoomConfig}
+           />
+         )}
 
         <Minimap
           myCharacter={myCharacter}
