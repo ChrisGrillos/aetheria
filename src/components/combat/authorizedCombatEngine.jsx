@@ -1,259 +1,228 @@
 /**
- * AUTHORITATIVE COMBAT ENGINE
- * 
- * Single shared combat resolution used by:
- * - CombatOverlay (world combat)
- * - TravelEncounterModal (travel encounters)
- * - Future PvP duels and auto-combat
- * 
- * All combat modifications, cooldowns, energy, buffs, loot, death—route through here.
- * Enforces world rules, prevents exploits, ensures backward compat.
+ * AUTHORIZED COMBAT ENGINE — Single source of truth for combat initiation,
+ * damage calculation, ability use, and death handling.
+ *
+ * ALL combat entry points (walk-onto, click, Tab+Enter, hotbar) MUST
+ * route through initiateCombat() which validates via worldRules.
+ *
+ * This re-exports the pure math from combatEngine.jsx and adds the
+ * authority/validation layer on top.
  */
 
-import { shouldLevelUp, levelUpUpdates, calculateDerivedStats } from "@/components/shared/charUtils";
-import { canAttack, validateTarget, getDeathRules, applyDeathPenalty, getRespawnLocation } from "@/components/shared/worldRules";
-import { rollLoot } from "@/components/shared/lootTables";
+import { canAttack, applyDeathPenalty, getRespawnLocation } from "@/components/shared/worldRules";
+import { getZoneAt } from "@/components/shared/worldZones";
 
-// ─── COMBAT INITIALIZATION ────────────────────────────────────────────────────
+// ─── RE-EXPORT PURE COMBAT MATH ──────────────────────────────────────────────
+// These are the stateless calculation functions from combatEngine.jsx.
+// Import them here so consumers only need one import.
+
+export {
+  calcAttackDamage,
+  resolveMonsterAttack,
+  calcRewards,
+  autoResolveCombat,
+} from "@/components/combat/combatEngine";
+
+// ─── COMBAT INITIATION ──────────────────────────────────────────────────────
 
 /**
- * Start a combat session. Validate both combatants, apply initial state.
- * Returns { valid: boolean, reason?: string, session?: CombatSession }
+ * Attempt to start combat. Validates through worldRules before allowing.
+ *
+ * @param {Object} attacker - The attacking character
+ * @param {Object} target - The target entity
+ * @param {boolean} combatModeActive - Is the attacker in combat mode?
+ * @returns {{ success: boolean, reason: string|null }}
  */
-export function initiateCombat(attacker, target, zone, relationshipState = {}) {
-  // Validate attacker can attack target
-  const validation = validateTarget(attacker, target, zone, relationshipState);
-  if (!validation.valid) {
-    return { valid: false, reason: validation.reason };
+export function initiateCombat(attacker, target, combatModeActive = true) {
+  if (!attacker || !target) {
+    return { success: false, reason: "invalid_entities" };
   }
 
-  // Valid combat session
+  // Must be in combat mode to attack (Shadowbane-style)
+  // Exception: auto-enter on monster aggro (walk-onto)
+  const isMonster = target.type === "monster" || target.monster_type;
+  if (!combatModeActive && !isMonster) {
+    return { success: false, reason: "not_in_combat_mode" };
+  }
+
+  // Range check: must be adjacent or on same tile
+  const dx = Math.abs((attacker.x || 0) - (target.x || 0));
+  const dy = Math.abs((attacker.y || 0) - (target.y || 0));
+  if (dx + dy > 1) {
+    return { success: false, reason: "out_of_range" };
+  }
+
+  // Validate through world rules (PvP legality, zone checks)
+  const attackCheck = canAttack(attacker, target, target.x, target.y);
+  if (!attackCheck.allowed) {
+    return { success: false, reason: attackCheck.reason };
+  }
+
+  return { success: true, reason: attackCheck.reason }; // reason may be "contested_zone_pvp" for warnings
+}
+
+// ─── ABILITY VALIDATION ──────────────────────────────────────────────────────
+
+/**
+ * Can the character use this ability right now?
+ * Checks energy, cooldown, and combat state.
+ */
+export function canUseAbility(character, ability, cooldowns = {}) {
+  if (!ability) return { usable: false, reason: "no_ability" };
+
+  // Energy check
+  const maxEn = 50 + ((character.stats?.wisdom || 10) * 2);
+  const currentEnergy = character.energy ?? maxEn;
+  if (ability.energy_cost && currentEnergy < ability.energy_cost) {
+    return { usable: false, reason: "not_enough_energy" };
+  }
+
+  // Cooldown check
+  const cdKey = ability.id;
+  if (cooldowns[cdKey] && cooldowns[cdKey] > 0) {
+    return { usable: false, reason: "on_cooldown", remainingRounds: cooldowns[cdKey] };
+  }
+
+  // Level check
+  if (ability.unlocked_at_level && (character.level || 1) < ability.unlocked_at_level) {
+    return { usable: false, reason: "level_locked" };
+  }
+
+  return { usable: true, reason: null };
+}
+
+/**
+ * Apply an ability. Returns the energy cost and sets cooldown.
+ * Does NOT calculate damage (that's calcAttackDamage's job).
+ */
+export function applyAbilityCost(character, ability, cooldowns = {}) {
+  const maxEn = 50 + ((character.stats?.wisdom || 10) * 2);
+  const currentEnergy = character.energy ?? maxEn;
+  const newEnergy = Math.max(0, currentEnergy - (ability.energy_cost || 0));
+
+  const newCooldowns = { ...cooldowns };
+  if (ability.cooldown_rounds) {
+    newCooldowns[ability.id] = ability.cooldown_rounds;
+  }
+
   return {
-    valid: true,
-    session: {
-      attackerId: attacker.id,
-      targetId: target.id,
-      zoneId: zone?.id,
-      relationshipState,
-      attackerStartHP: attacker.hp || attacker.max_hp || 100,
-      targetStartHP: target.hp || target.max_hp || 100,
-      log: [],
-      round: 0,
-    }
+    energy: newEnergy,
+    cooldowns: newCooldowns,
   };
 }
 
-// ─── DAMAGE CALCULATION ────────────────────────────────────────────────────────
-
 /**
- * Calculate attack damage: base attack - defense, variance, crit, evasion.
- * Ability effect_magnitude is % of base attack (100 = 1.0x, 150 = 1.5x, etc).
+ * Tick all cooldowns down by 1 round. Called at end of each combat round.
  */
-export function calcAttackDamage(attacker, defender, ability = null) {
-  const atkPower = attacker.attack_power || 10;
-  const defPower = defender.defense || 0;
-  const magnitude = ability ? ability.effect_magnitude / 100 : 1.0;
-
-  // Base damage = (attack - defense) * ability magnitude + variance
-  const baseDmg = Math.max(1, atkPower * magnitude - defPower * 0.5);
-  const variance = Math.random() * atkPower * 0.2;
-  let dmg = Math.round(baseDmg + variance);
-
-  // Critical hit
-  const critChance = (attacker.critical_hit_chance || 5) / 100;
-  const isCrit = Math.random() < critChance;
-  if (isCrit) dmg = Math.round(dmg * 1.5);
-
-  // Evasion
-  const evasionChance = (defender.evasion || 0) / 100;
-  const evaded = Math.random() < evasionChance;
-
-  return { dmg, isCrit, evaded };
+export function tickCooldowns(cooldowns) {
+  const updated = {};
+  for (const [key, val] of Object.entries(cooldowns)) {
+    if (val > 1) updated[key] = val - 1;
+    // Drop entries that hit 0
+  }
+  return updated;
 }
 
-// ─── COMBAT ROUND RESOLUTION ──────────────────────────────────────────────────
+// ─── COMBAT ENERGY REGEN ─────────────────────────────────────────────────────
 
 /**
- * Resolve a single round of combat.
- * attacker and defender are { hp, max_hp, attack_power, defense, etc. }
- * ability is optional (null = basic attack).
+ * In-combat energy regen per round. Lower than out-of-combat movement regen.
  */
-export function resolveCombatRound(session, attacker, defender, attackerAbility = null) {
-  const { dmg, isCrit, evaded } = calcAttackDamage(attacker, defender, attackerAbility);
+export function combatEnergyRegen(character) {
+  const wisdom = character.stats?.wisdom || 10;
+  const maxEn = 50 + wisdom * 2;
+  const current = character.energy ?? maxEn;
+  const regen = 2 + Math.floor(wisdom / 5); // Slower regen in combat
+  return Math.min(maxEn, current + regen);
+}
 
-  let log = [];
-  let newDefenderHP = defender.hp;
+// ─── DEATH HANDLING ──────────────────────────────────────────────────────────
 
-  if (evaded) {
-    log.push(`${defender.name} evaded the attack!`);
+/**
+ * Handle character death. Returns all updates to apply.
+ * This is the ONLY death handler. World.jsx onDefeat MUST use this.
+ */
+export function handleDeath(character, zoneId = null, killerType = "monster") {
+  // Determine zone from character position if not provided
+  const zone = zoneId || getZoneAt(character.x, character.y)?.id || null;
+
+  // Apply death penalty (respawn location, HP, gold, XP losses)
+  const penalty = applyDeathPenalty(character, zone, killerType);
+
+  return {
+    ...penalty,
+    // Additional state resets on death
+    active_effects: [], // Clear all buffs/debuffs
+  };
+}
+
+// ─── BUFF/DEBUFF APPLICATION ─────────────────────────────────────────────────
+// Single source — charUtils helpers delegate here.
+
+/**
+ * Apply a buff or debuff effect to a character.
+ */
+export function applyEffect(character, effect) {
+  const effects = [...(character.active_effects || [])];
+
+  // Check if same effect already exists (refresh duration)
+  const existingIdx = effects.findIndex(e => e.id === effect.id);
+  if (existingIdx >= 0) {
+    effects[existingIdx] = { ...effects[existingIdx], ...effect, applied_at: Date.now() };
   } else {
-    newDefenderHP = Math.max(0, defender.hp - dmg);
-    const critLabel = isCrit ? " 💥CRIT" : "";
-    log.push(`${attacker.name} dealt ${dmg}${critLabel} damage`);
+    effects.push({ ...effect, applied_at: Date.now() });
   }
 
-  return { newDefenderHP, log, dmg, isCrit, evaded };
+  return { active_effects: effects };
 }
-
-// ─── COOLDOWN / ENERGY MANAGEMENT ──────────────────────────────────────────────
-
-export function initializeCooldowns(abilities = []) {
-  const cooldowns = {};
-  abilities.forEach(a => {
-    if (a.id) cooldowns[a.id] = 0;
-  });
-  return cooldowns;
-}
-
-export function canUseAbility(abilityId, cooldowns = {}, currentEnergy = 0, ability = {}) {
-  if (cooldowns[abilityId] && cooldowns[abilityId] > 0) {
-    return { canUse: false, reason: `Cooldown: ${cooldowns[abilityId]} rounds` };
-  }
-  const cost = ability.energy_cost || 0;
-  if (currentEnergy < cost) {
-    return { canUse: false, reason: `Need ${cost} energy, have ${currentEnergy}` };
-  }
-  return { canUse: true };
-}
-
-export function tickCooldowns(cooldowns = {}) {
-  const next = { ...cooldowns };
-  Object.keys(next).forEach(k => {
-    if (next[k] > 0) next[k]--;
-  });
-  return next;
-}
-
-export function applyCooldown(cooldowns = {}, abilityId, rounds) {
-  return { ...cooldowns, [abilityId]: rounds };
-}
-
-// ─── BUFFS / DEBUFFS — delegate to charUtils (single source) ─────────────────
-export { buildBuff, buildDebuff, tickEffects, applyEffect } from "@/components/shared/charUtils";
-
-// ─── DEATH & RESPAWN ───────────────────────────────────────────────────────────
 
 /**
- * Handle character death: apply penalty, determine respawn, set state.
+ * Remove expired effects.
  */
-export function handleDeath(character, zoneId, defeatedByMonster = false) {
-  const deathRules = getDeathRules(zoneId);
-  const penalty = applyDeathPenalty(character, zoneId);
-  const respawn = getRespawnLocation(zoneId);
-
-  return {
-    death: {
-      zoneId,
-      defeatedByMonster,
-      goldLost: penalty.goldLost,
-      shouldDropLoot: penalty.shouldDropLoot,
-    },
-    updates: {
-      x: respawn.x,
-      y: respawn.y,
-      hp: Math.floor((character.max_hp || 100) * 0.5),  // Respawn at 50% HP
-      gold: penalty.gold,
-    },
-  };
-}
-
-// ─── LOOT & REWARDS ───────────────────────────────────────────────────────────
-
-export function calcRewards(monster, won) {
-  if (!won) return { xp: 0, gold: 0 };
-  return {
-    xp: monster.xp_reward || (monster.level || 1) * 20,
-    gold: monster.gold_reward || (monster.level || 1) * 8,
-  };
-}
-
-export function applyVictoryRewards(character, monster, zone) {
-  const rewards = calcRewards(monster, true);
-  const loot = rollLoot(monster, zone);
-
-  const newXP = (character.xp || 0) + rewards.xp;
-  const newGold = (character.gold || 0) + rewards.gold;
-
-  return {
-    xp: newXP,
-    gold: newGold,
-    loot,
-    shouldLevelUp: newXP >= getLevelUpThreshold(character.level || 1),
-  };
-}
-
-export function getLevelUpThreshold(level) {
-  return Math.floor(100 * Math.pow(level, 1.5));
-}
-
-// ─── AUTO-RESOLVE (for testing/travel encounters) ────────────────────────────
-
-/**
- * Fully auto-resolve combat between character and monster.
- * Used by TravelEncounterModal and testing.
- */
-export function autoResolveCombat(character, monster, zone) {
-  const derived = calculateDerivedStats(character);
-  let playerHP = character.hp || character.max_hp || 100;
-  let monsterHP = monster.hp || monster.max_hp || 50;
-  const log = [];
-  let rounds = 0;
-
-  const monsterDefense = { 
-    defense: (monster.level || 1) * 3, 
-    evasion: 10,
-    attack_power: (monster.level || 1) * 8 + 5,
-    critical_hit_chance: 5,
-  };
-
-  while (playerHP > 0 && monsterHP > 0 && rounds < 20) {
-    rounds++;
-
-    // Player attacks
-    const { dmg: pDmg, isCrit, evaded: pEvaded } = calcAttackDamage(derived, monsterDefense, null);
-    if (pEvaded) {
-      log.push(`R${rounds}: ${monster.name} dodged!`);
-    } else {
-      monsterHP = Math.max(0, monsterHP - pDmg);
-      log.push(`R${rounds}: You deal ${pDmg}${isCrit ? " 💥CRIT" : ""} dmg. Enemy: ${Math.max(0, monsterHP)}HP`);
+export function tickEffects(character, roundsElapsed = 1) {
+  const effects = (character.active_effects || []).filter(e => {
+    if (!e.duration_rounds) return true; // Permanent effects
+    const remaining = (e.duration_rounds || 0) - roundsElapsed;
+    return remaining > 0;
+  }).map(e => {
+    if (e.duration_rounds) {
+      return { ...e, duration_rounds: e.duration_rounds - roundsElapsed };
     }
-    if (monsterHP <= 0) break;
+    return e;
+  });
 
-    // Monster attacks
-    const playerDefense = { defense: derived.defense, evasion: derived.evasion, critical_hit_chance: 0 };
-    const { dmg: mDmg, isCrit: mCrit, evaded: mEvaded } = calcAttackDamage(monsterDefense, playerDefense, null);
-    if (mEvaded) {
-      log.push(`R${rounds}: You dodged! 💨`);
-    } else {
-      playerHP = Math.max(0, playerHP - mDmg);
-      log.push(`R${rounds}: Enemy deals ${mDmg}${mCrit ? " 💥" : ""} dmg. You: ${Math.max(0, playerHP)}HP`);
+  return { active_effects: effects };
+}
+
+// ─── DERIVED COMBAT STATS ────────────────────────────────────────────────────
+
+/**
+ * Get effective combat stats with all active buffs/debuffs applied.
+ */
+export function getEffectiveCombatStats(character, derived) {
+  let attackPower = derived.attack_power || 10;
+  let defense = derived.defense || 0;
+  let evasion = derived.evasion || 0;
+  let critChance = derived.critical_hit_chance || 5;
+
+  for (const effect of character.active_effects || []) {
+    if (effect.effect_type === "buff") {
+      if (effect.stat === "attack" || effect.stat === "attack_power") attackPower += effect.effect_magnitude || 0;
+      if (effect.stat === "defense") defense += effect.effect_magnitude || 0;
+      if (effect.stat === "evasion") evasion += effect.effect_magnitude || 0;
+      if (effect.stat === "crit") critChance += effect.effect_magnitude || 0;
+    }
+    if (effect.effect_type === "debuff") {
+      if (effect.stat === "attack" || effect.stat === "attack_power") attackPower -= effect.effect_magnitude || 0;
+      if (effect.stat === "defense") defense -= effect.effect_magnitude || 0;
+      if (effect.stat === "evasion") evasion -= effect.effect_magnitude || 0;
     }
   }
 
-  const won = monsterHP <= 0;
-  const rewards = calcRewards(monster, won);
-
-  if (!won) {
-    const deathResult = handleDeath(character, zone?.id, true);
-    return {
-      won: false,
-      rounds,
-      log,
-      finalPlayerHP: 0,
-      xpGained: 0,
-      goldGained: 0,
-      death: deathResult.death,
-      deathUpdates: deathResult.updates,
-    };
-  }
-
   return {
-    won: true,
-    rounds,
-    log,
-    finalPlayerHP: Math.max(1, playerHP),
-    xpGained: rewards.xp,
-    goldGained: rewards.gold,
-    loot: rollLoot(monster, zone),
+    attack_power: Math.max(1, attackPower),
+    defense: Math.max(0, defense),
+    evasion: Math.max(0, Math.min(75, evasion)),
+    critical_hit_chance: Math.max(0, Math.min(100, critChance)),
   };
 }
