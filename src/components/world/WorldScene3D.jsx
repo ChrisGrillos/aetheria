@@ -903,6 +903,9 @@ export default function WorldScene3D({
     const cy = myCharacter?.y ?? 25;
     terrainRef.current = buildTerrain(scene, cx, cy);
 
+    // Spawn visual-only town walker NPCs
+    townWalkersRef.current = createTownWalkers(scene);
+
     // Resize
     const onResize = () => {
       if (!mount || !renderer || !camera) return;
