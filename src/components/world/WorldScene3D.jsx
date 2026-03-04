@@ -793,7 +793,7 @@ function addTree(group, wx, baseY, wz) {
 function billboardHpBar(mesh, entity, camera, showBars) {
   const bg   = mesh.getObjectByName("hpBarBg");
   const fill = mesh.getObjectByName("hpBarFill");
-  if (!bg || !fill) return;
+  if (!bg || !fill || !bg.material || !fill.material) return;
 
   if (!showBars) { bg.visible = false; fill.visible = false; return; }
   bg.visible = fill.visible = true;
@@ -805,9 +805,11 @@ function billboardHpBar(mesh, entity, camera, showBars) {
   const maxHp = entity.max_hp ?? 100;
   const pct   = Math.max(0.001, Math.min(1, hp / maxHp));
   fill.scale.x = pct;
-  const barW = bg.geometry.parameters?.width ?? 0.48;
+  const barW = bg.geometry?.parameters?.width ?? 1.5;
   fill.position.x = (pct - 1) * (barW / 2);
-  fill.material.color.setHex(pct > 0.6 ? 0x22c55e : pct > 0.3 ? 0xf59e0b : 0xef4444);
+  if (fill.material && fill.material.color) {
+    fill.material.color.setHex(pct > 0.6 ? 0x22c55e : pct > 0.3 ? 0xf59e0b : 0xef4444);
+  }
 }
 
 // ─── COMPONENT ───────────────────────────────────────────────────────────────
