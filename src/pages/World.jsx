@@ -210,18 +210,19 @@ export default function World() {
     setAllCharacters(prev => prev.map(c => c.id === myCharacter.id ? updated : c));
     await base44.entities.Character.update(myCharacter.id, updates);
 
-    // Check if we walked onto a monster tile — trigger combat and stop walking
-    setMonsters(currentMonsters => {
-      const monsterOnTile = currentMonsters.find(m => m.is_alive && m.x === newX && m.y === newY);
-      if (monsterOnTile && !combatMonster) {
+    // Check if we walked onto a monster tile — route through authoritative combat start
+    const monsterOnTile = monsters.find(m => m.is_alive && m.x === newX && m.y === newY);
+    if (monsterOnTile) {
+      // Use startCombat after this render; we need to defer since startCombat uses myCharacter
+      // which is about to be updated. Pass the updated character directly.
+      const zone = getZoneAt(newX, newY);
+      const validation = initiateCombat(updated, monsterOnTile, zone);
+      if (validation.valid) {
+        setActiveTarget({ entity: monsterOnTile, type: "monster" });
         setCombatMonster(monsterOnTile);
+        return "combat";
       }
-      return currentMonsters;
-    });
-
-    // Check for monster on tile using snapshot (for return value)
-    const monsterOnTileCheck = monsters.find(m => m.is_alive && m.x === newX && m.y === newY);
-    if (monsterOnTileCheck) return "combat";
+    }
 
     // Roll for random encounter after moving
     const enc = rollEncounter(zone);
