@@ -601,11 +601,12 @@ export default function WorldScene3D({
 
     const hp = entity.hp ?? entity.max_hp ?? 100;
     const maxHp = entity.max_hp ?? 100;
-    const pct = Math.max(0, Math.min(1, hp / maxHp));
+    const pct = Math.max(0.001, Math.min(1, hp / maxHp)); // never 0 — avoids Three.js uniform crash
 
     // Scale fill
     fill.scale.x = pct;
-    fill.position.x = (pct - 1) * (bg.geometry.parameters.width / 2);
+    const barWidth = bg.geometry.parameters?.width ?? 0.44;
+    fill.position.x = (pct - 1) * (barWidth / 2);
 
     // Color by HP %
     const color = pct > 0.6 ? 0x22c55e : pct > 0.3 ? 0xf59e0b : 0xef4444;
