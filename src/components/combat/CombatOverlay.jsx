@@ -223,6 +223,7 @@ export default function CombatOverlay({ character, monster, onClose, onVictory, 
     }
 
     if (newEnemyHP <= 0) {
+      triggerEntityState(monster.id, "death", 1200);
       handleVictory(newPlayerHP, playerEnergy - cost);
     } else {
       setPhase("enemy");
