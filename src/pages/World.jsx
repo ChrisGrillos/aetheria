@@ -290,7 +290,7 @@ export default function World() {
             worldObjects={worldObjects}
             onMove={handleMove}
             activeEvents={activeEvents}
-            onMonsterClick={(monster) => setCombatMonster(monster)}
+            onMonsterClick={(monster) => { lockTarget(monster); setCombatMonster(monster); }}
           />
         </div>
 
