@@ -1,77 +1,90 @@
 /**
- * WorldScene3D — Phase 3 model-based world presentation layer.
- *
- * AUTHORITY:
- * - This is a PRESENTATION LAYER ONLY.
- * - All movement, combat, and world state authority remains in pages/World.jsx + authorizedCombatEngine.
- * - This component reads world state and calls the same onMove/onMonsterClick callbacks as WorldMap.
- * - No new gameplay logic is introduced here.
- *
- * RENDERING:
- * - Three.js canvas, orthographic-leaning 3/4 camera (classic MMO perspective)
- * - Procedural low-poly character meshes per race
- * - Smooth position interpolation between tile centers
- * - Readable selection circles, nameplates, health bars
- * - Minimal restrained effects (selection flash, damage numbers via DOM overlay)
+ * WorldScene3D — Visual presentation layer only.
+ * Authority (movement, combat, targeting) stays in pages/World.jsx.
+ * This file: Three.js canvas, camera, terrain, character meshes, DOM overlays.
  */
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import * as THREE from "three";
-import { getTile, getZoneAt, MAP_W, MAP_H, ZONES } from "@/components/shared/worldZones";
+import { getTile, getZoneAt, MAP_W, MAP_H, ZONES, POINTS_OF_INTEREST } from "@/components/shared/worldZones";
 import { buildPath, isPassable } from "@/components/shared/movementAuthority";
-import { getRace, RACES } from "@/components/shared/raceData";
 import { useAmbientWorld, AmbientHUDWidget } from "./AmbientWorld";
 
 // ─── CONSTANTS ────────────────────────────────────────────────────────────────
 
-const TILE_SIZE = 2;         // world units per tile
-const CAMERA_HEIGHT = 22;
-const CAMERA_DISTANCE = 18;
-const CAMERA_ANGLE = 0.65;   // radians, isometric lean
+const TILE_SIZE   = 2;
+const CAM_HEIGHT  = 26;
+const CAM_DIST    = 22;
+const CAM_ANGLE   = 0.18; // radians offset from straight-back (classic 3/4 tilt)
 
-const FOG_RADIUS = 10; // tiles
+// ─── TERRAIN PALETTE ─────────────────────────────────────────────────────────
 
-// Race visual config: height, body scale, color accents
+const TERRAIN_3D = {
+  grass:  { color: 0x3a6b32, height: 0.14 },
+  forest: { color: 0x1e4020, height: 0.20 },
+  water:  { color: 0x193f6e, height: 0.04 },
+  stone:  { color: 0x555555, height: 0.22 },
+  sand:   { color: 0xa08060, height: 0.10 },
+  lava:   { color: 0x8b2200, height: 0.18 },
+  swamp:  { color: 0x2e4422, height: 0.10 },
+  plains: { color: 0x5a6e28, height: 0.12 },
+};
+
+// Zone-border accent color for visual separation
+const ZONE_BORDER_COLORS = {
+  town_center:       0xd4a017,
+  dark_forest:       0x163a16,
+  iron_hills:        0x444444,
+  cursed_swamp:      0x1a3010,
+  golden_plains:     0x6d8420,
+  volcanic_badlands: 0x7a1800,
+  coastal_ruins:     0x3a5a6e,
+};
+
+// ─── RACE VISUALS ─────────────────────────────────────────────────────────────
+
 const RACE_VISUALS = {
-  human:      { height: 1.0, bodyW: 0.32, color: 0xd4a77a, accentColor: 0xfbbf24, headScale: 1.0 },
-  elf:        { height: 1.05, bodyW: 0.26, color: 0xc5dba8, accentColor: 0x67e8f9, headScale: 0.95 },
-  dwarf:      { height: 0.72, bodyW: 0.40, color: 0xb87333, accentColor: 0xfb923c, headScale: 1.15 },
-  halfling:   { height: 0.60, bodyW: 0.28, color: 0xe8c88a, accentColor: 0x86efac, headScale: 1.10 },
-  orc:        { height: 1.08, bodyW: 0.44, color: 0x6b8a5e, accentColor: 0xef4444, headScale: 1.05 },
-  half_giant: { height: 1.35, bodyW: 0.55, color: 0x9ca3af, accentColor: 0xa855f7, headScale: 0.90 },
+  human:      { height: 1.00, bodyW: 0.32, color: 0xd4a77a, accent: 0xfbbf24, headScale: 1.0,  beard: false, ears: false, shoulders: false },
+  elf:        { height: 1.08, bodyW: 0.26, color: 0xb8d99a, accent: 0x67e8f9, headScale: 0.95, beard: false, ears: true,  shoulders: false },
+  dwarf:      { height: 0.70, bodyW: 0.42, color: 0xb07030, accent: 0xfb923c, headScale: 1.18, beard: true,  ears: false, shoulders: false },
+  halfling:   { height: 0.58, bodyW: 0.28, color: 0xd8b870, accent: 0x86efac, headScale: 1.12, beard: false, ears: true,  shoulders: false },
+  orc:        { height: 1.10, bodyW: 0.46, color: 0x5a7a4e, accent: 0xef4444, headScale: 1.06, beard: false, ears: false, shoulders: false },
+  half_giant: { height: 1.40, bodyW: 0.58, color: 0x8090a0, accent: 0xa855f7, headScale: 0.88, beard: false, ears: false, shoulders: true  },
 };
 
 const MONSTER_VISUALS = {
-  goblin:   { color: 0x4ade80, height: 0.55, bodyW: 0.30 },
-  orc:      { color: 0x6b8a5e, height: 1.05, bodyW: 0.44 },
-  dragon:   { color: 0xef4444, height: 1.40, bodyW: 0.60 },
-  skeleton: { color: 0xe2e8f0, height: 0.90, bodyW: 0.26 },
-  troll:    { color: 0x78716c, height: 1.20, bodyW: 0.50 },
-  vampire:  { color: 0x9333ea, height: 1.00, bodyW: 0.30 },
-  werewolf: { color: 0x92400e, height: 1.10, bodyW: 0.42 },
-  wraith:   { color: 0x6366f1, height: 0.95, bodyW: 0.28 },
-  basilisk: { color: 0x65a30d, height: 0.70, bodyW: 0.50 },
-  kraken:   { color: 0x1d4ed8, height: 1.30, bodyW: 0.65 },
+  goblin:   { color: 0x44bb60, height: 0.55, bodyW: 0.30 },
+  orc:      { color: 0x5a7a4e, height: 1.05, bodyW: 0.46 },
+  dragon:   { color: 0xcc2200, height: 1.50, bodyW: 0.65 },
+  skeleton: { color: 0xdde8ee, height: 0.90, bodyW: 0.26 },
+  troll:    { color: 0x706050, height: 1.25, bodyW: 0.52 },
+  vampire:  { color: 0x8822cc, height: 1.00, bodyW: 0.30 },
+  werewolf: { color: 0x7a3d10, height: 1.12, bodyW: 0.44 },
+  wraith:   { color: 0x5055cc, height: 0.95, bodyW: 0.28 },
+  basilisk: { color: 0x558800, height: 0.72, bodyW: 0.52 },
+  kraken:   { color: 0x1040b8, height: 1.35, bodyW: 0.68 },
 };
 
-const TERRAIN_COLORS_3D = {
-  grass:  0x2d5a27,
-  forest: 0x1a3d1a,
-  water:  0x1a3d6e,
-  stone:  0x4a4a4a,
-  sand:   0x8b7355,
-  lava:   0x8b2500,
-  swamp:  0x2a3d1a,
-  plains: 0x4a5a20,
+// Visual state booleans per entity
+// States: idle | walk | attack | cast | hurt | death
+const STATE_COLORS = {
+  idle:   null,
+  walk:   null,
+  attack: 0xff6622,
+  cast:   0x66aaff,
+  hurt:   0xff2222,
+  death:  0x333333,
 };
 
-// ─── HELPERS ──────────────────────────────────────────────────────────────────
+// ─── HELPERS ─────────────────────────────────────────────────────────────────
 
 function tileToWorld(tx, ty) {
   return new THREE.Vector3(tx * TILE_SIZE, 0, ty * TILE_SIZE);
 }
 
-
+function lerp3(v, target, t) {
+  v.lerp(target, t);
+}
 
 // ─── MESH BUILDERS ────────────────────────────────────────────────────────────
 
@@ -87,113 +100,422 @@ function buildCharacterMesh(raceId, isAI = false, isMonster = false, monsterSpec
 
   const h  = vis.height;
   const bw = vis.bodyW;
-  const bodyColor  = vis.color;
-  const accentColor = isMonster ? 0xff4444 : (isAI ? 0x67e8f9 : (vis.accentColor || 0xfbbf24));
+  const bodyColor   = vis.color;
+  const accentColor = isMonster ? 0xdd3333 : (isAI ? 0x22ccdd : (vis.accent || 0xfbbf24));
 
-  // Body
-  const bodyGeo  = new THREE.BoxGeometry(bw, h * 0.55, bw * 0.7);
-  const bodyMat  = new THREE.MeshLambertMaterial({ color: bodyColor });
-  const body     = new THREE.Mesh(bodyGeo, bodyMat);
-  body.position.y = h * 0.28;
+  // ── Legs ──
+  const legH = h * 0.35;
+  const legW = bw * 0.32;
+  [-1, 1].forEach(side => {
+    const legGeo = new THREE.BoxGeometry(legW, legH, legW);
+    const legMat = new THREE.MeshLambertMaterial({ color: bodyColor });
+    const leg = new THREE.Mesh(legGeo, legMat);
+    leg.position.set(side * bw * 0.18, legH * 0.5, 0);
+    leg.castShadow = true;
+    group.add(leg);
+  });
+
+  // ── Body ──
+  const bodyH = h * 0.42;
+  const bodyGeo = new THREE.BoxGeometry(bw, bodyH, bw * 0.70);
+  const bodyMat = new THREE.MeshLambertMaterial({ color: bodyColor });
+  const body = new THREE.Mesh(bodyGeo, bodyMat);
+  body.position.y = legH + bodyH * 0.5;
   body.castShadow = true;
   group.add(body);
 
-  // Head
-  const headScale = vis.headScale || 1.0;
-  const headSize  = bw * 0.72 * headScale;
-  const headGeo   = new THREE.BoxGeometry(headSize, headSize, headSize);
-  const headMat   = new THREE.MeshLambertMaterial({ color: bodyColor });
-  const head      = new THREE.Mesh(headGeo, headMat);
-  head.position.y = h * 0.65;
+  // ── Accent strip (belt / armor) ──
+  const beltGeo = new THREE.BoxGeometry(bw + 0.04, h * 0.06, bw * 0.72);
+  const beltMat = new THREE.MeshLambertMaterial({ color: accentColor });
+  const belt    = new THREE.Mesh(beltGeo, beltMat);
+  belt.position.y = legH + bodyH * 0.15;
+  group.add(belt);
+
+  // ── Arms ──
+  const armH = h * 0.38;
+  const armW = bw * 0.26;
+  [-1, 1].forEach(side => {
+    const armGeo = new THREE.BoxGeometry(armW, armH, armW);
+    const armMat = new THREE.MeshLambertMaterial({ color: bodyColor });
+    const arm = new THREE.Mesh(armGeo, armMat);
+    arm.position.set(side * (bw * 0.60), legH + bodyH * 0.60, 0);
+    arm.castShadow = true;
+    group.add(arm);
+  });
+
+  // ── Head ──
+  const headS = vis.headScale || 1.0;
+  const headSz = bw * 0.72 * headS;
+  const headGeo = new THREE.BoxGeometry(headSz, headSz, headSz);
+  const headMat = new THREE.MeshLambertMaterial({ color: bodyColor });
+  const headY   = legH + bodyH + headSz * 0.52;
+  const head    = new THREE.Mesh(headGeo, headMat);
+  head.position.y = headY;
   head.castShadow = true;
   group.add(head);
 
-  // Accent (belt / armor stripe)
-  const accentGeo = new THREE.BoxGeometry(bw + 0.02, h * 0.07, bw * 0.72);
-  const accentMat = new THREE.MeshLambertMaterial({ color: accentColor });
-  const accent    = new THREE.Mesh(accentGeo, accentMat);
-  accent.position.y = h * 0.28;
-  group.add(accent);
+  // ── Eyes (two small dark cubes) ──
+  [-1, 1].forEach(side => {
+    const eyeGeo = new THREE.BoxGeometry(headSz * 0.16, headSz * 0.12, headSz * 0.05);
+    const eyeMat = new THREE.MeshBasicMaterial({ color: isMonster ? 0xff2200 : 0x111111 });
+    const eye    = new THREE.Mesh(eyeGeo, eyeMat);
+    eye.position.set(side * headSz * 0.22, headY + headSz * 0.04, headSz * 0.48);
+    group.add(eye);
+  });
 
-  // Dwarf gets a beard block
-  if (raceId === "dwarf") {
-    const beardGeo = new THREE.BoxGeometry(headSize * 0.7, headSize * 0.45, headSize * 0.4);
-    const beardMat = new THREE.MeshLambertMaterial({ color: 0xd97706 });
-    const beard    = new THREE.Mesh(beardGeo, beardMat);
-    beard.position.y = h * 0.65 - headSize * 0.35;
-    beard.position.z = headSize * 0.3;
+  // ── Race-specific geometry ──
+  if (vis.beard) {
+    const bGeo = new THREE.BoxGeometry(headSz * 0.68, headSz * 0.44, headSz * 0.36);
+    const bMat = new THREE.MeshLambertMaterial({ color: 0xc87820 });
+    const beard = new THREE.Mesh(bGeo, bMat);
+    beard.position.set(0, headY - headSz * 0.38, headSz * 0.28);
     group.add(beard);
   }
-
-  // Half-giant gets extra shoulder blocks
-  if (raceId === "half_giant") {
+  if (vis.ears) {
     [-1, 1].forEach(side => {
-      const shGeo = new THREE.BoxGeometry(0.18, 0.14, 0.18);
-      const shMat = new THREE.MeshLambertMaterial({ color: accentColor });
-      const sh    = new THREE.Mesh(shGeo, shMat);
-      sh.position.set(side * (bw * 0.55), h * 0.52, 0);
+      const eGeo = new THREE.ConeGeometry(0.04, 0.18, 4);
+      const eMat = new THREE.MeshLambertMaterial({ color: bodyColor });
+      const ear  = new THREE.Mesh(eGeo, eMat);
+      ear.position.set(side * headSz * 0.56, headY + headSz * 0.12, 0);
+      ear.rotation.z = side * Math.PI / 2.1;
+      group.add(ear);
+    });
+  }
+  if (vis.shoulders) {
+    [-1, 1].forEach(side => {
+      const sGeo = new THREE.BoxGeometry(0.22, 0.16, 0.22);
+      const sMat = new THREE.MeshLambertMaterial({ color: accentColor });
+      const sh   = new THREE.Mesh(sGeo, sMat);
+      sh.position.set(side * (bw * 0.58), legH + bodyH * 0.85, 0);
       group.add(sh);
     });
   }
 
-  // Elf gets pointy "ear" spikes on head sides
-  if (raceId === "elf") {
-    [-1, 1].forEach(side => {
-      const earGeo = new THREE.ConeGeometry(0.04, 0.14, 4);
-      const earMat = new THREE.MeshLambertMaterial({ color: bodyColor });
-      const ear    = new THREE.Mesh(earGeo, earMat);
-      ear.position.set(side * headSize * 0.55, h * 0.65 + headSize * 0.1, 0);
-      ear.rotation.z = side * Math.PI / 2.2;
-      group.add(ear);
-    });
+  // Monster species extras
+  if (isMonster) {
+    if (monsterSpecies === "dragon") {
+      // Wing stubs
+      [-1, 1].forEach(side => {
+        const wGeo = new THREE.BoxGeometry(0.60, 0.10, 0.35);
+        const wMat = new THREE.MeshLambertMaterial({ color: 0x991100 });
+        const wing = new THREE.Mesh(wGeo, wMat);
+        wing.position.set(side * (bw * 0.80), legH + bodyH * 0.70, -0.10);
+        wing.rotation.z = side * 0.45;
+        group.add(wing);
+      });
+    }
+    if (monsterSpecies === "skeleton") {
+      // Ribcage lines — visual accent only
+      [0.14, 0, -0.14].forEach(oy => {
+        const rGeo = new THREE.BoxGeometry(bw * 0.88, 0.03, bw * 0.68);
+        const rMat = new THREE.MeshBasicMaterial({ color: 0xaaaaaa });
+        const rib  = new THREE.Mesh(rGeo, rMat);
+        rib.position.set(0, legH + bodyH * 0.50 + oy, bw * 0.36);
+        group.add(rib);
+      });
+    }
+    if (monsterSpecies === "wraith") {
+      // Ghost wisp bottom (elongated downward block, semi-transparent)
+      const wispGeo = new THREE.CylinderGeometry(bw * 0.28, bw * 0.08, h * 0.38, 6);
+      const wispMat = new THREE.MeshLambertMaterial({ color: 0x4444aa, transparent: true, opacity: 0.55 });
+      const wisp    = new THREE.Mesh(wispGeo, wispMat);
+      wisp.position.y = -h * 0.10;
+      group.add(wisp);
+    }
   }
 
-  // Shadow disc on ground
-  const shadowGeo = new THREE.CircleGeometry(bw * 0.55, 8);
-  const shadowMat = new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.3 });
+  // ── Ground shadow disc ──
+  const shadowGeo = new THREE.CircleGeometry(bw * 0.60, 10);
+  const shadowMat = new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.28 });
   const shadow    = new THREE.Mesh(shadowGeo, shadowMat);
   shadow.rotation.x = -Math.PI / 2;
   shadow.position.y = 0.01;
   group.add(shadow);
 
-  // Selection ring (hidden by default)
-  const ringGeo = new THREE.RingGeometry(bw * 0.6, bw * 0.75, 24);
-  const ringMat = new THREE.MeshBasicMaterial({ color: 0xfbbf24, side: THREE.DoubleSide, transparent: true, opacity: 0 });
-  const ring    = new THREE.Mesh(ringGeo, ringMat);
+  // ── Selection ring (initially hidden) ──
+  const ringOuter = bw * 0.80;
+  const ringGeo = new THREE.RingGeometry(ringOuter - 0.08, ringOuter, 28);
+  const ringMat = new THREE.MeshBasicMaterial({
+    color: isMonster ? 0xff4444 : (isAI ? 0x22ccdd : 0xfbbf24),
+    side: THREE.DoubleSide, transparent: true, opacity: 0
+  });
+  const ring = new THREE.Mesh(ringGeo, ringMat);
   ring.rotation.x = -Math.PI / 2;
-  ring.position.y = 0.02;
+  ring.position.y = 0.022;
   ring.name = "selectionRing";
   group.add(ring);
 
-  // HP bar plane (world-space, always faces camera via billboard in animate loop)
-  const hpBarGeo = new THREE.PlaneGeometry(bw * 1.4, 0.07);
-  const hpBarBgMat = new THREE.MeshBasicMaterial({ color: 0x1f2937, side: THREE.DoubleSide });
-  const hpBarBg = new THREE.Mesh(hpBarGeo, hpBarBgMat);
-  hpBarBg.position.y = h + 0.28;
-  hpBarBg.name = "hpBarBg";
-  group.add(hpBarBg);
+  // ── World-space HP bar (billboarded in animate) ──
+  const barW = bw * 1.5;
+  const barH = 0.08;
+  const hpY  = legH + bodyH + headSz + 0.32;
 
-  const hpBarFillGeo = new THREE.PlaneGeometry(bw * 1.4, 0.07);
-  const hpBarFillMat = new THREE.MeshBasicMaterial({ color: 0x22c55e, side: THREE.DoubleSide });
-  const hpBarFill = new THREE.Mesh(hpBarFillGeo, hpBarFillMat);
-  hpBarFill.position.y = h + 0.28;
-  hpBarFill.position.z = 0.001;
-  hpBarFill.name = "hpBarFill";
-  group.add(hpBarFill);
+  const bgGeo  = new THREE.PlaneGeometry(barW, barH);
+  const bgMat  = new THREE.MeshBasicMaterial({ color: 0x1f2937, side: THREE.DoubleSide });
+  const hpBg   = new THREE.Mesh(bgGeo, bgMat);
+  hpBg.position.y = hpY;
+  hpBg.name = "hpBarBg";
+  group.add(hpBg);
+
+  const fillGeo  = new THREE.PlaneGeometry(barW, barH);
+  const fillMat  = new THREE.MeshBasicMaterial({ color: 0x22c55e, side: THREE.DoubleSide });
+  const hpFill   = new THREE.Mesh(fillGeo, fillMat);
+  hpFill.position.y = hpY;
+  hpFill.position.z = 0.001;
+  hpFill.name = "hpBarFill";
+  group.add(hpFill);
 
   return group;
 }
 
-function buildSelectionCircle(radius = 0.8, color = 0xfbbf24) {
-  const geo = new THREE.RingGeometry(radius - 0.05, radius, 32);
-  const mat = new THREE.MeshBasicMaterial({ color, side: THREE.DoubleSide, transparent: true, opacity: 0.8 });
-  const mesh = new THREE.Mesh(geo, mat);
-  mesh.rotation.x = -Math.PI / 2;
-  mesh.position.y = 0.03;
-  return mesh;
+// ─── TERRAIN BUILDER ─────────────────────────────────────────────────────────
+
+function buildTerrain(scene, cx, cy) {
+  const group = new THREE.Group();
+  group.name = "terrain";
+
+  const RANGE = 32;
+  const x0 = Math.max(0, cx - RANGE), x1 = Math.min(MAP_W, cx + RANGE);
+  const y0 = Math.max(0, cy - RANGE), y1 = Math.min(MAP_H, cy + RANGE);
+
+  // Track which zones have border-painted edges
+  const zoneBorderMeshes = [];
+
+  for (let ty = y0; ty < y1; ty++) {
+    for (let tx = x0; tx < x1; tx++) {
+      const tileName = getTile(tx, ty);
+      const td = TERRAIN_3D[tileName] ?? TERRAIN_3D.grass;
+      const geo  = new THREE.BoxGeometry(TILE_SIZE, td.height, TILE_SIZE);
+      const mat  = new THREE.MeshLambertMaterial({ color: td.color });
+      const mesh = new THREE.Mesh(geo, mat);
+      mesh.position.set(tx * TILE_SIZE, td.height * 0.5 - 0.10, ty * TILE_SIZE);
+      mesh.receiveShadow = true;
+      mesh.userData = { tx, ty, tile: tileName };
+      group.add(mesh);
+
+      // Road: horizontal bands through golden_plains + town paths
+      const zone = getZoneAt(tx, ty);
+      if (zone?.id === "golden_plains" && (tx % 4 === 0 || ty % 4 === 0)) {
+        const roadGeo = new THREE.BoxGeometry(TILE_SIZE, 0.03, TILE_SIZE);
+        const roadMat = new THREE.MeshLambertMaterial({ color: 0x7a6040 });
+        const road    = new THREE.Mesh(roadGeo, roadMat);
+        road.position.set(tx * TILE_SIZE, td.height - 0.07, ty * TILE_SIZE);
+        group.add(road);
+      }
+
+      // Town cobble overlay
+      if (zone?.id === "town_center") {
+        const cobGeo = new THREE.BoxGeometry(TILE_SIZE - 0.12, 0.025, TILE_SIZE - 0.12);
+        const cobMat = new THREE.MeshLambertMaterial({ color: 0x5a5044 });
+        const cob    = new THREE.Mesh(cobGeo, cobMat);
+        cob.position.set(tx * TILE_SIZE, td.height - 0.06, ty * TILE_SIZE);
+        group.add(cob);
+      }
+    }
+  }
+
+  // Zone border lines — thin raised strips on zone edges for visual separation
+  ZONES.forEach(zone => {
+    const borderColor = ZONE_BORDER_COLORS[zone.id] ?? 0x888888;
+    // Top/bottom edges
+    [zone.y, zone.y + zone.h - 1].forEach(ty => {
+      for (let tx = zone.x; tx < zone.x + zone.w; tx++) {
+        if (tx < x0 || tx >= x1 || ty < y0 || ty >= y1) return;
+        const td = TERRAIN_3D[getTile(tx, ty)] ?? TERRAIN_3D.grass;
+        const bGeo = new THREE.BoxGeometry(TILE_SIZE, 0.05, 0.12);
+        const bMat = new THREE.MeshBasicMaterial({ color: borderColor, transparent: true, opacity: 0.6 });
+        const bMesh = new THREE.Mesh(bGeo, bMat);
+        bMesh.position.set(tx * TILE_SIZE, td.height - 0.03, ty * TILE_SIZE);
+        group.add(bMesh);
+      }
+    });
+    // Left/right edges
+    [zone.x, zone.x + zone.w - 1].forEach(tx => {
+      for (let ty = zone.y; ty < zone.y + zone.h; ty++) {
+        if (tx < x0 || tx >= x1 || ty < y0 || ty >= y1) return;
+        const td = TERRAIN_3D[getTile(tx, ty)] ?? TERRAIN_3D.grass;
+        const bGeo = new THREE.BoxGeometry(0.12, 0.05, TILE_SIZE);
+        const bMat = new THREE.MeshBasicMaterial({ color: borderColor, transparent: true, opacity: 0.6 });
+        const bMesh = new THREE.Mesh(bGeo, bMat);
+        bMesh.position.set(tx * TILE_SIZE, td.height - 0.03, ty * TILE_SIZE);
+        group.add(bMesh);
+      }
+    });
+  });
+
+  // Props / POI markers
+  POINTS_OF_INTEREST.forEach(poi => {
+    if (poi.x < x0 || poi.x >= x1 || poi.y < y0 || poi.y >= y1) return;
+    addPropMesh(group, poi);
+  });
+
+  scene.add(group);
+  return group;
 }
 
-// ─── COMPONENT ────────────────────────────────────────────────────────────────
+// ─── PROP BUILDER ────────────────────────────────────────────────────────────
+
+function addPropMesh(group, poi) {
+  const wx = poi.x * TILE_SIZE;
+  const wz = poi.y * TILE_SIZE;
+  const td = TERRAIN_3D[getTile(poi.x, poi.y)] ?? TERRAIN_3D.grass;
+  const baseY = td.height - 0.05;
+
+  if (poi.type === "crafting_station" || poi.type === "npc") {
+    // Simple tall block = building
+    const bGeo = new THREE.BoxGeometry(1.4, 1.6, 1.4);
+    const bMat = new THREE.MeshLambertMaterial({ color: 0x706050 });
+    const bldg = new THREE.Mesh(bGeo, bMat);
+    bldg.position.set(wx, baseY + 0.80, wz);
+    bldg.castShadow = true;
+    group.add(bldg);
+    // Roof
+    const rGeo = new THREE.ConeGeometry(1.1, 0.7, 4);
+    const rMat = new THREE.MeshLambertMaterial({ color: 0x8b3a2a });
+    const roof = new THREE.Mesh(rGeo, rMat);
+    roof.position.set(wx, baseY + 1.95, wz);
+    roof.rotation.y = Math.PI / 4;
+    group.add(roof);
+  } else if (poi.type === "shop") {
+    const sGeo = new THREE.BoxGeometry(1.8, 1.2, 1.8);
+    const sMat = new THREE.MeshLambertMaterial({ color: 0x8b6030 });
+    const shop = new THREE.Mesh(sGeo, sMat);
+    shop.position.set(wx, baseY + 0.60, wz);
+    shop.castShadow = true;
+    group.add(shop);
+    // Sign post
+    const postGeo = new THREE.BoxGeometry(0.06, 0.8, 0.06);
+    const signPostMat = new THREE.MeshLambertMaterial({ color: 0x5a3a10 });
+    const post = new THREE.Mesh(postGeo, signPostMat);
+    post.position.set(wx + 0.95, baseY + 1.25, wz);
+    group.add(post);
+    const signGeo = new THREE.BoxGeometry(0.40, 0.22, 0.05);
+    const signMat = new THREE.MeshLambertMaterial({ color: 0xd4a017 });
+    const sign = new THREE.Mesh(signGeo, signMat);
+    sign.position.set(wx + 0.95, baseY + 1.68, wz);
+    group.add(sign);
+  } else if (poi.type === "rest") {
+    // Inn — warm glow color
+    const iGeo = new THREE.BoxGeometry(2.0, 1.4, 2.0);
+    const iMat = new THREE.MeshLambertMaterial({ color: 0x9a7050 });
+    const inn  = new THREE.Mesh(iGeo, iMat);
+    inn.position.set(wx, baseY + 0.70, wz);
+    inn.castShadow = true;
+    group.add(inn);
+    const rGeo = new THREE.ConeGeometry(1.5, 0.8, 4);
+    const rMat = new THREE.MeshLambertMaterial({ color: 0xaa4422 });
+    const roof = new THREE.Mesh(rGeo, rMat);
+    roof.position.set(wx, baseY + 1.70, wz);
+    roof.rotation.y = Math.PI / 4;
+    group.add(roof);
+  } else if (poi.type === "heal_station") {
+    // Temple — white pillar
+    const pGeo = new THREE.CylinderGeometry(0.30, 0.34, 2.0, 8);
+    const pMat = new THREE.MeshLambertMaterial({ color: 0xe8e0d0 });
+    [-0.7, 0.7].forEach(ox => {
+      const pillar = new THREE.Mesh(pGeo, pMat);
+      pillar.position.set(wx + ox, baseY + 1.0, wz);
+      group.add(pillar);
+    });
+    const capGeo = new THREE.BoxGeometry(2.2, 0.18, 1.2);
+    const capMat = new THREE.MeshLambertMaterial({ color: 0xd8d0c0 });
+    const cap    = new THREE.Mesh(capGeo, capMat);
+    cap.position.set(wx, baseY + 2.10, wz);
+    group.add(cap);
+  } else if (poi.type === "resource_node") {
+    // Ore node or tree cluster
+    const zone = getZoneAt(poi.x, poi.y);
+    if (poi.resource === "wheat" || zone?.id === "golden_plains") {
+      // Wheat bunches
+      for (let i = 0; i < 4; i++) {
+        const angle = (i / 4) * Math.PI * 2;
+        const wGeo = new THREE.CylinderGeometry(0.04, 0.08, 0.9, 4);
+        const wMat = new THREE.MeshLambertMaterial({ color: 0xd4aa30 });
+        const stalk = new THREE.Mesh(wGeo, wMat);
+        stalk.position.set(wx + Math.cos(angle) * 0.35, baseY + 0.45, wz + Math.sin(angle) * 0.35);
+        group.add(stalk);
+      }
+    } else {
+      // Ore rock cluster
+      for (let i = 0; i < 3; i++) {
+        const angle = (i / 3) * Math.PI * 2;
+        const size = 0.28 + Math.random() * 0.16;
+        const rGeo = new THREE.DodecahedronGeometry(size, 0);
+        const rMat = new THREE.MeshLambertMaterial({ color: 0x887060 });
+        const rock = new THREE.Mesh(rGeo, rMat);
+        rock.position.set(wx + Math.cos(angle) * 0.42, baseY + size * 0.6, wz + Math.sin(angle) * 0.42);
+        rock.rotation.set(Math.random(), Math.random(), Math.random());
+        group.add(rock);
+      }
+    }
+  } else if (poi.type === "mystery" || poi.type === "dungeon") {
+    // Standing stone / ruin column
+    const sGeo = new THREE.BoxGeometry(0.5, 2.4, 0.5);
+    const sMat = new THREE.MeshLambertMaterial({ color: 0x333344 });
+    const stone = new THREE.Mesh(sGeo, sMat);
+    stone.position.set(wx, baseY + 1.2, wz);
+    stone.rotation.y = 0.3;
+    stone.castShadow = true;
+    group.add(stone);
+    // Cap stone
+    const cGeo = new THREE.BoxGeometry(0.75, 0.25, 0.75);
+    const cMat = new THREE.MeshLambertMaterial({ color: 0x222233 });
+    const cap  = new THREE.Mesh(cGeo, cMat);
+    cap.position.set(wx, baseY + 2.52, wz);
+    group.add(cap);
+  }
+
+  // Tree clusters for forest zone POIs
+  if (poi.zone === "dark_forest" || poi.zone === "cursed_swamp") {
+    for (let i = 0; i < 3; i++) {
+      const angle = (i / 3) * Math.PI * 2 + 0.5;
+      const r = 0.8 + i * 0.2;
+      addTree(group, wx + Math.cos(angle) * r, baseY, wz + Math.sin(angle) * r);
+    }
+  }
+}
+
+function addTree(group, wx, baseY, wz) {
+  const trunkH = 0.7 + Math.random() * 0.4;
+  const tGeo   = new THREE.CylinderGeometry(0.07, 0.12, trunkH, 5);
+  const tMat   = new THREE.MeshLambertMaterial({ color: 0x4a3020 });
+  const trunk  = new THREE.Mesh(tGeo, tMat);
+  trunk.position.set(wx, baseY + trunkH * 0.5, wz);
+  group.add(trunk);
+
+  const foliageColor = 0x1e4020;
+  [[0, trunkH + 0.30, 0.55], [0, trunkH + 0.62, 0.38], [0, trunkH + 0.88, 0.24]].forEach(([oy, cy2, r]) => {
+    const fGeo = new THREE.ConeGeometry(r, r * 1.2, 6);
+    const fMat = new THREE.MeshLambertMaterial({ color: foliageColor });
+    const foliage = new THREE.Mesh(fGeo, fMat);
+    foliage.position.set(wx + oy, baseY + cy2, wz);
+    group.add(foliage);
+  });
+}
+
+// ─── HP BAR BILLBOARD ────────────────────────────────────────────────────────
+
+function billboardHpBar(mesh, entity, camera, showBars) {
+  const bg   = mesh.getObjectByName("hpBarBg");
+  const fill = mesh.getObjectByName("hpBarFill");
+  if (!bg || !fill) return;
+
+  if (!showBars) { bg.visible = false; fill.visible = false; return; }
+  bg.visible = fill.visible = true;
+
+  bg.quaternion.copy(camera.quaternion);
+  fill.quaternion.copy(camera.quaternion);
+
+  const hp    = entity.hp ?? entity.max_hp ?? 100;
+  const maxHp = entity.max_hp ?? 100;
+  const pct   = Math.max(0.001, Math.min(1, hp / maxHp));
+  fill.scale.x = pct;
+  const barW = bg.geometry.parameters?.width ?? 0.48;
+  fill.position.x = (pct - 1) * (barW / 2);
+  fill.material.color.setHex(pct > 0.6 ? 0x22c55e : pct > 0.3 ? 0xf59e0b : 0xef4444);
+}
+
+// ─── COMPONENT ───────────────────────────────────────────────────────────────
 
 export default function WorldScene3D({
   myCharacter,
@@ -205,71 +527,51 @@ export default function WorldScene3D({
   onMonsterClick,
   sceneSettings = {},
 }) {
-  const mountRef = useRef(null);
-  const sceneRef = useRef(null);
-  const cameraRef = useRef(null);
-  const rendererRef = useRef(null);
-  const rafRef = useRef(null);
-  const sunLightRef = useRef(null);
-  const ambientLightRef = useRef(null);
-  const fogRef = useRef(null);
+  const mountRef     = useRef(null);
+  const sceneRef     = useRef(null);
+  const cameraRef    = useRef(null);
+  const rendererRef  = useRef(null);
+  const rafRef       = useRef(null);
+  const sunLightRef  = useRef(null);
+  const ambLightRef  = useRef(null);
+  const fogRef       = useRef(null);
+  const terrainRef   = useRef(null);
 
-  // Interpolated player position (smooth movement)
-  const playerPosRef = useRef(null);
+  const playerPosRef    = useRef(null);
   const playerTargetRef = useRef(null);
 
-  // Character meshes keyed by id
-  const charMeshesRef = useRef({});
-  // Monster meshes keyed by id
+  const charMeshesRef    = useRef({});
   const monsterMeshesRef = useRef({});
-  // Terrain tiles (cached)
-  const terrainRef = useRef(null);
 
-  // State for DOM overlays (nameplates, damage numbers)
   const [nameplates, setNameplates] = useState([]);
-  const [damageNums, setDamageNums] = useState([]);
-  const [selectedTarget, setSelectedTarget] = useState(null);
 
-  // Refs for callbacks to avoid stale closure
-  const myCharRef = useRef(myCharacter);
-  myCharRef.current = myCharacter;
-  const allCharsRef = useRef(allCharacters);
-  allCharsRef.current = allCharacters;
-  const monstersRef = useRef(monsters);
-  monstersRef.current = monsters;
-  const onMoveRef = useRef(onMove);
-  onMoveRef.current = onMove;
-  const onMonsterClickRef = useRef(onMonsterClick);
-  onMonsterClickRef.current = onMonsterClick;
+  const myCharRef          = useRef(myCharacter);  myCharRef.current = myCharacter;
+  const allCharsRef        = useRef(allCharacters); allCharsRef.current = allCharacters;
+  const monstersRef        = useRef(monsters);      monstersRef.current = monsters;
+  const onMoveRef          = useRef(onMove);        onMoveRef.current = onMove;
+  const onMonsterClickRef  = useRef(onMonsterClick); onMonsterClickRef.current = onMonsterClick;
 
-  const movingRef = useRef(false);
+  const movingRef      = useRef(false);
   const pendingPathRef = useRef([]);
 
-  const settings = {
-    showNameplates: true,
-    showHealthBars: true,
-    cameraDistance: 1.0,
-    ...sceneSettings,
-  };
+  const settings = { showNameplates: true, showHealthBars: true, cameraDistance: 1.0, ...sceneSettings };
 
-  // ─── INIT THREE.JS ─────────────────────────────────────────────────────────
+  // ─── INIT ──────────────────────────────────────────────────────────────────
 
   useEffect(() => {
     const mount = mountRef.current;
     if (!mount) return;
 
-    // Scene
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x030712);
-    scene.fog = new THREE.FogExp2(0x030712, 0.018);
+    scene.background = new THREE.Color(0x060c1a);
+    scene.fog = new THREE.FogExp2(0x060c1a, 0.014);
     sceneRef.current = scene;
+    fogRef.current = scene.fog;
 
-    // Camera — orthographic-leaning perspective for classic MMO feel
     const aspect = mount.clientWidth / mount.clientHeight;
-    const camera = new THREE.PerspectiveCamera(45, aspect, 0.1, 300);
+    const camera = new THREE.PerspectiveCamera(42, aspect, 0.1, 400);
     cameraRef.current = camera;
 
-    // Renderer
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
     renderer.setSize(mount.clientWidth, mount.clientHeight);
@@ -279,226 +581,173 @@ export default function WorldScene3D({
     rendererRef.current = renderer;
 
     // Lights
-    const ambient = new THREE.AmbientLight(0xffeedd, 0.5);
+    const ambient = new THREE.AmbientLight(0xffeedd, 0.55);
     scene.add(ambient);
-    ambientLightRef.current = ambient;
+    ambLightRef.current = ambient;
 
-    const sun = new THREE.DirectionalLight(0xfff3cd, 1.2);
-    sun.position.set(20, 40, -20);
+    const sun = new THREE.DirectionalLight(0xfff2cc, 1.3);
+    sun.position.set(25, 50, -20);
     sun.castShadow = true;
-    sun.shadow.mapSize.set(1024, 1024);
+    sun.shadow.mapSize.set(2048, 2048);
     sun.shadow.camera.near = 1;
-    sun.shadow.camera.far = 200;
-    sun.shadow.camera.left = -60;
-    sun.shadow.camera.right = 60;
-    sun.shadow.camera.top = 60;
-    sun.shadow.camera.bottom = -60;
+    sun.shadow.camera.far  = 220;
+    sun.shadow.camera.left  = -80;
+    sun.shadow.camera.right =  80;
+    sun.shadow.camera.top   =  80;
+    sun.shadow.camera.bottom = -80;
     scene.add(sun);
     sunLightRef.current = sun;
 
-    // Subtle fill from below
-    const fill = new THREE.DirectionalLight(0x4466bb, 0.2);
-    fill.position.set(-10, -5, 10);
-    scene.add(fill);
+    // Hemisphere sky/ground fill
+    const hemi = new THREE.HemisphereLight(0x80a0ff, 0x2a3a10, 0.35);
+    scene.add(hemi);
 
-    // Expose fog ref for ambient system
-    if (scene.fog) fogRef.current = scene.fog;
+    // Build terrain
+    const cx = myCharacter?.x ?? 30;
+    const cy = myCharacter?.y ?? 25;
+    terrainRef.current = buildTerrain(scene, cx, cy);
 
-    // Build terrain (chunked — only near player)
-    buildTerrain(scene);
-
-    // Resize handler
-    const handleResize = () => {
+    // Resize
+    const onResize = () => {
       if (!mount || !renderer || !camera) return;
       const w = mount.clientWidth, h = mount.clientHeight;
       renderer.setSize(w, h);
       camera.aspect = w / h;
       camera.updateProjectionMatrix();
     };
-    window.addEventListener("resize", handleResize);
+    window.addEventListener("resize", onResize);
 
-    // Animate loop
+    // Animate
     const animate = () => {
       rafRef.current = requestAnimationFrame(animate);
       const myChar = myCharRef.current;
+      const now = Date.now();
 
-      // Smooth camera follow
       if (myChar) {
+        const wp = tileToWorld(myChar.x, myChar.y);
         if (!playerPosRef.current) {
-          playerPosRef.current = tileToWorld(myChar.x, myChar.y).clone();
-          playerTargetRef.current = tileToWorld(myChar.x, myChar.y).clone();
+          playerPosRef.current = wp.clone();
+          playerTargetRef.current = wp.clone();
         }
-        // Lerp player visual position
-        if (playerTargetRef.current) {
-          playerPosRef.current.lerp(playerTargetRef.current, 0.18);
-        }
+        lerp3(playerPosRef.current, playerTargetRef.current, 0.16);
 
         const px = playerPosRef.current.x;
         const pz = playerPosRef.current.z;
-        const dist = CAMERA_DISTANCE * settings.cameraDistance;
+        const dist = CAM_DIST * settings.cameraDistance;
 
+        // Classic 3/4 MMO camera: slightly behind and above, slight angle offset
         camera.position.set(
-          px - Math.sin(Math.PI * 0.15) * dist,
-          CAMERA_HEIGHT * settings.cameraDistance * 0.85,
-          pz + Math.cos(Math.PI * 0.15) * dist
+          px - Math.sin(CAM_ANGLE) * dist,
+          CAM_HEIGHT * settings.cameraDistance * 0.9,
+          pz + Math.cos(CAM_ANGLE) * dist
         );
         camera.lookAt(px, 0, pz);
 
-        // Move player mesh
         const myMesh = charMeshesRef.current[myChar.id];
         if (myMesh) {
           myMesh.position.x = playerPosRef.current.x;
           myMesh.position.z = playerPosRef.current.z;
-          // Idle bob
-          myMesh.position.y = Math.sin(Date.now() * 0.002) * 0.05;
-          // Face movement direction
-          const target = playerTargetRef.current;
-          const dx = target.x - myMesh.position.x;
-          const dz = target.z - myMesh.position.z;
+          myMesh.position.y = Math.sin(now * 0.0018) * 0.04; // idle bob
+
+          // Face direction of movement
+          const dx = playerTargetRef.current.x - myMesh.position.x;
+          const dz = playerTargetRef.current.z - myMesh.position.z;
           if (Math.abs(dx) + Math.abs(dz) > 0.05) {
             myMesh.rotation.y = Math.atan2(dx, dz);
           }
-          // Update selection ring pulse
+
+          // Player selection ring pulse
           const ring = myMesh.getObjectByName("selectionRing");
-          if (ring) {
-            ring.material.opacity = 0.6 + Math.sin(Date.now() * 0.004) * 0.3;
-          }
-          // Update HP bar billboard
-          billboardHpBar(myMesh, myChar, camera);
+          if (ring) ring.material.opacity = 0.55 + Math.sin(now * 0.004) * 0.28;
+
+          billboardHpBar(myMesh, myChar, camera, settings.showHealthBars);
         }
       }
 
-      // Update other character meshes
+      // Other chars
       allCharsRef.current.forEach(c => {
         if (myChar && c.id === myChar.id) return;
         const mesh = charMeshesRef.current[c.id];
-        if (mesh) {
-          const target = tileToWorld(c.x, c.y);
-          mesh.position.lerp(new THREE.Vector3(target.x, mesh.position.y, target.z), 0.12);
-          mesh.position.y = Math.sin(Date.now() * 0.002 + c.id.charCodeAt(0)) * 0.04;
-          billboardHpBar(mesh, c, camera);
-        }
+        if (!mesh) return;
+        const target = tileToWorld(c.x, c.y);
+        mesh.position.lerp(new THREE.Vector3(target.x, 0, target.z), 0.12);
+        mesh.position.y = Math.sin(now * 0.0018 + c.id.charCodeAt(0)) * 0.04;
+        billboardHpBar(mesh, c, camera, settings.showHealthBars);
       });
 
-      // Update monster meshes
+      // Monsters
       monstersRef.current.forEach(m => {
         if (!m.is_alive) return;
         const mesh = monsterMeshesRef.current[m.id];
-        if (mesh) {
-          mesh.position.y = Math.sin(Date.now() * 0.003 + m.id.charCodeAt(0)) * 0.06;
-          // Monster idle sway
-          mesh.rotation.y = Math.sin(Date.now() * 0.001 + m.id.charCodeAt(0)) * 0.15;
-          billboardHpBar(mesh, m, camera);
+        if (!mesh) return;
+        mesh.position.y = Math.sin(now * 0.0024 + m.id.charCodeAt(0)) * 0.06;
+        mesh.rotation.y = Math.sin(now * 0.0010 + m.id.charCodeAt(0)) * 0.18;
+        billboardHpBar(mesh, m, camera, settings.showHealthBars);
 
-          // Red pulsing ring for monsters
-          const ring = mesh.getObjectByName("selectionRing");
-          if (ring) {
-            ring.material.color.setHex(0xef4444);
-            ring.material.opacity = 0.3 + Math.sin(Date.now() * 0.003) * 0.2;
-          }
-        }
+        const ring = mesh.getObjectByName("selectionRing");
+        if (ring) ring.material.opacity = 0.25 + Math.sin(now * 0.003 + m.id.charCodeAt(0)) * 0.18;
       });
 
-      // Update nameplates (DOM overlay positions)
-      updateNameplatePositions(camera, renderer);
-
+      updateNameplateDom(camera, renderer);
       renderer.render(scene, camera);
     };
     animate();
 
     return () => {
-      window.removeEventListener("resize", handleResize);
+      window.removeEventListener("resize", onResize);
       cancelAnimationFrame(rafRef.current);
       renderer.dispose();
       if (mount.contains(renderer.domElement)) mount.removeChild(renderer.domElement);
     };
-  }, []);
+  }, []); // eslint-disable-line
 
-  // ─── TERRAIN ───────────────────────────────────────────────────────────────
-
-  function buildTerrain(scene) {
-    // Build visible terrain around player spawn
-    const group = new THREE.Group();
-    group.name = "terrain";
-
-    const RANGE = 30; // tiles around center
-    const cx = myCharacter?.x ?? 20;
-    const cy = myCharacter?.y ?? 20;
-
-    for (let ty = Math.max(0, cy - RANGE); ty < Math.min(MAP_H, cy + RANGE); ty++) {
-      for (let tx = Math.max(0, cx - RANGE); tx < Math.min(MAP_W, cx + RANGE); tx++) {
-        const tile = getTile(tx, ty);
-        const color = TERRAIN_COLORS_3D[tile] ?? 0x2d5a27;
-
-        const geo = new THREE.BoxGeometry(TILE_SIZE, tile === "water" ? 0.05 : 0.18, TILE_SIZE);
-        const mat = new THREE.MeshLambertMaterial({ color });
-        const mesh = new THREE.Mesh(geo, mat);
-        mesh.position.set(tx * TILE_SIZE, tile === "water" ? -0.09 : 0, ty * TILE_SIZE);
-        mesh.receiveShadow = true;
-        mesh.userData = { tx, ty, tile };
-        group.add(mesh);
-      }
-    }
-    terrainRef.current = group;
-    scene.add(group);
-  }
-
-  // ─── SYNC CHARACTERS → MESHES ─────────────────────────────────────────────
+  // ─── SYNC PLAYER ───────────────────────────────────────────────────────────
 
   useEffect(() => {
     const scene = sceneRef.current;
     if (!scene || !myCharacter) return;
-
-    // Ensure player mesh exists
     if (!charMeshesRef.current[myCharacter.id]) {
       const mesh = buildCharacterMesh(myCharacter.race || "human", false, false);
-      const wp = tileToWorld(myCharacter.x, myCharacter.y);
+      const wp   = tileToWorld(myCharacter.x, myCharacter.y);
       mesh.position.copy(wp);
       mesh.userData = { charId: myCharacter.id, isMe: true };
       scene.add(mesh);
       charMeshesRef.current[myCharacter.id] = mesh;
-
-      // Show selection ring for self
+      playerPosRef.current    = wp.clone();
+      playerTargetRef.current = wp.clone();
+      // Show own ring
       const ring = mesh.getObjectByName("selectionRing");
       if (ring) ring.material.opacity = 0.7;
-
-      playerPosRef.current = wp.clone();
-      playerTargetRef.current = wp.clone();
     }
-  }, [myCharacter?.id]);
+  }, [myCharacter?.id]); // eslint-disable-line
 
-  // Update player target on position change
   useEffect(() => {
-    if (!myCharacter) return;
-    if (playerTargetRef.current) {
-      const wp = tileToWorld(myCharacter.x, myCharacter.y);
-      playerTargetRef.current.set(wp.x, 0, wp.z);
-    }
-  }, [myCharacter?.x, myCharacter?.y]);
+    if (!myCharacter || !playerTargetRef.current) return;
+    const wp = tileToWorld(myCharacter.x, myCharacter.y);
+    playerTargetRef.current.set(wp.x, 0, wp.z);
+  }, [myCharacter?.x, myCharacter?.y]); // eslint-disable-line
 
-  // Sync other characters
+  // ─── SYNC OTHER CHARS ──────────────────────────────────────────────────────
+
   useEffect(() => {
     const scene = sceneRef.current;
     if (!scene) return;
-
     const existing = new Set(Object.keys(charMeshesRef.current));
 
     allCharacters.forEach(c => {
       if (myCharacter && c.id === myCharacter.id) return;
-
       if (!charMeshesRef.current[c.id]) {
         const isAI = c.type === "ai_agent";
         const mesh = buildCharacterMesh(c.race || "human", isAI, false);
-        const wp = tileToWorld(c.x, c.y);
+        const wp   = tileToWorld(c.x, c.y);
         mesh.position.copy(wp);
         mesh.userData = { charId: c.id, isAI };
-        // Color AI agents in cyan accent
         if (isAI) {
           mesh.traverse(child => {
-            if (child.isMesh && child.name !== "hpBarBg" && child.name !== "hpBarFill") {
+            if (child.isMesh && !["hpBarBg","hpBarFill"].includes(child.name)) {
               child.material = child.material.clone();
               child.material.emissive = new THREE.Color(0x0e7490);
-              child.material.emissiveIntensity = 0.15;
+              child.material.emissiveIntensity = 0.18;
             }
           });
         }
@@ -508,24 +757,22 @@ export default function WorldScene3D({
       existing.delete(c.id);
     });
 
-    // Remove departed characters (keep self)
     existing.forEach(id => {
       if (myCharacter && id === myCharacter.id) return;
-      const mesh = charMeshesRef.current[id];
-      if (mesh) { scene.remove(mesh); delete charMeshesRef.current[id]; }
+      const m = charMeshesRef.current[id];
+      if (m) { scene.remove(m); delete charMeshesRef.current[id]; }
     });
-  }, [allCharacters]);
+  }, [allCharacters]); // eslint-disable-line
 
-  // Sync monsters
+  // ─── SYNC MONSTERS ─────────────────────────────────────────────────────────
+
   useEffect(() => {
     const scene = sceneRef.current;
     if (!scene) return;
-
     const existing = new Set(Object.keys(monsterMeshesRef.current));
 
     monsters.forEach(m => {
       if (!m.is_alive) {
-        // Remove dead monsters
         if (monsterMeshesRef.current[m.id]) {
           scene.remove(monsterMeshesRef.current[m.id]);
           delete monsterMeshesRef.current[m.id];
@@ -534,63 +781,38 @@ export default function WorldScene3D({
       }
       if (!monsterMeshesRef.current[m.id]) {
         const mesh = buildCharacterMesh(null, false, true, m.species);
-        const wp = tileToWorld(m.x, m.y);
+        const wp   = tileToWorld(m.x, m.y);
         mesh.position.copy(wp);
         mesh.userData = { monsterId: m.id, isMonster: true };
-        // Enemy red tint
         mesh.traverse(child => {
-          if (child.isMesh && child.name !== "hpBarBg" && child.name !== "hpBarFill") {
+          if (child.isMesh && !["hpBarBg","hpBarFill"].includes(child.name)) {
             child.material = child.material.clone();
-            child.material.emissive = new THREE.Color(0x7f0000);
-            child.material.emissiveIntensity = 0.12;
+            child.material.emissive = new THREE.Color(0x5a0000);
+            child.material.emissiveIntensity = 0.14;
           }
         });
         scene.add(mesh);
         monsterMeshesRef.current[m.id] = mesh;
+        // Show monster ring immediately
+        const ring = mesh.getObjectByName("selectionRing");
+        if (ring) ring.material.opacity = 0.35;
       }
       existing.delete(m.id);
     });
 
     existing.forEach(id => {
-      const mesh = monsterMeshesRef.current[id];
-      if (mesh) { scene.remove(mesh); delete monsterMeshesRef.current[id]; }
+      const m = monsterMeshesRef.current[id];
+      if (m) { scene.remove(m); delete monsterMeshesRef.current[id]; }
     });
-  }, [monsters]);
+  }, [monsters]); // eslint-disable-line
 
-  // ─── HP BAR BILLBOARD ──────────────────────────────────────────────────────
+  // ─── AMBIENT WORLD ─────────────────────────────────────────────────────────
 
-  function billboardHpBar(mesh, entity, camera) {
-    if (!settings.showHealthBars) return;
-    const bg = mesh.getObjectByName("hpBarBg");
-    const fill = mesh.getObjectByName("hpBarFill");
-    if (!bg || !fill) return;
+  const { gameHour, timeLabel, weatherLabel } = useAmbientWorld(sceneRef, sunLightRef, ambLightRef, fogRef);
 
-    // Always face camera
-    bg.quaternion.copy(camera.quaternion);
-    fill.quaternion.copy(camera.quaternion);
+  // ─── NAMEPLATE DOM ─────────────────────────────────────────────────────────
 
-    const hp = entity.hp ?? entity.max_hp ?? 100;
-    const maxHp = entity.max_hp ?? 100;
-    const pct = Math.max(0.001, Math.min(1, hp / maxHp)); // never 0 — avoids Three.js uniform crash
-
-    // Scale fill
-    fill.scale.x = pct;
-    const barWidth = bg.geometry.parameters?.width ?? 0.44;
-    fill.position.x = (pct - 1) * (barWidth / 2);
-
-    // Color by HP %
-    const color = pct > 0.6 ? 0x22c55e : pct > 0.3 ? 0xf59e0b : 0xef4444;
-    fill.material.color.setHex(color);
-  }
-
-  // ─── NAMEPLATE POSITIONS ───────────────────────────────────────────────────
-
-  // Ambient world system (day/night, weather, birds)
-  const { gameHour, timeLabel, weatherLabel } = useAmbientWorld(sceneRef, sunLightRef, ambientLightRef, fogRef);
-
-  const nameplateDataRef = useRef([]);
-
-  function updateNameplatePositions(camera, renderer) {
+  function updateNameplateDom(camera, renderer) {
     if (!settings.showNameplates) { setNameplates([]); return; }
     const plates = [];
     const w = renderer.domElement.clientWidth;
@@ -601,37 +823,31 @@ export default function WorldScene3D({
       return { x: (v.x + 1) / 2 * w, y: -(v.y - 1) / 2 * h, behind: v.z > 1 };
     };
 
-    // Player
     const myChar = myCharRef.current;
     if (myChar && playerPosRef.current) {
-      const labelPos = playerPosRef.current.clone();
-      const vis = RACE_VISUALS[myChar.race || "human"] || RACE_VISUALS.human;
-      labelPos.y += vis.height + 0.6;
-      const { x, y, behind } = project(labelPos);
-      if (!behind) plates.push({ id: myChar.id, name: myChar.name, x, y, type: "me", level: myChar.level || 1 });
+      const lp = playerPosRef.current.clone();
+      lp.y += (RACE_VISUALS[myChar.race || "human"] || RACE_VISUALS.human).height + 0.7;
+      const { x, y, behind } = project(lp);
+      if (!behind) plates.push({ id: myChar.id, name: myChar.name, x, y, type: "me", level: myChar.level || 1, sub: myChar.base_class || myChar.class });
     }
 
-    // Other chars
     allCharsRef.current.forEach(c => {
       if (myChar && c.id === myChar.id) return;
       const mesh = charMeshesRef.current[c.id];
       if (!mesh) return;
-      const labelPos = mesh.position.clone();
-      const vis = RACE_VISUALS[c.race || "human"] || RACE_VISUALS.human;
-      labelPos.y += vis.height + 0.6;
-      const { x, y, behind } = project(labelPos);
-      if (!behind) plates.push({ id: c.id, name: c.name, x, y, type: c.type === "ai_agent" ? "ai" : "player", level: c.level || 1 });
+      const lp = mesh.position.clone();
+      lp.y += (RACE_VISUALS[c.race || "human"] || RACE_VISUALS.human).height + 0.7;
+      const { x, y, behind } = project(lp);
+      if (!behind) plates.push({ id: c.id, name: c.name, x, y, type: c.type === "ai_agent" ? "ai" : "player", level: c.level || 1, sub: c.base_class || c.class });
     });
 
-    // Monsters
     monstersRef.current.filter(m => m.is_alive).forEach(m => {
       const mesh = monsterMeshesRef.current[m.id];
       if (!mesh) return;
-      const labelPos = mesh.position.clone();
-      const vis = MONSTER_VISUALS[m.species] || MONSTER_VISUALS.goblin;
-      labelPos.y += vis.height + 0.65;
-      const { x, y, behind } = project(labelPos);
-      if (!behind) plates.push({ id: m.id, name: `${m.name} Lv.${m.level}`, x, y, type: "monster", hp: m.hp, maxHp: m.max_hp });
+      const lp = mesh.position.clone();
+      lp.y += (MONSTER_VISUALS[m.species] || MONSTER_VISUALS.goblin).height + 0.70;
+      const { x, y, behind } = project(lp);
+      if (!behind) plates.push({ id: m.id, name: m.name, x, y, type: "monster", level: m.level || 1, sub: m.species, hp: m.hp, maxHp: m.max_hp });
     });
 
     setNameplates(plates);
@@ -641,73 +857,59 @@ export default function WorldScene3D({
 
   const handleCanvasClick = useCallback((e) => {
     const renderer = rendererRef.current;
-    const camera = cameraRef.current;
-    const scene = sceneRef.current;
-    if (!renderer || !camera || !scene || movingRef.current) return;
+    const camera   = cameraRef.current;
+    const scene    = sceneRef.current;
+    if (!renderer || !camera || !scene) return;
 
-    const rect = renderer.domElement.getBoundingClientRect();
+    const rect  = renderer.domElement.getBoundingClientRect();
     const mouse = new THREE.Vector2(
-      ((e.clientX - rect.left) / rect.width) * 2 - 1,
-      -((e.clientY - rect.top) / rect.height) * 2 + 1
+      ((e.clientX - rect.left) / rect.width)  * 2 - 1,
+      -((e.clientY - rect.top)  / rect.height) * 2 + 1
     );
 
-    const raycaster = new THREE.Raycaster();
-    raycaster.setFromCamera(mouse, camera);
+    const ray = new THREE.Raycaster();
+    ray.setFromCamera(mouse, camera);
 
-    // Check monster clicks first
-    const monsterMeshes = Object.values(monsterMeshesRef.current);
-    const monsterHits = raycaster.intersectObjects(monsterMeshes, true);
-    if (monsterHits.length > 0) {
-      let obj = monsterHits[0].object;
+    // Monsters first
+    const mHits = ray.intersectObjects(Object.values(monsterMeshesRef.current), true);
+    if (mHits.length > 0) {
+      let obj = mHits[0].object;
       while (obj.parent && !obj.userData.monsterId) obj = obj.parent;
       if (obj.userData.monsterId && onMonsterClickRef.current) {
         const monster = monstersRef.current.find(m => m.id === obj.userData.monsterId);
-        if (monster) {
-          setSelectedTarget({ type: "monster", entity: monster });
-          onMonsterClickRef.current(monster);
-          return;
-        }
+        if (monster) { onMonsterClickRef.current(monster); return; }
       }
     }
 
-    // Check character clicks
-    const charMeshes = Object.values(charMeshesRef.current).filter(m => !m.userData.isMe);
-    const charHits = raycaster.intersectObjects(charMeshes, true);
-    if (charHits.length > 0) {
-      let obj = charHits[0].object;
+    // Other characters
+    const cHits = ray.intersectObjects(
+      Object.values(charMeshesRef.current).filter(m => !m.userData.isMe), true
+    );
+    if (cHits.length > 0) {
+      let obj = cHits[0].object;
       while (obj.parent && !obj.userData.charId) obj = obj.parent;
-      if (obj.userData.charId) {
-        const char = allCharsRef.current.find(c => c.id === obj.userData.charId);
-        if (char) { setSelectedTarget({ type: "character", entity: char }); return; }
-      }
+      // Character targeting handled at World level via onMonsterClick-equivalent
+      return;
     }
 
-    // Click on terrain → move
+    // Terrain → move
     const terrain = terrainRef.current;
     if (!terrain) return;
-    const terrainHits = raycaster.intersectObjects(terrain.children, false);
-    if (terrainHits.length > 0) {
-      const hit = terrainHits[0].object;
-      const { tx, ty, tile } = hit.userData;
-      if (!isPassable(tx, ty)) return;
+    const tHits = ray.intersectObjects(terrain.children, false);
+    if (tHits.length > 0) {
+      const { tx, ty } = tHits[0].object.userData;
+      if (tx === undefined || !isPassable(tx, ty)) return;
       const myChar = myCharRef.current;
       if (!myChar) return;
-
+      if (movingRef.current) { movingRef.current = false; pendingPathRef.current = []; }
       const path = buildPath(myChar.x, myChar.y, tx, ty);
-      if (path.length > 0) {
-        pendingPathRef.current = path;
-        walkPath(path);
-      }
-      setSelectedTarget(null);
+      if (path.length > 0) walkPath(path);
     }
-  }, []);
-
-  // ─── PATH WALKING ──────────────────────────────────────────────────────────
+  }, []); // eslint-disable-line
 
   const walkPath = useCallback(async (path) => {
-    if (!path.length) { movingRef.current = false; pendingPathRef.current = []; return; }
+    if (!path.length) { movingRef.current = false; return; }
     movingRef.current = true;
-
     for (let i = 0; i < path.length; i++) {
       if (!movingRef.current) break;
       const [nx, ny] = path[i];
@@ -716,70 +918,71 @@ export default function WorldScene3D({
         const wp = tileToWorld(nx, ny);
         playerTargetRef.current.set(wp.x, 0, wp.z);
       }
-
       if (onMoveRef.current) {
         const result = await onMoveRef.current(nx, ny);
-        if (result === "combat") {
-          movingRef.current = false;
-          pendingPathRef.current = [];
-          return;
-        }
+        if (result === "combat") { movingRef.current = false; pendingPathRef.current = []; return; }
       }
-      await new Promise(r => setTimeout(r, 180));
+      await new Promise(r => setTimeout(r, 175));
     }
-
     movingRef.current = false;
     pendingPathRef.current = [];
-  }, []);
+  }, []); // eslint-disable-line
 
-  // ─── RENDER ────────────────────────────────────────────────────────────────
+  // ─── RENDER ───────────────────────────────────────────────────────────────
 
-  const nameplateColors = {
-    me: "text-amber-400 border-amber-600",
-    player: "text-blue-300 border-blue-800",
-    ai: "text-cyan-400 border-cyan-800",
-    monster: "text-red-400 border-red-900",
+  const nameplateStyle = {
+    me:      "text-amber-300 border-amber-700/80 bg-gray-950/85",
+    player:  "text-sky-300   border-sky-800/80   bg-gray-950/85",
+    ai:      "text-cyan-300  border-cyan-800/80  bg-gray-950/85",
+    monster: "text-red-400   border-red-900/80   bg-gray-950/85",
   };
 
   return (
     <div className="w-full h-full relative bg-gray-950 overflow-hidden">
-      {/* Three.js canvas mount */}
+      {/* Three.js mount */}
       <div
         ref={mountRef}
         className="w-full h-full"
         onClick={handleCanvasClick}
-        style={{ cursor: movingRef.current ? "wait" : "crosshair" }}
+        style={{ cursor: "crosshair" }}
       />
 
-      {/* DOM Nameplates */}
+      {/* DOM nameplates */}
       {settings.showNameplates && nameplates.map(plate => (
         <div
           key={plate.id}
-          className={`absolute pointer-events-none select-none text-center`}
+          className="absolute pointer-events-none select-none text-center"
           style={{ left: plate.x, top: plate.y, transform: "translate(-50%, -100%)" }}
         >
-          <div className={`text-xs font-bold px-1.5 py-0.5 rounded border bg-gray-950/80 ${nameplateColors[plate.type] || "text-gray-300 border-gray-700"}`}>
-            {plate.name}
-            {plate.level && plate.type !== "monster" && (
-              <span className="ml-1 opacity-60 text-[10px]">Lv.{plate.level}</span>
-            )}
+          <div className={`text-[11px] font-bold px-1.5 py-0.5 rounded border leading-tight ${nameplateStyle[plate.type] || "text-gray-300 border-gray-700 bg-gray-950/85"}`}>
+            <span>{plate.name}</span>
+            {plate.level && <span className="ml-1 opacity-50 text-[9px]">Lv.{plate.level}</span>}
+            {plate.sub && <div className="opacity-40 text-[9px] capitalize font-normal leading-none mt-0.5">{plate.sub}</div>}
           </div>
+          {/* Mini HP bar under nameplate for monsters */}
+          {plate.type === "monster" && plate.maxHp && (
+            <div className="w-full mt-0.5 h-1 bg-gray-800/80 rounded-full overflow-hidden">
+              <div
+                className="h-full rounded-full"
+                style={{
+                  width: `${Math.max(0, Math.min(100, (plate.hp / plate.maxHp) * 100))}%`,
+                  backgroundColor: plate.hp / plate.maxHp > 0.6 ? "#22c55e" : plate.hp / plate.maxHp > 0.3 ? "#f59e0b" : "#ef4444"
+                }}
+              />
+            </div>
+          )}
         </div>
       ))}
 
-      {/* Target frame (selected entity) */}
-      {selectedTarget && (
-        <div className="absolute top-2 left-1/2 -translate-x-1/2 z-20 pointer-events-none">
-          <TargetFrame target={selectedTarget} />
-        </div>
-      )}
+      {/* Zone identity banner — shows when in a named zone */}
+      <ZoneBanner myCharacter={myCharacter} />
 
       {/* Controls hint */}
-      <div className="absolute bottom-2 left-2 text-xs text-gray-600 bg-gray-900/80 px-2 py-1 rounded pointer-events-none">
-        Click terrain to move · Click entities to target · Right-click monsters to attack
+      <div className="absolute bottom-2 left-2 text-[10px] text-gray-600 bg-gray-900/70 px-2 py-1 rounded pointer-events-none">
+        Click terrain to move · Click entities to target
       </div>
 
-      {/* Ambient HUD: day/night and weather */}
+      {/* Day/night widget */}
       <div className="absolute top-2 right-2 pointer-events-none">
         <AmbientHUDWidget gameHour={gameHour} timeLabel={timeLabel} weatherLabel={weatherLabel} />
       </div>
@@ -787,35 +990,43 @@ export default function WorldScene3D({
   );
 }
 
-// ─── TARGET FRAME ─────────────────────────────────────────────────────────────
+// ─── ZONE BANNER ─────────────────────────────────────────────────────────────
 
-function TargetFrame({ target }) {
-  const { type, entity } = target;
-  const isMonster = type === "monster";
-  const hp = entity.hp ?? entity.max_hp ?? 100;
-  const maxHp = entity.max_hp ?? 100;
-  const hpPct = Math.min(100, Math.max(0, (hp / maxHp) * 100));
-  const hpColor = hpPct > 60 ? "bg-green-500" : hpPct > 30 ? "bg-yellow-500" : "bg-red-600 animate-pulse";
+function ZoneBanner({ myCharacter }) {
+  const [banner, setBanner] = useState(null);
+  const lastZoneRef = useRef(null);
+
+  useEffect(() => {
+    if (!myCharacter) return;
+    const zone = getZoneAt(myCharacter.x, myCharacter.y);
+    const zoneId = zone?.id ?? null;
+    if (zoneId !== lastZoneRef.current) {
+      lastZoneRef.current = zoneId;
+      if (zone) {
+        setBanner(zone);
+        const t = setTimeout(() => setBanner(null), 4000);
+        return () => clearTimeout(t);
+      } else {
+        setBanner(null);
+      }
+    }
+  }, [myCharacter?.x, myCharacter?.y]); // eslint-disable-line
+
+  if (!banner) return null;
 
   return (
-    <div className={`bg-gray-900/95 border rounded-lg px-3 py-2 text-xs min-w-40 ${isMonster ? "border-red-700" : "border-blue-700"}`}>
-      <div className={`font-bold ${isMonster ? "text-red-400" : "text-blue-300"}`}>
-        {isMonster ? "⚔️ " : "🧑 "}{entity.name}
-        {entity.level && <span className="ml-1 opacity-60">Lv.{entity.level}</span>}
+    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none
+      flex flex-col items-center gap-1 animate-pulse"
+      style={{ animationDuration: "3s" }}>
+      <div className="text-4xl">{banner.emoji}</div>
+      <div className="text-white font-black text-lg tracking-widest uppercase drop-shadow-lg"
+        style={{ textShadow: "0 2px 12px rgba(0,0,0,0.9)" }}>
+        {banner.name}
       </div>
-      <div className="mt-1.5 flex items-center gap-1.5">
-        <span className="text-gray-500">HP</span>
-        <div className="flex-1 bg-gray-800 rounded-full h-2">
-          <div className={`${hpColor} h-2 rounded-full transition-all`} style={{ width: `${hpPct}%` }} />
-        </div>
-        <span className="text-gray-400">{hp}/{maxHp}</span>
+      <div className="text-gray-400 text-xs tracking-wide max-w-xs text-center"
+        style={{ textShadow: "0 1px 6px rgba(0,0,0,0.8)" }}>
+        {banner.description?.slice(0, 80)}…
       </div>
-      {entity.base_class && (
-        <div className="text-gray-600 mt-0.5 capitalize">{entity.base_class} · {entity.race || "human"}</div>
-      )}
-      {entity.species && (
-        <div className="text-gray-600 mt-0.5 capitalize">{entity.species}</div>
-      )}
     </div>
   );
 }
