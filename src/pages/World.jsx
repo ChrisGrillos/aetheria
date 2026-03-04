@@ -42,20 +42,6 @@ export default function World() {
   const [sceneSettings, setSceneSettings] = useState({ showNameplates: true, showHealthBars: true, cameraDistance: 1.0 });
   const [npcDialogue, setNpcDialogue] = useState(null); // { npcType, zoneName }
 
-  // ─── Input controller (WASD, hotkeys, target lock, auto-attack) ─────────
-  const characterAbilities = myCharacter?.abilities || [];
-  const { lockedTarget, lockTarget, clearTarget, autoAttacking, startAutoAttack, cooldowns } =
-    useInputController({
-      myCharacter,
-      monsters,
-      onMove: handleMove,
-      onStartCombat: (monster, ability) => {
-        if (monster) setCombatMonster(monster);
-      },
-      abilities: characterAbilities,
-      enabled: !combatMonster && !showInventory && !npcDialogue && !encounter,
-    });
-
   useEffect(() => {
     loadWorld();
     const interval = setInterval(loadCharacters, 5000);
