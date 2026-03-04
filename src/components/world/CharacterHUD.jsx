@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Heart, Coins, Star, Package, Zap, Menu, X } from "lucide-react";
-import { useState } from "react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { calculateDerivedStats } from "@/components/shared/charUtils";
