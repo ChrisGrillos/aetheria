@@ -1,215 +1,256 @@
 /**
- * RACE DEFINITIONS — Phase 2
- * 
- * Six playable races with stat ranges, flavor, and class fit logic.
- * type="human" on Character entity remains the human PLAYER flag (vs ai_agent).
- * The separate optional `race` field holds the chosen race.
+ * VAELRATH — Race Definitions & Attribute Rolling System
+ *
+ * Six playable races. Stats are ROLLED (3d6 per stat with race bias),
+ * not assigned by class. Class comes AFTER race + roll.
+ *
+ * Rolling rules:
+ *   - Roll all 6 stats as a set (3d6 each, apply race bias, clamp to range)
+ *   - Player gets 5 total rerolls
+ *   - Accept early or use all rerolls
+ *   - Race determines stat ranges and tendencies
  */
+
+// ─── RACE DATA ────────────────────────────────────────────────────────────────
 
 export const RACES = {
   human: {
     id: "human",
     name: "Human",
     emoji: "🧑",
-    portrait: "🧑‍⚔️",
-    color: "amber",
-    borderClass: "border-amber-600",
-    bgClass: "bg-amber-900/20",
-    description: "Adaptable and versatile. No peak strengths, no glaring weaknesses.",
-    flavor: "Humanity's greatest strength is its boundless potential.",
+    plural: "Humans",
+    description: "Adaptable and politically fragmented. Found in every corner of Vaelrath. What they lack in natural gifts they make for in sheer determination.",
+    lore: "Once the backbone of the Concordant Age, humans now scatter across every faction and frontier. Their ambition rebuilt High Bastion from the ashes.",
+    heightLabel: "Average",
     statRanges: {
-      strength:     [8, 14],
-      dexterity:    [8, 14],
-      intelligence: [8, 14],
-      wisdom:       [8, 14],
-      constitution: [8, 14],
-      charisma:     [8, 14],
+      strength:     { min: 8,  max: 14, bias: 0 },
+      dexterity:    { min: 8,  max: 14, bias: 0 },
+      intelligence: { min: 8,  max: 14, bias: 0 },
+      wisdom:       { min: 8,  max: 14, bias: 0 },
+      constitution: { min: 8,  max: 14, bias: 0 },
+      charisma:     { min: 8,  max: 14, bias: 0 },
     },
-    racialTrait: "Adaptable: Balanced stats, no penalties",
-    traitEmoji: "⚖️",
-    classSuggestions: ["warrior", "hunter", "wizard", "merchant", "healer", "craftsman"],
+    model: { heightScale: 1.0, bodyWidth: 1.0, accentColor: "#d4a040", skinTone: "#c4956a" },
+    startingRegions: ["high_bastion", "the_ashen_march", "the_sunken_crown"],
+    factionLean: ["bastion_compact", "ash_banner_hosts", "ember_throne"],
   },
+
   elf: {
     id: "elf",
     name: "Elf",
     emoji: "🧝",
-    portrait: "🧝‍♀️",
-    color: "cyan",
-    borderClass: "border-cyan-600",
-    bgClass: "bg-cyan-900/20",
-    description: "Nimble and perceptive. Born archers and mages, fragile in raw combat.",
-    flavor: "The forest remembers what the cities forgot.",
+    plural: "Elves",
+    description: "Tall, slender, long-lived. Keepers of ancient memory. Graceful and sharp-minded, but slow to trust outsiders.",
+    lore: "The Thornwild shelters what remains of the old elven courts. They remember the Concordant Age firsthand. That memory is both gift and burden.",
+    heightLabel: "Tall & Slender",
     statRanges: {
-      strength:     [6, 11],
-      dexterity:    [11, 16],
-      intelligence: [10, 15],
-      wisdom:       [9, 14],
-      constitution: [6, 11],
-      charisma:     [8, 14],
+      strength:     { min: 6,  max: 12, bias: -1 },
+      dexterity:    { min: 11, max: 16, bias: 2  },
+      intelligence: { min: 10, max: 15, bias: 1  },
+      wisdom:       { min: 9,  max: 14, bias: 1  },
+      constitution: { min: 6,  max: 12, bias: -1 },
+      charisma:     { min: 8,  max: 14, bias: 0  },
     },
-    racialTrait: "Keen Senses: +DEX, +INT lean; lighter build",
-    traitEmoji: "🏹",
-    classSuggestions: ["hunter", "wizard", "healer"],
+    model: { heightScale: 1.12, bodyWidth: 0.85, accentColor: "#40d4d4", skinTone: "#e0d8c8" },
+    startingRegions: ["the_thornwild"],
+    factionLean: ["thornbound_circle", "veiled_synod"],
   },
+
   dwarf: {
     id: "dwarf",
     name: "Dwarf",
     emoji: "⛏️",
-    portrait: "🪨",
-    color: "orange",
-    borderClass: "border-orange-700",
-    bgClass: "bg-orange-900/20",
-    description: "Stocky and resilient. Exceptional soldiers and craftsmen.",
-    flavor: "Stone endures. So do we.",
+    plural: "Dwarves",
+    description: "Stocky, enduring, oath-bound. Fortress-builders who prize stone, steel, and their word above all else.",
+    lore: "Kharum Deep has never fallen. The Iron Oath dwarves held their gates through the Sundering and hold them still. They do not forget. They do not forgive.",
+    heightLabel: "Short & Stocky",
     statRanges: {
-      strength:     [11, 16],
-      dexterity:    [7, 12],
-      intelligence: [7, 12],
-      wisdom:       [8, 13],
-      constitution: [12, 17],
-      charisma:     [6, 11],
+      strength:     { min: 11, max: 16, bias: 2  },
+      dexterity:    { min: 6,  max: 12, bias: -1 },
+      intelligence: { min: 8,  max: 13, bias: 0  },
+      wisdom:       { min: 8,  max: 14, bias: 0  },
+      constitution: { min: 12, max: 17, bias: 3  },
+      charisma:     { min: 6,  max: 11, bias: -2 },
     },
-    racialTrait: "Stout: +STR, +CON; slow but resilient",
-    traitEmoji: "🛡️",
-    classSuggestions: ["warrior", "craftsman", "fighter"],
+    model: { heightScale: 0.70, bodyWidth: 1.30, accentColor: "#d47040", skinTone: "#b89070" },
+    startingRegions: ["kharum_deep"],
+    factionLean: ["iron_oath"],
   },
+
   halfling: {
     id: "halfling",
     name: "Halfling",
-    emoji: "🍀",
-    portrait: "🧙",
-    color: "green",
-    borderClass: "border-green-600",
-    bgClass: "bg-green-900/20",
-    description: "Small but surprisingly quick and lucky. Natural rogues and traders.",
-    flavor: "Small feet, swift hands, and a quicker tongue.",
+    emoji: "🧒",
+    plural: "Halflings",
+    description: "Small, quick, sharp-tongued. Born traders and scouts. They survive by being where trouble isn't — or by talking their way out of it.",
+    lore: "No halfling kingdom ever existed. They live between the cracks of other peoples' empires, running caravans, counting coin, and knowing every road worth knowing.",
+    heightLabel: "Small & Quick",
     statRanges: {
-      strength:     [5, 10],
-      dexterity:    [12, 17],
-      intelligence: [8, 13],
-      wisdom:       [9, 14],
-      constitution: [8, 13],
-      charisma:     [10, 15],
+      strength:     { min: 5,  max: 10, bias: -2 },
+      dexterity:    { min: 12, max: 17, bias: 3  },
+      intelligence: { min: 8,  max: 14, bias: 0  },
+      wisdom:       { min: 8,  max: 14, bias: 0  },
+      constitution: { min: 7,  max: 12, bias: -1 },
+      charisma:     { min: 10, max: 15, bias: 1  },
     },
-    racialTrait: "Nimble: +DEX, +CHA lean; light evasion bonus",
-    traitEmoji: "💨",
-    classSuggestions: ["hunter", "merchant", "healer"],
+    model: { heightScale: 0.58, bodyWidth: 0.90, accentColor: "#40d460", skinTone: "#d4b890" },
+    startingRegions: ["high_bastion", "the_ashen_march"],
+    factionLean: ["free_spears", "bastion_compact"],
   },
+
   orc: {
     id: "orc",
     name: "Orc",
-    emoji: "💪",
-    portrait: "👹",
-    color: "red",
-    borderClass: "border-red-700",
-    bgClass: "bg-red-900/20",
-    description: "Fearsome warriors with raw strength. Limited in subtlety and magic.",
-    flavor: "The mountain does not step aside.",
+    emoji: "👹",
+    plural: "Orcs",
+    description: "Martial, proud, contested. Strong beyond measure but fighting for legitimacy in a world that fears them.",
+    lore: "The orcs were shock troops of the old empire — used, discarded, blamed. Now they build their own warbands on the frontiers and dare anyone to call them lesser.",
+    heightLabel: "Tall & Broad",
     statRanges: {
-      strength:     [12, 17],
-      dexterity:    [7, 12],
-      intelligence: [5, 10],
-      wisdom:       [6, 11],
-      constitution: [11, 16],
-      charisma:     [4, 9],
+      strength:     { min: 12, max: 17, bias: 3  },
+      dexterity:    { min: 7,  max: 12, bias: -1 },
+      intelligence: { min: 5,  max: 11, bias: -2 },
+      wisdom:       { min: 6,  max: 12, bias: -1 },
+      constitution: { min: 11, max: 16, bias: 2  },
+      charisma:     { min: 5,  max: 11, bias: -2 },
     },
-    racialTrait: "Brutish: +STR, +CON; weak in diplomacy and magic",
-    traitEmoji: "⚔️",
-    classSuggestions: ["warrior", "fighter"],
+    model: { heightScale: 1.20, bodyWidth: 1.25, accentColor: "#d44040", skinTone: "#5a7a50" },
+    startingRegions: ["the_ashen_march", "greyfen_reach"],
+    factionLean: ["ash_banner_hosts", "free_spears"],
   },
+
   half_giant: {
     id: "half_giant",
     name: "Half Giant",
-    emoji: "🏔️",
-    portrait: "🗿",
-    color: "purple",
-    borderClass: "border-purple-700",
-    bgClass: "bg-purple-900/20",
-    description: "Enormous physical power and endurance. Poor social skills and magic.",
-    flavor: "The earth shakes beneath their stride.",
+    emoji: "🗿",
+    plural: "Half Giants",
+    description: "Rare, powerful, ancient bloodlines. Descended from something older than the Concordant Age. The ground shakes when they walk.",
+    lore: "No one knows if the giants were born from the mountains or if the mountains grew around them. The half-blooded carry that power in diluted but still terrifying form.",
+    heightLabel: "Massive",
     statRanges: {
-      strength:     [14, 18],
-      dexterity:    [5, 10],
-      intelligence: [4, 9],
-      wisdom:       [5, 10],
-      constitution: [13, 18],
-      charisma:     [4, 8],
+      strength:     { min: 14, max: 18, bias: 4  },
+      dexterity:    { min: 4,  max: 10, bias: -3 },
+      intelligence: { min: 4,  max: 10, bias: -3 },
+      wisdom:       { min: 6,  max: 12, bias: -1 },
+      constitution: { min: 13, max: 18, bias: 3  },
+      charisma:     { min: 4,  max: 10, bias: -3 },
     },
-    racialTrait: "Colossal: Peak STR+CON; very limited INT/CHA/DEX",
-    traitEmoji: "💥",
-    classSuggestions: ["warrior", "fighter"],
+    model: { heightScale: 1.40, bodyWidth: 1.45, accentColor: "#a040d4", skinTone: "#a09080" },
+    startingRegions: ["kharum_deep", "vale_of_cinders"],
+    factionLean: ["iron_oath", "ash_banner_hosts"],
   },
 };
 
 export const RACE_LIST = Object.values(RACES);
+export const RACE_IDS  = Object.keys(RACES);
 
-// ─── STAT ROLLING ─────────────────────────────────────────────────────────────
+// ─── STAT NAMES ───────────────────────────────────────────────────────────────
 
-/**
- * Roll a single stat value within a min/max range.
- * Uses 3d6-drop-lowest style: rolls 4 values, drops the lowest, sums top 3,
- * then clamps to the race's range.
- */
-function rollInRange(min, max) {
-  const rolls = Array.from({ length: 4 }, () => Math.floor(Math.random() * 6) + 1);
-  rolls.sort((a, b) => a - b);
-  const sum = rolls[1] + rolls[2] + rolls[3]; // Drop lowest
-  // Map 3-18 range to race min-max
-  const normalized = (sum - 3) / 15; // 0.0 to 1.0
-  return Math.round(min + normalized * (max - min));
+export const STAT_NAMES = ["strength", "dexterity", "intelligence", "wisdom", "constitution", "charisma"];
+
+export const STAT_LABELS = {
+  strength:     { short: "STR", full: "Strength",     emoji: "💪" },
+  dexterity:    { short: "DEX", full: "Dexterity",    emoji: "🏃" },
+  intelligence: { short: "INT", full: "Intelligence", emoji: "🧠" },
+  wisdom:       { short: "WIS", full: "Wisdom",       emoji: "👁️" },
+  constitution: { short: "CON", full: "Constitution", emoji: "🛡️" },
+  charisma:     { short: "CHA", full: "Charisma",     emoji: "✨" },
+};
+
+// ─── ROLLING FUNCTIONS ────────────────────────────────────────────────────────
+
+/** Roll 3d6 → sum */
+function roll3d6() {
+  return (
+    Math.floor(Math.random() * 6) + 1 +
+    Math.floor(Math.random() * 6) + 1 +
+    Math.floor(Math.random() * 6) + 1
+  );
 }
 
-/**
- * Roll a full stat set for a given race ID.
- * Returns { strength, dexterity, intelligence, wisdom, constitution, charisma }
- */
-export function rollStatsForRace(raceId) {
+/** Roll a single stat for a given race. Returns the clamped value. */
+function rollStat(raceId, statName) {
   const race = RACES[raceId];
-  if (!race) return rollStatsForRace("human");
+  if (!race) return 10;
+  const range = race.statRanges[statName];
+  if (!range) return 10;
 
-  const result = {};
-  for (const [stat, [min, max]] of Object.entries(race.statRanges)) {
-    result[stat] = rollInRange(min, max);
+  const raw = roll3d6() + range.bias;
+  return Math.max(range.min, Math.min(range.max, raw));
+}
+
+/** Roll a full stat block for a race. Returns { strength, dexterity, ... } */
+export function rollStats(raceId) {
+  const stats = {};
+  for (const stat of STAT_NAMES) {
+    stats[stat] = rollStat(raceId, stat);
   }
-  return result;
+  return stats;
+}
+
+/** Get the total stat points in a roll (for quality display) */
+export function statTotal(stats) {
+  return STAT_NAMES.reduce((sum, s) => sum + (stats[s] || 0), 0);
+}
+
+/** Rate a roll quality: "poor" | "average" | "good" | "exceptional" */
+export function rollQuality(stats) {
+  const total = statTotal(stats);
+  if (total >= 75) return "exceptional";
+  if (total >= 65) return "good";
+  if (total >= 55) return "average";
+  return "poor";
+}
+
+/** Individual stat quality relative to race range */
+export function statQuality(raceId, statName, value) {
+  const race = RACES[raceId];
+  if (!race) return "average";
+  const range = race.statRanges[statName];
+  if (!range) return "average";
+
+  const span = range.max - range.min;
+  const pct  = (value - range.min) / (span || 1);
+
+  if (pct >= 0.85) return "exceptional";
+  if (pct >= 0.60) return "good";
+  if (pct >= 0.30) return "average";
+  return "poor";
 }
 
 // ─── CLASS FIT ────────────────────────────────────────────────────────────────
 
-const CLASS_STAT_WEIGHTS = {
-  warrior:   { strength: 2.0, constitution: 1.5, dexterity: 0.5 },
-  hunter:    { dexterity: 2.0, wisdom: 1.5, strength: 0.5 },
-  healer:    { wisdom: 2.0, intelligence: 1.5, charisma: 0.5 },
-  wizard:    { intelligence: 2.0, wisdom: 1.5 },
-  magician:  { intelligence: 1.5, charisma: 2.0 },
-  merchant:  { charisma: 2.0, intelligence: 1.5, wisdom: 0.5 },
-  craftsman: { dexterity: 2.0, strength: 1.5, wisdom: 0.5 },
-  fighter:   { strength: 1.5, constitution: 2.0, dexterity: 0.5 },
+const CLASS_PRIMARY = {
+  warrior:   ["strength", "constitution"],
+  hunter:    ["dexterity", "wisdom"],
+  healer:    ["wisdom", "intelligence"],
+  wizard:    ["intelligence", "wisdom"],
+  magician:  ["charisma", "intelligence"],
+  merchant:  ["charisma", "intelligence"],
+  craftsman: ["dexterity", "strength"],
+  fighter:   ["strength", "constitution"],
 };
 
-/** Returns "strong" | "viable" | "weak" */
-export function getClassFit(stats, classId) {
-  const weights = CLASS_STAT_WEIGHTS[classId] || {};
-  let score = 0, maxScore = 0;
-  for (const [stat, weight] of Object.entries(weights)) {
-    score    += (stats[stat] || 10) * weight;
-    maxScore += 16 * weight;
-  }
-  const pct = score / maxScore;
-  if (pct >= 0.72) return "strong";
-  if (pct >= 0.58) return "viable";
+/**
+ * Evaluate how well a rolled stat block fits a class.
+ * Returns "strong" | "viable" | "weak"
+ */
+export function classFit(stats, classId) {
+  const primaries = CLASS_PRIMARY[classId];
+  if (!primaries) return "viable";
+
+  const avg = primaries.reduce((sum, s) => sum + (stats[s] || 10), 0) / primaries.length;
+
+  if (avg >= 13) return "strong";
+  if (avg >= 10) return "viable";
   return "weak";
 }
 
-/** Returns classes sorted by fit with fit label */
-export function getAllClassFits(stats) {
-  const classes = ["warrior", "hunter", "healer", "wizard", "magician", "merchant", "craftsman", "fighter"];
-  return classes.map(id => ({ id, fit: getClassFit(stats, id) }));
-}
+export const CLASS_FIT_LABELS = {
+  strong: { label: "Strong Fit", color: "#4ade80", emoji: "⚡" },
+  viable: { label: "Viable",     color: "#facc15", emoji: "⚪" },
+  weak:   { label: "Weak Fit",   color: "#f87171", emoji: "⚠️" },
+};
 
-// ─── RACE DEFAULTS ────────────────────────────────────────────────────────────
-
-/** Safe lookup with fallback to human */
-export function getRace(raceId) {
-  return RACES[raceId] || RACES.human;
-}
+// ─── MAX REROLLS ──────────────────────────────────────────────────────────────
+export const MAX_REROLLS = 5;
