@@ -14,6 +14,7 @@ import LootPopup from "./LootPopup";
 import { rollLoot } from "@/components/shared/lootTables";
 import { getZoneAt } from "@/components/shared/worldZones";
 import { addItemToInventory } from "@/components/shared/inventoryUtils";
+import { getDerivedModifiers } from "@/components/shared/getDerivedModifiers";
 
 const MONSTER_EMOJI = {
   goblin: "👺", orc: "👹", dragon: "🐉", skeleton: "💀",
@@ -119,7 +120,10 @@ export default function CombatOverlay({ character, monster, onClose, onVictory, 
     if (logRef.current) logRef.current.scrollTop = logRef.current.scrollHeight;
   }, [log]);
 
-  // Log passives at start
+  // Skill/feat modifiers — computed once at combat start
+  const [skillMods] = useState(() => getDerivedModifiers(character));
+
+  // Log passives + skill modifiers at start
   useEffect(() => {
     const passives = abilities.filter(a => a.type === "passive");
     if (passives.length > 0) {
@@ -128,6 +132,11 @@ export default function CombatOverlay({ character, monster, onClose, onVictory, 
         .map(([k, v]) => `+${v} ${k.replace(/_/g, " ")}`)
         .join(", ");
       addLog(`✨ Passives: ${bonusStr || passives.map(p => p.name).join(", ")}`);
+    }
+    // Log skill modifiers
+    if (skillMods.breakdown.length > 0) {
+      addLog(`📊 Skill bonuses: ${skillMods.breakdown.slice(0, 6).join(" | ")}`);
+      if (skillMods.breakdown.length > 6) addLog(`📊 ...and ${skillMods.breakdown.length - 6} more modifiers active`);
     }
   }, []);
 
@@ -147,7 +156,7 @@ export default function CombatOverlay({ character, monster, onClose, onVictory, 
     setTimeout(() => { setFlashTarget(""); setShaking(""); }, 400);
   };
 
-  // Build "combat-effective" stats including passives + active effects
+  // Build "combat-effective" stats including passives + active effects + skill mods
   const getPlayerCombatStats = (effects = playerEffects) => {
     const withPassives = {
       ...derived,
@@ -156,6 +165,7 @@ export default function CombatOverlay({ character, monster, onClose, onVictory, 
       evasion:             (derived.evasion             || 0) + (passiveBonuses.evasion             || 0),
       magic_power:         (derived.magic_power         || 0) + (passiveBonuses.magic_power         || 0),
       critical_hit_chance: (derived.critical_hit_chance || 0) + (passiveBonuses.critical_hit_chance || 0),
+      _skillMods: skillMods, // Pass skill modifiers through to calcAttackDamage
     };
     return applyEffects(withPassives, effects);
   };
@@ -181,9 +191,16 @@ export default function CombatOverlay({ character, monster, onClose, onVictory, 
     const enemyDefStats = applyEffects({ defense: monster.level * 3, evasion: 10, critical_hit_chance: 0 }, enemyEffects.filter(e => e.type === "debuff"));
 
     if (ability.effect_type === "damage") {
-      const { dmg, isCrit, evaded } = calcDamage(playerStats, enemyDefStats, ability);
+      const result = calcDamage(playerStats, enemyDefStats, ability);
+      const { dmg, isCrit, evaded, blocked, parried } = result;
       triggerEntityState(character.id, "attack", 380);
-      if (evaded) {
+      if (blocked) {
+        addLog(`🛡️ ${monster.name} blocked ${ability.name}!`);
+        spawnDamageNumber("BLOCK", "dodge", "enemy");
+      } else if (parried) {
+        addLog(`⚔️ ${monster.name} parried ${ability.name}!`);
+        spawnDamageNumber("PARRY", "dodge", "enemy");
+      } else if (evaded) {
         addLog(`💨 ${monster.name} evaded ${ability.name}!`);
         spawnDamageNumber("DODGE", "dodge", "enemy");
       } else {
