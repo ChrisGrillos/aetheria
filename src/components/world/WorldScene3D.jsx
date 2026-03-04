@@ -614,6 +614,9 @@ export default function WorldScene3D({
 
   // ─── NAMEPLATE POSITIONS ───────────────────────────────────────────────────
 
+  // Ambient world system (day/night, weather, birds)
+  const { gameHour, timeLabel, weatherLabel } = useAmbientWorld(sceneRef, sunLightRef, ambientLightRef, fogRef);
+
   const nameplateDataRef = useRef([]);
 
   function updateNameplatePositions(camera, renderer) {
