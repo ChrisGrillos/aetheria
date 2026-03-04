@@ -87,6 +87,13 @@ export function createCombatModeAuthority(setCombatMode) {
   };
 }
 
+// ─── COMBAT MODE CONSTANTS ──────────────────────────────────────────────
+
+export const COMBAT_MODE = {
+  ACTIVE: "active",
+  PEACEFUL: "peaceful",
+};
+
 // ─── COMBAT MODE INDICATOR DATA ──────────────────────────────────────────────
 
 export const COMBAT_MODE_DISPLAY = {
@@ -103,5 +110,24 @@ export const COMBAT_MODE_DISPLAY = {
     icon: "🕊️",
     bgClass: "bg-green-900/30",
     borderClass: "border-green-700",
+  },
+};
+
+export const COMBAT_MODE_UI = {
+  active: {
+    label: "COMBAT",
+    indicator: "⚔️",
+    color: "text-red-400",
+    bg: "bg-red-900/60",
+    border: "border-red-600",
+    pulse: true,
+  },
+  peaceful: {
+    label: "PEACE",
+    indicator: "🕊️",
+    color: "text-green-400",
+    bg: "bg-green-900/30",
+    border: "border-green-700",
+    pulse: false,
   },
 };
