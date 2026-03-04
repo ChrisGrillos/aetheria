@@ -94,13 +94,12 @@ function TargetFrame({ target, onClear, autoAttacking }) {
   );
 }
 
-export default function AbilityHotbar({ abilities = [], cooldowns = {}, onUseAbility, lockedTarget, onClearTarget, autoAttacking }) {
-  // Show up to 9 slots
+export default function AbilityHotbar({ abilities = [], cooldowns = {}, onUseAbility, autoAttacking }) {
+  // Show up to 9 slots. Target is displayed by the authoritative TargetFrame overlay in World.
   const slots = Array.from({ length: 9 }, (_, i) => abilities[i] || null);
 
   return (
     <div className="flex flex-col items-center gap-1 select-none">
-      <TargetFrame target={lockedTarget} onClear={onClearTarget} autoAttacking={autoAttacking} />
       <div className="flex gap-1 bg-gray-950/80 border border-gray-800 rounded-lg px-2 py-1.5">
         {slots.map((ab, i) => (
           <AbilitySlot
