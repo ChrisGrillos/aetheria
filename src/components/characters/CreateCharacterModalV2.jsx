@@ -288,7 +288,7 @@ export default function CreateCharacterModalV2({ user, onCreated, onClose }) {
           {/* ── Class ── */}
           {stepId === "class" && (
             <div className="grid grid-cols-2 gap-2">
-              {BASE_CLASSES.map(c => (
+              {BASE_CLASSES_ARRAY.map(c => (
                 <button
                   key={c.id}
                   onClick={() => setClassId(c.id)}
