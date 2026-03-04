@@ -428,6 +428,103 @@ function buildTerrain(scene, cx, cy) {
     addPropMesh(group, poi);
   });
 
+  // ── Ambient prop scatter (deterministic using tile hash) ──────────────────
+  // We use a seeded pseudo-random so props are stable across re-renders
+  for (let ty = y0; ty < y1; ty++) {
+    for (let tx = x0; tx < x1; tx++) {
+      const tileName = getTile(tx, ty);
+      const zone = getZoneAt(tx, ty);
+      const td = TERRAIN_3D[tileName] ?? TERRAIN_3D.grass;
+      const baseY = td.height - 0.05;
+      const wx = tx * TILE_SIZE;
+      const wz = ty * TILE_SIZE;
+
+      // Seeded hash: avoid Math.random() to keep stable across re-renders
+      const h1 = (tx * 2477 + ty * 8191) % 10000 / 10000;
+      const h2 = (tx * 5381 + ty * 1373) % 10000 / 10000;
+      const h3 = (tx * 3571 + ty * 6257) % 10000 / 10000;
+
+      // Skip POI tiles
+      const hasPOI = POINTS_OF_INTEREST.some(p => p.x === tx && p.y === ty);
+      if (hasPOI) continue;
+
+      if (zone?.id === "dark_forest" && h1 < 0.28) {
+        // Scattered trees + stumps
+        const offX = (h2 - 0.5) * 1.2;
+        const offZ = (h3 - 0.5) * 1.2;
+        if (h1 < 0.18) {
+          addTree(group, wx + offX, baseY, wz + offZ);
+        } else {
+          // Stump
+          const sGeo = new THREE.CylinderGeometry(0.10, 0.14, 0.22, 6);
+          const sMat = new THREE.MeshLambertMaterial({ color: 0x3a2510 });
+          const stump = new THREE.Mesh(sGeo, sMat);
+          stump.position.set(wx + offX, baseY + 0.11, wz + offZ);
+          group.add(stump);
+        }
+      } else if (zone?.id === "cursed_swamp" && h1 < 0.22) {
+        const offX = (h2 - 0.5) * 1.1;
+        const offZ = (h3 - 0.5) * 1.1;
+        if (h1 < 0.10) {
+          // Dead tree (bare trunk, no foliage)
+          const tGeo = new THREE.CylinderGeometry(0.06, 0.10, 1.0 + h2 * 0.6, 5);
+          const tMat = new THREE.MeshLambertMaterial({ color: 0x2a1e10 });
+          const trunk = new THREE.Mesh(tGeo, tMat);
+          trunk.position.set(wx + offX, baseY + 0.5, wz + offZ);
+          trunk.rotation.z = (h3 - 0.5) * 0.3;
+          group.add(trunk);
+        } else {
+          // Reed / stone
+          const rGeo = new THREE.CylinderGeometry(0.04, 0.06, 0.55, 4);
+          const rMat = new THREE.MeshLambertMaterial({ color: 0x3a4a2a });
+          const reed = new THREE.Mesh(rGeo, rMat);
+          reed.position.set(wx + offX, baseY + 0.27, wz + offZ);
+          group.add(reed);
+        }
+      } else if ((zone?.id === "golden_plains" || zone?.id === "iron_hills") && h1 < 0.14) {
+        const offX = (h2 - 0.5) * 1.3;
+        const offZ = (h3 - 0.5) * 1.3;
+        if (zone?.id === "iron_hills" || h1 < 0.07) {
+          // Rock
+          const sz = 0.12 + h2 * 0.14;
+          const rGeo = new THREE.DodecahedronGeometry(sz, 0);
+          const rMat = new THREE.MeshLambertMaterial({ color: zone?.id === "iron_hills" ? 0x666666 : 0x7a6a50 });
+          const rock = new THREE.Mesh(rGeo, rMat);
+          rock.position.set(wx + offX, baseY + sz * 0.5, wz + offZ);
+          rock.rotation.set(h1 * 2, h2 * 3, h3 * 2);
+          group.add(rock);
+        } else {
+          // Shrub / tuft
+          const fGeo = new THREE.SphereGeometry(0.13 + h2 * 0.08, 5, 4);
+          const fMat = new THREE.MeshLambertMaterial({ color: 0x4a6020 });
+          const shrub = new THREE.Mesh(fGeo, fMat);
+          shrub.scale.y = 0.55;
+          shrub.position.set(wx + offX, baseY + 0.07, wz + offZ);
+          group.add(shrub);
+        }
+      } else if (tileName === "grass" && !zone && h1 < 0.08) {
+        // Sparse grass tufts in neutral tiles
+        const offX = (h2 - 0.5) * 1.4;
+        const offZ = (h3 - 0.5) * 1.4;
+        const fGeo = new THREE.ConeGeometry(0.06, 0.28, 4);
+        const fMat = new THREE.MeshLambertMaterial({ color: 0x3a5520 });
+        for (let g = 0; g < 3; g++) {
+          const tuft = new THREE.Mesh(fGeo, fMat);
+          const ga = (g / 3) * Math.PI * 2;
+          tuft.position.set(wx + offX + Math.cos(ga) * 0.15, baseY + 0.14, wz + offZ + Math.sin(ga) * 0.15);
+          tuft.rotation.z = (h1 - 0.5) * 0.4;
+          group.add(tuft);
+        }
+      }
+    }
+  }
+
+  // ── Town walls / gate perimeter ───────────────────────────────────────────
+  const townZone = ZONES.find(z => z.id === "town_center");
+  if (townZone) {
+    buildTownWalls(group, townZone);
+  }
+
   scene.add(group);
   return group;
 }
