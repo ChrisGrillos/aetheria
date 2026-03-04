@@ -259,13 +259,15 @@ export default function World() {
       enabled: !combatMonster && !showInventory && !npcDialogue && !encounter,
     });
 
-  // Keep activeTarget in sync with lockedTarget from input controller.
-  // lockedTarget is only set by useInputController (Tab/key cycling).
-  // Monster clicks go through selectTarget → setActiveTarget directly.
+  // Sync Tab-cycled lockedTarget into the authoritative activeTarget.
+  // Only fires when lockedTarget changes (Tab key cycling in useInputController).
+  // Click-based targeting goes directly through selectTarget → setActiveTarget.
   useEffect(() => {
-    if (lockedTarget && (!activeTarget || activeTarget.entity?.id !== lockedTarget.id)) {
-      setActiveTarget({ entity: lockedTarget, type: "monster" });
-    }
+    if (!lockedTarget) return;
+    setActiveTarget(prev => {
+      if (prev?.entity?.id === lockedTarget.id) return prev; // already current
+      return { entity: lockedTarget, type: "monster" };
+    });
   }, [lockedTarget]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ─── Combat mode (derived from authoritative state) ──────────────────────
