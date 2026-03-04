@@ -65,16 +65,95 @@ const MONSTER_VISUALS = {
   kraken:   { color: 0x1040b8, height: 1.35, bodyW: 0.68 },
 };
 
-// Visual state booleans per entity
-// States: idle | walk | attack | cast | hurt | death
-const STATE_COLORS = {
-  idle:   null,
-  walk:   null,
-  attack: 0xff6622,
-  cast:   0x66aaff,
-  hurt:   0xff2222,
-  death:  0x333333,
-};
+// ─── VISUAL STATE SYSTEM ─────────────────────────────────────────────────────
+// Tracks per-entity timed visual reactions. entityStates[id] = { state, expiresAt, phase }
+const entityStates = {};
+
+export function triggerEntityState(entityId, state, durationMs = 400) {
+  entityStates[entityId] = { state, expiresAt: Date.now() + durationMs, phase: 0 };
+}
+
+// Called from outside (e.g. CombatOverlay) to drive visual reactions
+// States: 'attack' | 'cast' | 'hurt' | 'death'
+
+function applyEntityStateVisuals(mesh, entityId, now) {
+  const es = entityStates[entityId];
+  if (!es) return;
+
+  const elapsed = now - (es.expiresAt - (
+    es.state === "death" ? 1200 :
+    es.state === "cast"  ? 800  : 400
+  ));
+  const total = es.expiresAt - (es.expiresAt - (
+    es.state === "death" ? 1200 :
+    es.state === "cast"  ? 800  : 400
+  ));
+  const t = Math.min(1, elapsed / Math.max(1, es.expiresAt - (now - 999999))); // will compute below
+
+  if (now > es.expiresAt) {
+    // Reset
+    mesh.rotation.z = 0;
+    mesh.scale.setScalar(1);
+    mesh.traverse(child => {
+      if (child.isMesh && child.material?.emissive) {
+        child.material.emissive.setHex(mesh.userData.baseEmissive ?? 0x000000);
+        child.material.emissiveIntensity = mesh.userData.baseEmissiveIntensity ?? 0;
+      }
+    });
+    if (es.state === "death") delete entityStates[entityId];
+    else delete entityStates[entityId];
+    return;
+  }
+
+  const dur = es.state === "death" ? 1200 : es.state === "cast" ? 800 : 400;
+  const p   = Math.min(1, elapsed / dur);
+
+  if (es.state === "attack") {
+    // Quick forward lunge + orange flash
+    const lunge = Math.sin(p * Math.PI) * 0.28;
+    mesh.position.z -= lunge * 0.5;
+    mesh.traverse(child => {
+      if (child.isMesh && child.material?.emissive) {
+        child.material.emissive.setHex(0xff5500);
+        child.material.emissiveIntensity = (1 - p) * 0.9;
+      }
+    });
+  } else if (es.state === "cast") {
+    // Slow pulse up/down + blue glow
+    mesh.position.y += Math.sin(p * Math.PI * 3) * 0.06;
+    mesh.traverse(child => {
+      if (child.isMesh && child.material?.emissive) {
+        child.material.emissive.setHex(0x4499ff);
+        child.material.emissiveIntensity = 0.5 + Math.sin(p * Math.PI * 4) * 0.4;
+      }
+    });
+  } else if (es.state === "hurt") {
+    // Recoil backward + red flash + tilt
+    mesh.rotation.z = Math.sin(p * Math.PI * 3) * 0.3;
+    mesh.traverse(child => {
+      if (child.isMesh && child.material?.emissive) {
+        child.material.emissive.setHex(0xff0000);
+        child.material.emissiveIntensity = (1 - p) * 1.2;
+      }
+    });
+  } else if (es.state === "death") {
+    // Tilt sideways + sink into ground + fade emissive dark
+    mesh.rotation.z = p * Math.PI * 0.5; // fall over
+    mesh.position.y = -p * 0.8;          // sink
+    mesh.scale.setScalar(1 - p * 0.3);   // shrink slightly
+    mesh.traverse(child => {
+      if (child.isMesh && child.material) {
+        if (child.material.emissive) {
+          child.material.emissive.setHex(0x220000);
+          child.material.emissiveIntensity = 0.2;
+        }
+        if (child.material.opacity !== undefined && child.material.transparent) {
+          child.material.opacity = Math.max(0.1, 1 - p);
+        }
+      }
+    });
+  }
+}
 
 // ─── HELPERS ─────────────────────────────────────────────────────────────────
 
