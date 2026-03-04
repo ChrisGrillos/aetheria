@@ -56,7 +56,12 @@ export default function CharacterHUD({ character, onInventory, onUpdateCharacter
               {character.name}
               {character.active_title && <span className="ml-1 text-purple-400 font-semibold">«{character.active_title}»</span>}
             </div>
-            <div className="text-xs text-gray-600 capitalize leading-tight">Lv.{character.level || 1} {character.base_class || character.class}</div>
+            <div className="text-xs text-gray-600 capitalize leading-tight">
+              Lv.{character.level || 1} {character.base_class || character.class}
+              {character.race && character.race !== "human" && (
+                <span className="ml-1 text-gray-700">· {getRace(character.race).emoji} {getRace(character.race).name}</span>
+              )}
+            </div>
           </div>
         </div>
 
