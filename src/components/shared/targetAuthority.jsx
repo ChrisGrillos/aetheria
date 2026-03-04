@@ -1,127 +1,132 @@
 /**
- * TARGET AUTHORITY
+ * TARGET AUTHORITY — Single source of truth for target selection and locking.
  *
- * Single source of truth for selection, targeting, and target validation.
- * All input surfaces (WorldMap, WorldScene3D, useInputController, CombatOverlay)
- * must route target changes through here.
+ * All input paths (click, Tab, walk-onto, hotbar) MUST route through
+ * selectTarget / lockTarget / clearTarget.
  *
- * Grammar:
- *   left click    → select / interact
- *   right click   → move (handled by movementAuthority)
- *   double click  → engage (attack if valid)
- *   tab           → cycle nearest hostile
- *   escape        → clear target
- *
- * Target types: "monster" | "player" | "ai_agent" | "npc" | "object"
+ * This module manages the canonical active target. No component should
+ * maintain its own parallel target state.
  */
 
-import { isSafeZone, ZONE_TYPES, ZONE_CONFIG } from "./worldRules";
-import { getZoneAt } from "./worldZones";
-
-// ─── TARGET TYPES ────────────────────────────────────────────────────────────
-
-export const TARGET_TYPE = {
-  MONSTER:  "monster",
-  PLAYER:   "player",
-  AI_AGENT: "ai_agent",
-  NPC:      "npc",
-  OBJECT:   "object",
-  SELF:     "self",
-};
-
-// ─── HOSTILITY CLASSIFICATION ────────────────────────────────────────────────
+// ─── TARGET STATE ─────────────────────────────────────────────────────────────
 
 /**
- * Given viewer (myCharacter) and a target entity, determine the visual hostility
- * class for UI coloring and interaction grammar.
+ * Create a target authority instance.
+ * In React, wrap this in a context or pass through World.jsx state.
  *
- * Returns: "hostile" | "friendly" | "neutral" | "self" | "pvp_flagged"
+ * Usage:
+ *   const [activeTarget, setActiveTarget] = useState(null);
+ *   const targetAuth = createTargetAuthority(setActiveTarget);
+ *   targetAuth.selectTarget(monster);
  */
-export function getHostilityClass(viewer, target, zone) {
-  if (!viewer || !target) return "neutral";
-  if (viewer.id === target.id) return "self";
-
-  // Monsters are always hostile
-  if (target.is_alive !== undefined && !target.name?.startsWith?.("Player")) return "hostile";
-  if (target.species) return "hostile";
-
-  const inSafe = isSafeZone(viewer.x, viewer.y);
-
-  // Other players
-  if (target.type === "human") {
-    if (inSafe) return "friendly";   // safe zone — never hostile coloring
-    return "pvp_flagged";            // frontier — neutral until engaged
-  }
-
-  // AI agents
-  if (target.type === "ai_agent") {
-    if (inSafe) return "friendly";
-    return "neutral";
-  }
-
-  return "neutral";
-}
-
-/**
- * Get zone rule summary for a position (used in target/combat UI).
- */
-export function getZoneRuleSummary(x, y) {
-  const zone = getZoneAt(x, y);
-  if (!zone) return { label: "Frontier", isSafe: false, dangerLevel: 3, pvpAllowed: true };
-
-  const config = ZONE_CONFIG[zone.id];
-  const isSafe = config?.type === ZONE_TYPES.SAFE_TOWN;
+export function createTargetAuthority(setActiveTarget) {
+  let _current = null;
 
   return {
-    label: isSafe ? "Safehold" : "Frontier",
-    isSafe,
-    zoneName: zone.name,
-    dangerLevel: zone.danger ?? 3,
-    pvpAllowed: !isSafe,
-    emoji: isSafe ? "🛡️" : "⚔️",
-    color: isSafe ? "text-green-400" : "text-red-400",
-    borderColor: isSafe ? "border-green-700" : "border-red-700",
-    bgColor: isSafe ? "bg-green-900/20" : "bg-red-900/20",
+    /**
+     * Get current target (can be monster, player, NPC, or null).
+     */
+    get current() {
+      return _current;
+    },
+
+    /**
+     * Select a target. Validates it exists and is targetable.
+     * Also locks the target (select = lock in this model).
+     */
+    selectTarget(entity) {
+      if (!entity) {
+        _current = null;
+        setActiveTarget(null);
+        return null;
+      }
+
+      if (!isTargetable(entity)) {
+        return null;
+      }
+
+      _current = entity;
+      setActiveTarget(entity);
+      return entity;
+    },
+
+    /**
+     * Lock current target (alias for select — kept for API compat).
+     */
+    lockTarget(entity) {
+      return this.selectTarget(entity);
+    },
+
+    /**
+     * Clear target.
+     */
+    clearTarget() {
+      _current = null;
+      setActiveTarget(null);
+    },
+
+    /**
+     * Tab-cycle to next valid target from a list.
+     */
+    cycleTarget(entities, direction = 1) {
+      const valid = entities.filter(isTargetable);
+      if (valid.length === 0) return null;
+
+      const currentIdx = _current ? valid.findIndex(e => e.id === _current.id) : -1;
+      const nextIdx = (currentIdx + direction + valid.length) % valid.length;
+      return this.selectTarget(valid[nextIdx]);
+    },
   };
 }
 
+// ─── VALIDATION ───────────────────────────────────────────────────────────────
+
 /**
- * Determine if an engage action is legal given viewer, target, current zone.
- * Returns { legal: boolean, reason: string, blockedBySafe?: boolean }
+ * Can this entity be targeted?
  */
-export function canEngage(viewer, target, x, y) {
-  if (!viewer || !target) return { legal: false, reason: "No target" };
-  if (viewer.id === target.id) return { legal: false, reason: "Cannot attack yourself" };
-
-  const safe = isSafeZone(x, y);
-
-  // Monsters always engageable
-  if (target.species || (target.is_alive !== undefined && target.type === undefined)) {
-    return { legal: true, reason: "Monster — engage freely" };
-  }
-
-  if (safe) {
-    return { legal: false, reason: "Safehold — no hostile action permitted", blockedBySafe: true };
-  }
-
-  return { legal: true, reason: "Frontier zone — engagement permitted" };
+export function isTargetable(entity) {
+  if (!entity) return false;
+  // Dead things can't be targeted
+  if (entity.hp !== undefined && entity.hp <= 0) return false;
+  if (entity.is_alive === false) return false;
+  return true;
 }
 
 /**
- * Cycle nearest hostile from a list of monsters/entities relative to character.
- * Returns next target (entity) or null.
+ * Is the target hostile to the player?
  */
-export function cycleNearestHostile(character, entities, currentTargetId = null) {
-  if (!character || !entities?.length) return null;
+export function isHostile(entity) {
+  if (!entity) return false;
+  // Monsters are always hostile
+  if (entity.type === "monster" || entity.monster_type) return true;
+  // Players can be hostile in PvP zones (handled by worldRules)
+  return false;
+}
 
-  const alive = entities.filter(e => e.is_alive !== false);
-  if (!alive.length) return null;
+/**
+ * Is the target friendly?
+ */
+export function isFriendly(entity) {
+  if (!entity) return false;
+  if (entity.type === "human" || entity.type === "agent") return true;
+  if (entity.npc_type) return true;
+  return false;
+}
 
-  alive.sort((a, b) =>
-    (Math.abs(a.x - character.x) + Math.abs(a.y - character.y)) -
-    (Math.abs(b.x - character.x) + Math.abs(b.y - character.y))
-  );
+/**
+ * Get target display info for TargetFrame.
+ */
+export function getTargetInfo(entity) {
+  if (!entity) return null;
 
-  const curIdx = currentTargetId ? alive.findIndex(e => e.id === currentTargetId) : -1;
-  return alive[(curIdx + 1) % alive.length];
+  return {
+    name: entity.name || entity.monster_type || "Unknown",
+    level: entity.level || 1,
+    hp: entity.hp ?? 0,
+    maxHp: entity.max_hp ?? entity.hp ?? 100,
+    type: entity.type || (entity.monster_type ? "monster" : "unknown"),
+    hostile: isHostile(entity),
+    race: entity.race || null,
+    class: entity.class || entity.monster_type || null,
+  };
 }
