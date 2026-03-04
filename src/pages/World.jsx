@@ -234,6 +234,15 @@ export default function World() {
       enabled: !combatMonster && !showInventory && !npcDialogue && !encounter,
     });
 
+  // ─── Combat mode (derived from all state) ───────────────────────────────
+  const combatMode = computeCombatMode(COMBAT_MODE.PEACEFUL, {
+    hasTarget: !!(selectedTarget || lockedTarget),
+    targetIsHostile: !!(lockedTarget?.species || lockedTarget?.is_alive !== undefined),
+    inCombat: !!combatMonster,
+    targetIsPlayer: selectedTarget?.type === "player",
+    inSafeZone: myCharacter ? (getZoneAt(myCharacter.x, myCharacter.y)?.id === "town_center") : false,
+  });
+
   const handleSendMessage = async (text, channel = "global") => {
     if (!myCharacter || !text.trim()) return;
     await base44.entities.ChatMessage.create({
