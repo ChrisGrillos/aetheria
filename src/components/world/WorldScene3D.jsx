@@ -808,9 +808,9 @@ export default function WorldScene3D({
         Click terrain to move · Click entities to target · Right-click monsters to attack
       </div>
 
-      {/* Scene indicator */}
-      <div className="absolute top-2 right-2 text-xs text-gray-700 bg-gray-900/60 px-2 py-1 rounded pointer-events-none">
-        3D View
+      {/* Ambient HUD: day/night and weather */}
+      <div className="absolute top-2 right-2 pointer-events-none">
+        <AmbientHUDWidget gameHour={gameHour} timeLabel={timeLabel} weatherLabel={weatherLabel} />
       </div>
     </div>
   );
