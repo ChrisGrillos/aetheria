@@ -84,8 +84,7 @@ export default function useInputController({
       if (!dir) continue;
       const nx = char.x + dir[0];
       const ny = char.y + dir[1];
-      if (nx < 0 || ny < 0 || nx >= MAP_W || ny >= MAP_H) continue;
-      if (getTile(nx, ny) === "water") continue;
+      if (!isPassable(nx, ny)) continue;
       const mon = monstersRef.current.find(m => m.is_alive && m.x === nx && m.y === ny);
       if (mon) { lockTarget(mon); startAutoAttack(); return; }
       if (onMove) onMove(nx, ny);
