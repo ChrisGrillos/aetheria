@@ -199,6 +199,7 @@ export default function CombatOverlay({ character, monster, onClose, onVictory, 
       addLog(`💚 ${ability.name}: healed ${healBonus} HP`);
       spawnDamageNumber(`+${healBonus}`, "heal", "player");
       flashAndShake("player", "heal");
+      triggerEntityState(character.id, "cast", 700);
     } else if (ability.effect_type === "buff") {
       const eff = buildEffect(ability);
       setPlayerEffects(prev => [...prev, eff]);
