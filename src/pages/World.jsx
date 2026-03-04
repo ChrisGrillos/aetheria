@@ -212,6 +212,20 @@ export default function World() {
     }
   }, [myCharacter, monsters, combatMonster]);
 
+  // ─── Input controller (WASD, hotkeys, target lock, auto-attack) ─────────
+  const characterAbilities = myCharacter?.abilities || [];
+  const { lockedTarget, lockTarget, clearTarget, autoAttacking, startAutoAttack, cooldowns } =
+    useInputController({
+      myCharacter,
+      monsters,
+      onMove: handleMove,
+      onStartCombat: (monster) => {
+        if (monster) setCombatMonster(monster);
+      },
+      abilities: characterAbilities,
+      enabled: !combatMonster && !showInventory && !npcDialogue && !encounter,
+    });
+
   const handleSendMessage = async (text, channel = "global") => {
     if (!myCharacter || !text.trim()) return;
     await base44.entities.ChatMessage.create({
