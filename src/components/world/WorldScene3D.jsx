@@ -114,8 +114,8 @@ function applyEntityStateVisuals(mesh, entityId, now) {
     const lunge = Math.sin(p * Math.PI) * 0.28;
     mesh.position.z -= lunge * 0.5;
     mesh.traverse(child => {
-      if (child.isMesh && child.material?.emissive) {
-        child.material.emissive.setHex(0xff5500);
+      if (child.isMesh && child.material && child.material.emissive) {
+        try { child.material.emissive.setHex(0xff5500); } catch(e) {}
         child.material.emissiveIntensity = (1 - p) * 0.9;
       }
     });
@@ -123,8 +123,8 @@ function applyEntityStateVisuals(mesh, entityId, now) {
     // Slow pulse up/down + blue glow
     mesh.position.y += Math.sin(p * Math.PI * 3) * 0.06;
     mesh.traverse(child => {
-      if (child.isMesh && child.material?.emissive) {
-        child.material.emissive.setHex(0x4499ff);
+      if (child.isMesh && child.material && child.material.emissive) {
+        try { child.material.emissive.setHex(0x4499ff); } catch(e) {}
         child.material.emissiveIntensity = 0.5 + Math.sin(p * Math.PI * 4) * 0.4;
       }
     });
@@ -132,8 +132,8 @@ function applyEntityStateVisuals(mesh, entityId, now) {
     // Recoil backward + red flash + tilt
     mesh.rotation.z = Math.sin(p * Math.PI * 3) * 0.3;
     mesh.traverse(child => {
-      if (child.isMesh && child.material?.emissive) {
-        child.material.emissive.setHex(0xff0000);
+      if (child.isMesh && child.material && child.material.emissive) {
+        try { child.material.emissive.setHex(0xff0000); } catch(e) {}
         child.material.emissiveIntensity = (1 - p) * 1.2;
       }
     });
