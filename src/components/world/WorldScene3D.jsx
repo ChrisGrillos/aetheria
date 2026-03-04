@@ -1057,7 +1057,7 @@ export default function WorldScene3D({
         mesh.userData = { charId: c.id, isAI };
         if (isAI) {
           mesh.traverse(child => {
-            if (child.isMesh && !["hpBarBg","hpBarFill"].includes(child.name)) {
+            if (child.isMesh && !["hpBarBg","hpBarFill"].includes(child.name) && child.material) {
               child.material = child.material.clone();
               child.material.emissive = new THREE.Color(0x0e7490);
               child.material.emissiveIntensity = 0.18;
@@ -1098,7 +1098,7 @@ export default function WorldScene3D({
         mesh.position.copy(wp);
         mesh.userData = { monsterId: m.id, isMonster: true };
         mesh.traverse(child => {
-          if (child.isMesh && !["hpBarBg","hpBarFill"].includes(child.name)) {
+          if (child.isMesh && !["hpBarBg","hpBarFill"].includes(child.name) && child.material) {
             child.material = child.material.clone();
             child.material.emissive = new THREE.Color(0x5a0000);
             child.material.emissiveIntensity = 0.14;
