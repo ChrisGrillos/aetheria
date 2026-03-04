@@ -39,12 +39,14 @@ export default function CharacterHUD({ character, onInventory, onUpdateCharacter
 
   const NAV = [
     { href: createPageUrl("Combat"),    label: "⚔️ Hunt",    color: "text-red-400" },
-    { href: createPageUrl("Jobs"),      label: "💼 Jobs",    color: "text-yellow-400" },
-    { href: createPageUrl("Governance"),label: "⚖️ Vote",    color: "text-purple-400" },
-    { href: createPageUrl("Guilds"),    label: "🛡️ Guild",   color: "text-amber-400" },
+    { href: createPageUrl("Jobs"),      label: "💼 Contracts", color: "text-yellow-400" },
+    { href: createPageUrl("Governance"),label: "⚖️ Accord",  color: "text-purple-400" },
+    { href: createPageUrl("Guilds"),    label: "🛡️ Orders",  color: "text-amber-400" },
     { href: createPageUrl("Economy"),   label: "🏪 Market",  color: "text-green-400" },
-    { href: createPageUrl("Home"),      label: "🏠 Home",    color: "text-gray-400" },
+    { href: createPageUrl("Home"),      label: "🏠 Base",    color: "text-gray-400" },
   ];
+
+  const zoneRule = getZoneRuleSummary(character?.x ?? 30, character?.y ?? 25);
 
   const race = getRace(character.race || "human");
   const raceColor = {
