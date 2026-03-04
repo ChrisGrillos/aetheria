@@ -305,7 +305,7 @@ export default function CreateCharacterModal({ user, onCreated, onClose }) {
                 {STAT_ORDER.map(stat => {
                    const info = STAT_INFO[stat];
                    const val = stats[stat] || 10;
-                   const { min, max } = race.statRanges[stat];
+                   const min = 3, max = 18;
                   const pct = ((val - min) / Math.max(1, max - min)) * 100;
                   return (
                     <div key={stat} className={`${info.bg} rounded-xl p-3 border border-gray-700/40`}>
