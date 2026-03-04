@@ -959,7 +959,7 @@ export default function WorldScene3D({
 
           // Player selection ring pulse
           const ring = myMesh.getObjectByName("selectionRing");
-          if (ring) ring.material.opacity = 0.55 + Math.sin(now * 0.004) * 0.28;
+          if (ring && ring.material) ring.material.opacity = 0.55 + Math.sin(now * 0.004) * 0.28;
 
           // Player state reactions
           if (!entityStates[myChar.id]) myMesh.position.y = Math.sin(now * 0.0018) * 0.04;
@@ -994,7 +994,7 @@ export default function WorldScene3D({
         billboardHpBar(mesh, m, camera, settings.showHealthBars);
 
         const ring = mesh.getObjectByName("selectionRing");
-        if (ring) ring.material.opacity = 0.25 + Math.sin(now * 0.003 + m.id.charCodeAt(0)) * 0.18;
+        if (ring && ring.material) ring.material.opacity = 0.25 + Math.sin(now * 0.003 + m.id.charCodeAt(0)) * 0.18;
       });
 
       // Animate visual NPC walkers
@@ -1030,7 +1030,7 @@ export default function WorldScene3D({
       playerTargetRef.current = wp.clone();
       // Show own ring
       const ring = mesh.getObjectByName("selectionRing");
-      if (ring) ring.material.opacity = 0.7;
+      if (ring && ring.material) ring.material.opacity = 0.7;
     }
   }, [myCharacter?.id]); // eslint-disable-line
 
@@ -1108,7 +1108,7 @@ export default function WorldScene3D({
         monsterMeshesRef.current[m.id] = mesh;
         // Show monster ring immediately
         const ring = mesh.getObjectByName("selectionRing");
-        if (ring) ring.material.opacity = 0.35;
+        if (ring && ring.material) ring.material.opacity = 0.35;
       }
       existing.delete(m.id);
     });
