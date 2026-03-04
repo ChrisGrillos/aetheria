@@ -71,38 +71,7 @@ function tileToWorld(tx, ty) {
   return new THREE.Vector3(tx * TILE_SIZE, 0, ty * TILE_SIZE);
 }
 
-function buildPath(x0, y0, x1, y1) {
-  if (x0 === x1 && y0 === y1) return [];
-  const key = (x, y) => `${x},${y}`;
-  const queue = [[x0, y0]];
-  const visited = new Set([key(x0, y0)]);
-  const parent = {};
-  const dirs = [[1,0],[-1,0],[0,1],[0,-1]];
-  while (queue.length) {
-    const [cx, cy] = queue.shift();
-    if (cx === x1 && cy === y1) {
-      const path = [];
-      let cur = key(x1, y1);
-      while (cur !== key(x0, y0)) {
-        const [px, py] = cur.split(",").map(Number);
-        path.unshift([px, py]);
-        cur = parent[cur];
-      }
-      return path;
-    }
-    for (const [dx, dy] of dirs) {
-      const nx = cx + dx, ny = cy + dy;
-      if (nx < 0 || ny < 0 || nx >= MAP_W || ny >= MAP_H) continue;
-      const k = key(nx, ny);
-      if (visited.has(k)) continue;
-      if (getTile(nx, ny) === "water") continue;
-      visited.add(k);
-      parent[k] = key(cx, cy);
-      queue.push([nx, ny]);
-    }
-  }
-  return [];
-}
+// buildPath and isPassable are imported from movementAuthority
 
 // ─── MESH BUILDERS ────────────────────────────────────────────────────────────
 
