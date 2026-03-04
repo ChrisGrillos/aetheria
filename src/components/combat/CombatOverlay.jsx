@@ -264,9 +264,18 @@ export default function CombatOverlay({ character, monster, onClose, onVictory, 
     let newHP = curPlayerHP;
 
     if (ability.effect_type === "damage") {
-      const { dmg, isCrit, evaded } = calcDamage(monDerived, playerDefStats, ability);
+      // Attach player's skill mods to defender stats so block/parry work
+      const playerDefWithMods = { ...playerDefStats, _skillMods: skillMods };
+      const result = calcDamage(monDerived, playerDefWithMods, ability);
+      const { dmg, isCrit, evaded, blocked, parried } = result;
       triggerEntityState(monster.id, "attack", 380);
-      if (evaded) {
+      if (blocked) {
+        addLog(`🛡️ You blocked ${ability.name}!`);
+        spawnDamageNumber("BLOCK", "buff", "player");
+      } else if (parried) {
+        addLog(`⚔️ You parried ${ability.name}!`);
+        spawnDamageNumber("PARRY", "buff", "player");
+      } else if (evaded) {
         addLog(`💨 You evaded ${ability.name}!`);
         spawnDamageNumber("DODGE", "dodge", "player");
       } else {

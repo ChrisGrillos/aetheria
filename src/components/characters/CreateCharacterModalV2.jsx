@@ -46,7 +46,7 @@ const STEPS = [
   { id: "attributes", label: "Attributes" },
   { id: "class",      label: "Class" },
   { id: "skills",     label: "Skills" },
-  { id: "talents",    label: "Talents" },
+  { id: "talents",    label: "Feats" },
   { id: "confirm",    label: "Confirm" },
 ];
 
