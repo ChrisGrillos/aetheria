@@ -1006,6 +1006,7 @@ export default function WorldScene3D({
     return () => {
       window.removeEventListener("resize", onResize);
       cancelAnimationFrame(rafRef.current);
+      if (townWalkersRef.current) townWalkersRef.current.dispose();
       renderer.dispose();
       if (mount.contains(renderer.domElement)) mount.removeChild(renderer.domElement);
     };
