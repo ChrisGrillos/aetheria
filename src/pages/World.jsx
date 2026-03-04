@@ -246,7 +246,17 @@ export default function World() {
         }}
       />
       <div className="flex flex-1 overflow-hidden">
-        <div className="flex-1 relative">
+      <div className="flex-1 relative">
+        {/* View toggle overlay */}
+        <ViewToggle
+          mode={viewMode}
+          onChange={setViewMode}
+          settings={sceneSettings}
+          onSettingsChange={setSceneSettings}
+        />
+
+        {/* Classic 2D map (always mounted for minimap data, hidden in 3D mode) */}
+        <div className={viewMode === "map" ? "w-full h-full" : "hidden"}>
           <WorldMap
             myCharacter={myCharacter}
             allCharacters={allCharacters}
@@ -256,7 +266,23 @@ export default function World() {
             activeEvents={activeEvents}
             onMonsterClick={(monster) => setCombatMonster(monster)}
           />
-          <Minimap
+        </div>
+
+        {/* 3D model-based world scene */}
+        {viewMode === "3d" && myCharacter && (
+          <WorldScene3D
+            myCharacter={myCharacter}
+            allCharacters={allCharacters}
+            monsters={monsters}
+            worldObjects={worldObjects}
+            activeEvents={activeEvents}
+            onMove={handleMove}
+            onMonsterClick={(monster) => setCombatMonster(monster)}
+            sceneSettings={sceneSettings}
+          />
+        )}
+
+        <Minimap
             myCharacter={myCharacter}
             allCharacters={allCharacters}
             monsters={monsters}
