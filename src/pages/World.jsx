@@ -153,14 +153,30 @@ export default function World() {
     fastTravelRef.current = interval;
   }, [combatMonster, fastTravelTarget]);
 
-  // startCombat is defined after useInputController — use a ref to break the cycle.
+  // ─── Combat start ref — breaks the handleMove ↔ startCombat circular dep ──
   const startCombatRef = useRef(null);
+
+  // ─── Authoritative combat start — ALL paths route through here ──────────
+  // Sources: walk-onto-monster, click-monster → engage button, Tab+Enter, ability hotbar.
+  const startCombat = useCallback((monster) => {
+    if (!monster || !myCharacter) return;
+    const zone = getZoneAt(myCharacter.x, myCharacter.y);
+    const validation = initiateCombat(myCharacter, monster, zone);
+    if (!validation.valid) {
+      console.warn("[CombatAuthority] Blocked:", validation.reason);
+      return;
+    }
+    setActiveTarget({ entity: monster, type: "monster" });
+    setCombatMonster(monster);
+  }, [myCharacter]);
+
+  // Keep ref in sync so handleMove's closure (captured at definition time) can call latest startCombat
+  useEffect(() => { startCombatRef.current = startCombat; }, [startCombat]);
 
   const handleMove = useCallback(async (newX, newY) => {
     if (!myCharacter) return;
     cancelFastTravel();
 
-    // Authority: validate tile passability
     if (!isPassable(newX, newY)) return;
 
     const zone = getZoneAt(newX, newY);
@@ -209,54 +225,24 @@ export default function World() {
     setAllCharacters(prev => prev.map(c => c.id === myCharacter.id ? updated : c));
     await base44.entities.Character.update(myCharacter.id, updates);
 
-    // Check if we walked onto a monster tile — route through authoritative combat start
+    // Walk-onto-monster → authoritative combat via ref (avoids stale closure)
     const monsterOnTile = monsters.find(m => m.is_alive && m.x === newX && m.y === newY);
     if (monsterOnTile) {
-      if (startCombatRef.current) startCombatRef.current(monsterOnTile);
+      startCombatRef.current?.(monsterOnTile);
       return "combat";
     }
 
-    // Roll for random encounter after moving
+    // Random encounter
     const enc = rollEncounter(zone);
     if (enc) {
       setEncounter(enc);
       setEncounterZone(zone);
     }
-  }, [myCharacter, monsters]);
+  }, [myCharacter, monsters, cancelFastTravel]);
 
-  // ─── Authoritative combat start — ALL paths route through here ──────────
-  // Sources: walk-onto-monster, click-monster → engage button, Tab+Enter, ability hotbar.
-  const startCombat = useCallback((monster) => {
-    if (!monster || !myCharacter) return;
-    const zone = getZoneAt(myCharacter.x, myCharacter.y);
-    const validation = initiateCombat(myCharacter, monster, zone);
-    if (!validation.valid) {
-      console.warn("[CombatAuthority] Blocked:", validation.reason);
-      return;
-    }
-    // Set both target and combat monster atomically
-    setActiveTarget({ entity: monster, type: "monster" });
-    setCombatMonster(monster);
-  }, [myCharacter]);
-
-  // Keep ref in sync so handleMove's closure can call the latest startCombat
-  useEffect(() => { startCombatRef.current = startCombat; }, [startCombat]);
-
-  // ─── Authoritative target selection ─────────────────────────────────────
-  // All click-based targeting flows through here. Tab-cycling goes through
-  // lockTarget (useInputController) which syncs into activeTarget via effect.
-  const selectTarget = useCallback((entity, type = "monster") => {
-    setActiveTarget({ entity, type });
-    lockTarget(type === "monster" ? entity : null); // keep input controller in sync
-  }, [lockTarget]);
-
-  const clearActiveTarget = useCallback(() => {
-    setActiveTarget(null);
-  }, []);
-
-  // ─── Input controller (WASD, hotkeys, target lock, auto-attack) ─────────
+  // ─── Input controller (WASD, hotkeys, Tab-target, auto-attack) ──────────
   const characterAbilities = myCharacter?.abilities || [];
-  const { lockedTarget, lockTarget, clearTarget, autoAttacking, startAutoAttack, cooldowns } =
+  const { lockedTarget, lockTarget, clearTarget, autoAttacking, cooldowns } =
     useInputController({
       myCharacter,
       monsters,
@@ -266,15 +252,24 @@ export default function World() {
       enabled: !combatMonster && !showInventory && !npcDialogue && !encounter,
     });
 
-  // Sync Tab-cycled lockedTarget into the authoritative activeTarget.
-  // Only fires when lockedTarget changes (Tab key cycling in useInputController).
-  // Click-based targeting goes directly through selectTarget → setActiveTarget.
+  // ─── Authoritative target selection (click-path) ─────────────────────────
+  // Tab-cycling → lockTarget (in useInputController) → lockedTarget state → effect below.
+  // Click-path → selectTarget → setActiveTarget + lockTarget (keep controller in sync).
+  const selectTarget = useCallback((entity, type = "monster") => {
+    setActiveTarget({ entity, type });
+    lockTarget(type === "monster" ? entity : null);
+  }, [lockTarget]);
+
+  const clearActiveTarget = useCallback(() => {
+    setActiveTarget(null);
+  }, []);
+
+  // Sync Tab-cycled lockedTarget into authoritative activeTarget
   useEffect(() => {
     if (!lockedTarget) return;
-    setActiveTarget(prev => {
-      if (prev?.entity?.id === lockedTarget.id) return prev; // already current
-      return { entity: lockedTarget, type: "monster" };
-    });
+    setActiveTarget(prev =>
+      prev?.entity?.id === lockedTarget.id ? prev : { entity: lockedTarget, type: "monster" }
+    );
   }, [lockedTarget]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ─── Combat mode (derived from authoritative state) ──────────────────────
