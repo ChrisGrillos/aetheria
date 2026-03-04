@@ -20,7 +20,6 @@ export {
   calcAttackDamage,
   resolveMonsterAttack,
   calcRewards,
-  autoResolveCombat,
 } from "@/components/combat/combatEngine";
 
 // ─── COMBAT INITIATION ──────────────────────────────────────────────────────
