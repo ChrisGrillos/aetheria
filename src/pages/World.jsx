@@ -330,6 +330,21 @@ export default function World() {
                 onClick={e => { e.stopPropagation(); cancelFastTravel(); }}>Cancel</Button>
             </div>
           )}
+          {/* Ability hotbar — anchored bottom-center */}
+          <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-20 pointer-events-auto">
+            <AbilityHotbar
+              abilities={characterAbilities}
+              cooldowns={cooldowns}
+              onUseAbility={(slot) => {
+                const ab = characterAbilities[slot];
+                if (ab && lockedTarget) setCombatMonster(lockedTarget);
+              }}
+              lockedTarget={lockedTarget}
+              onClearTarget={clearTarget}
+              autoAttacking={autoAttacking}
+            />
+          </div>
+
           {/* Party follower panel */}
           <PartyFollower myCharacter={myCharacter} allCharacters={allCharacters} />
 
