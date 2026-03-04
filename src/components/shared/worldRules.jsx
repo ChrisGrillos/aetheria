@@ -25,51 +25,51 @@ export const ZONE_TYPES = {
 // ─── ZONE CONFIGURATION ───────────────────────────────────────────────────────
 
 export const ZONE_CONFIG = {
-  town_center: {
+  high_bastion: {
     type: ZONE_TYPES.SAFE_TOWN,
-    safeFrom: ["player", "ai_agent"],  // No PvP between any characters
-    duelAllowed: true,                 // Can initiate duels here
+    safeFrom: ["player", "ai_agent"],
+    duelAllowed: true,
     deathPenalty: { goldLoss: 0.05, lootDrop: false },
-    respawnX: 30, respawnY: 25,        // Safe town center
+    respawnX: 30, respawnY: 25,
     loreLabel: "Safehold",
-    loreDescription: "A chartered safehold. Steel stays sheathed within these walls.",
+    loreDescription: "High Bastion — the Accord's chartered safehold. Steel stays sheathed within these walls.",
   },
-  dark_forest: {
-    type: ZONE_TYPES.FRONTIER,
-    safeFrom: [],                      // PvP-enabled
-    pvpFlag: true,                     // Players must be PvP-flagged to fight
-    deathPenalty: { goldLoss: 0.15, lootDrop: false },
-    respawnX: 22, respawnY: 25,
-  },
-  iron_hills: {
+  the_thornwild: {
     type: ZONE_TYPES.FRONTIER,
     safeFrom: [],
     pvpFlag: true,
     deathPenalty: { goldLoss: 0.15, lootDrop: false },
     respawnX: 22, respawnY: 25,
   },
-  cursed_swamp: {
-    type: ZONE_TYPES.FRONTIER,
-    safeFrom: [],
-    pvpFlag: true,
-    deathPenalty: { goldLoss: 0.2, lootDrop: true },  // Harsher frontier
-    respawnX: 22, respawnY: 25,
-  },
-  golden_plains: {
+  kharum_deep: {
     type: ZONE_TYPES.FRONTIER,
     safeFrom: [],
     pvpFlag: true,
     deathPenalty: { goldLoss: 0.15, lootDrop: false },
     respawnX: 22, respawnY: 25,
   },
-  volcanic_badlands: {
+  greyfen_reach: {
     type: ZONE_TYPES.FRONTIER,
     safeFrom: [],
     pvpFlag: true,
     deathPenalty: { goldLoss: 0.2, lootDrop: true },
     respawnX: 22, respawnY: 25,
   },
-  coastal_ruins: {
+  the_ashen_march: {
+    type: ZONE_TYPES.FRONTIER,
+    safeFrom: [],
+    pvpFlag: true,
+    deathPenalty: { goldLoss: 0.15, lootDrop: false },
+    respawnX: 22, respawnY: 25,
+  },
+  vale_of_cinders: {
+    type: ZONE_TYPES.FRONTIER,
+    safeFrom: [],
+    pvpFlag: true,
+    deathPenalty: { goldLoss: 0.2, lootDrop: true },
+    respawnX: 22, respawnY: 25,
+  },
+  the_sunken_crown: {
     type: ZONE_TYPES.FRONTIER,
     safeFrom: [],
     pvpFlag: true,
