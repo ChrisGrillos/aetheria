@@ -64,15 +64,11 @@ export default function useInputController({
 
   const startAutoAttack = useCallback(() => {
     if (!lockedRef.current) return;
+    // If already auto-attacking, route a fresh combat call and return
     if (autoAtkRef.current) { stopAutoAttack(); return; }
     autoAtkRef.current = true;
     setAutoAttacking(true);
     if (onStartCombat) onStartCombat(lockedRef.current);
-    autoAtkTimer.current = setInterval(() => {
-      const target = lockedRef.current;
-      if (!target || !target.is_alive) { stopAutoAttack(); return; }
-      if (onStartCombat) onStartCombat(target);
-    }, 2000);
   }, [onStartCombat, stopAutoAttack]);
 
   const doStep = useCallback(() => {
