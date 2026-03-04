@@ -87,8 +87,11 @@ export default function AbilityHotbar({ abilities = [], cooldowns = {}, onUseAbi
           />
         ))}
       </div>
+      {autoAttacking && (
+        <div className="text-[9px] text-red-500 font-mono animate-pulse">⚔ Auto-attacking</div>
+      )}
       <div className="text-[9px] text-gray-700 font-mono">
-        1-9 abilities · Tab target · Enter auto-atk · Esc clear
+        1-9 abilities · Tab target · Enter attack · Esc clear
       </div>
     </div>
   );
