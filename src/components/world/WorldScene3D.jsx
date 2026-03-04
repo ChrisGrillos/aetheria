@@ -9,6 +9,7 @@ import * as THREE from "three";
 import { getTile, getZoneAt, MAP_W, MAP_H, ZONES, POINTS_OF_INTEREST } from "@/components/shared/worldZones";
 import { buildPath, isPassable } from "@/components/shared/movementAuthority";
 import { useAmbientWorld, AmbientHUDWidget } from "./AmbientWorld";
+import { createTownWalkers } from "./TownWalkers";
 
 // ─── CONSTANTS ────────────────────────────────────────────────────────────────
 
