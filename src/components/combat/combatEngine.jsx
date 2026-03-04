@@ -1,7 +1,14 @@
+/**
+ * LEGACY SHIM — do not add new logic here.
+ * All combat logic has moved to authorizedCombatEngine.js
+ * This file is kept for any remaining imports not yet migrated.
+ */
+export { calcAttackDamage, autoResolveCombat, calcRewards } from "./authorizedCombatEngine";
+
 import { shouldLevelUp, levelUpUpdates } from "@/components/shared/charUtils";
 
 /**
- * Shared combat resolution engine used by both CombatOverlay and TravelEncounterModal.
+ * Shared combat resolution engine (legacy).
  *
  * ABILITY SCALING CONVENTION:
  * effect_magnitude is a MULTIPLIER expressed as percentage of base damage.
