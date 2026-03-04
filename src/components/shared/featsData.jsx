@@ -108,6 +108,46 @@ const STARTER_FEATS = [
     tags: ["crafting", "gathering", "starter"],
     effectMetadata: { gatheringBonus: 0.15 },
   },
+  {
+    id: "dual_wield_initiate",
+    name: "Dual Wield Initiate",
+    desc: "Reduces offhand penalty by 10%. Your offhand strikes land harder and truer.",
+    prerequisites: { level: 1, skills: { dual_wielding: 1 } },
+    tags: ["combat", "offensive", "starter"],
+    effectMetadata: { offhandDamageBonus: 1 },
+  },
+  {
+    id: "shield_discipline",
+    name: "Shield Discipline",
+    desc: "+5% block chance. Instinctive shield positioning under pressure.",
+    prerequisites: { level: 1, skills: { shields: 1 } },
+    tags: ["defense", "block", "starter"],
+    effectMetadata: { armorBonus: 1, blockChanceBonus: 5 },
+  },
+  {
+    id: "quick_cast",
+    name: "Quick Cast",
+    desc: "Spell energy costs reduced by 5%. Channel faster, waste less.",
+    prerequisites: { level: 1, skills: { arcana: 1 }, statThresholds: { intelligence: 11 } },
+    tags: ["magic", "efficiency", "starter"],
+    effectMetadata: { spellCostReduction: 0.05 },
+  },
+  {
+    id: "duelist_stance",
+    name: "Duelist Stance",
+    desc: "+3% parry chance and +2 accuracy. One blade, maximum precision.",
+    prerequisites: { level: 1, skills: { parry: 1 } },
+    tags: ["combat", "defense", "starter"],
+    effectMetadata: { parryChanceBonus: 3, accuracyBonus: 2 },
+  },
+  {
+    id: "heavy_hitter",
+    name: "Heavy Hitter",
+    desc: "+3 damage with two-handed weapons. Overwhelm foes with raw power.",
+    prerequisites: { level: 1, skills: { two_handed: 1 } },
+    tags: ["combat", "damage", "starter"],
+    effectMetadata: { twoHandedDamageBonus: 3 },
+  },
 ];
 
 // ─── TIER 2: INTERMEDIATE FEATS ───────────────────────────────────────────────
@@ -501,22 +541,22 @@ export function getSuggestedStarterFeats(race, classId) {
 
   // Class-based suggestions
   const classPrefs = {
-    warrior: ["weapon_master_light", "thick_hide", "tactical_mind"],
+    warrior: ["weapon_master_light", "thick_hide", "shield_discipline", "heavy_hitter"],
     hunter: ["archer_stance", "quick_reflexes", "keen_observer"],
-    healer: ["field_medic", "tough_talker", "survivor"],
-    wizard: ["magic_initiate", "tactical_mind", "keen_observer"],
-    merchant: ["tough_talker", "master_trader", "resourceful"],
-    craftsman: ["resourceful", "master_trader", "quick_reflexes"],
+    healer: ["field_medic", "quick_cast", "survivor"],
+    wizard: ["magic_initiate", "quick_cast", "tactical_mind"],
+    merchant: ["tough_talker", "resourceful", "keen_observer"],
+    craftsman: ["resourceful", "thick_hide", "quick_reflexes"],
   };
 
   // Race-based suggestions
   const racePrefs = {
-    human: ["tactical_mind", "tough_talker"],
-    elf: ["quick_reflexes", "magic_initiate"],
-    dwarf: ["thick_hide", "weapon_master_light"],
-    halfling: ["quick_reflexes", "resourceful"],
-    orc: ["weapon_master_light", "thick_hide"],
-    half_giant: ["weapon_master_light", "thick_hide"],
+    human: ["tactical_mind", "tough_talker", "duelist_stance"],
+    elf: ["quick_reflexes", "magic_initiate", "archer_stance"],
+    dwarf: ["thick_hide", "shield_discipline", "heavy_hitter"],
+    halfling: ["quick_reflexes", "dual_wield_initiate", "resourceful"],
+    orc: ["heavy_hitter", "thick_hide", "weapon_master_light"],
+    half_giant: ["heavy_hitter", "thick_hide", "weapon_master_light"],
   };
 
   const combined = new Set([
