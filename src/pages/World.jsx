@@ -364,12 +364,12 @@ export default function World() {
         )}
 
         <Minimap
-            myCharacter={myCharacter}
-            allCharacters={allCharacters}
-            monsters={monsters}
-            onFastTravel={requestFastTravel}
-          />
-          {fastTravelTarget && (
+          myCharacter={myCharacter}
+          allCharacters={allCharacters}
+          monsters={monsters}
+          onFastTravel={requestFastTravel}
+        />
+        {fastTravelTarget && (
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-30
               bg-gray-900/95 border border-amber-600 rounded-xl px-6 py-4 text-center pointer-events-auto"
               onClick={cancelFastTravel}>
