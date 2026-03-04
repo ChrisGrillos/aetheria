@@ -1001,7 +1001,11 @@ export default function WorldScene3D({
       if (townWalkersRef.current) townWalkersRef.current.update(now);
 
       updateNameplateDom(camera, renderer);
-      renderer.render(scene, camera);
+      try {
+        renderer.render(scene, camera);
+      } catch(e) {
+        console.error("Render error:", e);
+      }
     };
     animate();
 
