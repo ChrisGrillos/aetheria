@@ -225,7 +225,8 @@ export default function World() {
     }
   }, [myCharacter, monsters]);
 
-  // ─── Authoritative combat start — all paths route through here ──────────
+  // ─── Authoritative combat start — ALL paths route through here ──────────
+  // Sources: walk-onto-monster, click-monster → engage button, Tab+Enter, ability hotbar.
   const startCombat = useCallback((monster) => {
     if (!monster || !myCharacter) return;
     const zone = getZoneAt(myCharacter.x, myCharacter.y);
@@ -234,9 +235,13 @@ export default function World() {
       console.warn("[CombatAuthority] Blocked:", validation.reason);
       return;
     }
+    // Set both target and combat monster atomically
     setActiveTarget({ entity: monster, type: "monster" });
     setCombatMonster(monster);
   }, [myCharacter]);
+
+  // Keep ref in sync so handleMove's closure can call the latest startCombat
+  useEffect(() => { startCombatRef.current = startCombat; }, [startCombat]);
 
   // ─── Authoritative target selection ─────────────────────────────────────
   // All click-based targeting flows through here. Tab-cycling goes through
