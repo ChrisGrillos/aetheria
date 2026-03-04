@@ -406,22 +406,18 @@ export default function World() {
             onMoveFollower={null}
           />
 
-          {/* Target frame — shown when a target is selected or locked */}
-          {(selectedTarget || lockedTarget) && myCharacter && (
-            <div className="absolute top-12 left-1/2 -translate-x-1/2 z-25 pointer-events-auto">
+          {/* Target frame — authoritative: reads from activeTarget */}
+          {activeTarget && myCharacter && (
+            <div className="absolute top-12 left-1/2 -translate-x-1/2 z-[25] pointer-events-auto">
               <TargetFrame
-                target={selectedTarget || { entity: lockedTarget, type: "monster" }}
+                target={activeTarget}
                 myCharacter={myCharacter}
                 combatMode={combatMode}
                 x={myCharacter.x}
                 y={myCharacter.y}
-                onEngage={(entity) => {
-                  if (entity.species || entity.is_alive !== undefined) {
-                    setCombatMonster(entity);
-                  }
-                }}
+                onEngage={(entity) => startCombat(entity)}
                 onInteract={null}
-                onClear={() => { setSelectedTarget(null); clearTarget(); }}
+                onClear={() => { clearTarget(); clearActiveTarget(); }}
               />
             </div>
           )}
