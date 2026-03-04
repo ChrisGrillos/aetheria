@@ -41,8 +41,6 @@ export default function World() {
   const [encounter, setEncounter] = useState(null);
   const [encounterZone, setEncounterZone] = useState(null);
   const [viewPos, setViewPos] = useState(null);
-  const [combatMonster, setCombatMonster] = useState(null);
-  const [selectedTarget, setSelectedTarget] = useState(null); // { entity, type }
   const [showInventory, setShowInventory] = useState(false);
   const [fastTravelTarget, setFastTravelTarget] = useState(null);
   const [fastTravelProgress, setFastTravelProgress] = useState(0);
@@ -50,6 +48,13 @@ export default function World() {
   const [viewMode, setViewMode] = useState("3d"); // "map" | "3d"
   const [sceneSettings, setSceneSettings] = useState({ showNameplates: true, showHealthBars: true, cameraDistance: 1.0 });
   const [npcDialogue, setNpcDialogue] = useState(null); // { npcType, zoneName }
+
+  // ─── AUTHORITATIVE TARGET STATE ─────────────────────────────────────────────
+  // Single source of truth. No parallel lockedTarget / combatMonster / selectedTarget concepts.
+  // { entity, type: "monster"|"player"|"ai_agent"|"npc" }
+  const [activeTarget, setActiveTarget] = useState(null);
+  // Combat is open when the combat overlay is visible (entity engaged)
+  const [combatMonster, setCombatMonster] = useState(null);
 
   useEffect(() => {
     loadWorld();
