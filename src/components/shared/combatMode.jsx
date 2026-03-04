@@ -1,65 +1,107 @@
 /**
- * COMBAT MODE AUTHORITY
+ * COMBAT MODE — Explicit combat state management.
  *
- * Tracks and transitions the client's combat mode state.
- * Combat mode is an explicit, visible gameplay state — not implicit.
+ * Shadowbane-style: player must be in combat mode to attack.
+ * Combat mode is toggled with C key or enters automatically on aggro.
  *
- * States:
- *   PEACEFUL  — no target, no combat
- *   TARGETED  — entity selected, not yet engaged
- *   ENGAGED   — actively in combat (combat overlay open)
- *   PVP_PREP  — targeting a player in frontier (pre-engagement warning)
- *
- * This is a pure state machine — no React hooks. Import into hooks/pages.
+ * In React, wire this into World.jsx state:
+ *   const [combatMode, setCombatMode] = useState(false);
+ *   const combatModeAuth = createCombatModeAuthority(setCombatMode);
  */
 
-export const COMBAT_MODE = {
-  PEACEFUL: "peaceful",
-  TARGETED: "targeted",
-  ENGAGED:  "engaged",
-  PVP_PREP: "pvp_prep",
-};
+export function createCombatModeAuthority(setCombatMode) {
+  let _active = false;
+  let _enteredAt = null;
+  const _exitCooldown = 3000; // 3 seconds before can exit after last combat action
 
-/**
- * Compute the new combat mode given context.
- */
-export function computeCombatMode(current, { hasTarget, targetIsHostile, inCombat, targetIsPlayer, inSafeZone }) {
-  if (inCombat) return COMBAT_MODE.ENGAGED;
-  if (!hasTarget) return COMBAT_MODE.PEACEFUL;
-  if (targetIsPlayer && !inSafeZone) return COMBAT_MODE.PVP_PREP;
-  if (targetIsHostile) return COMBAT_MODE.TARGETED;
-  return COMBAT_MODE.TARGETED;
+  return {
+    get isActive() {
+      return _active;
+    },
+
+    get enteredAt() {
+      return _enteredAt;
+    },
+
+    /**
+     * Toggle combat mode on/off.
+     * Cannot exit if recently attacked (cooldown).
+     */
+    toggle() {
+      if (_active) {
+        return this.exit();
+      }
+      return this.enter();
+    },
+
+    /**
+     * Enter combat mode explicitly.
+     */
+    enter() {
+      if (_active) return true;
+      _active = true;
+      _enteredAt = Date.now();
+      setCombatMode(true);
+      return true;
+    },
+
+    /**
+     * Exit combat mode. Fails if still in exit cooldown.
+     */
+    exit() {
+      if (!_active) return true;
+
+      // Check cooldown (can't exit right after attacking)
+      if (_enteredAt && (Date.now() - _enteredAt) < _exitCooldown) {
+        return false; // Too soon
+      }
+
+      _active = false;
+      _enteredAt = null;
+      setCombatMode(false);
+      return true;
+    },
+
+    /**
+     * Force exit (death, zone change, etc).
+     */
+    forceExit() {
+      _active = false;
+      _enteredAt = null;
+      setCombatMode(false);
+    },
+
+    /**
+     * Auto-enter on aggro (monster walks onto player, etc).
+     */
+    autoEnterOnAggro() {
+      return this.enter();
+    },
+
+    /**
+     * Reset the exit timer (called when combat action occurs).
+     */
+    refreshCombatTimer() {
+      _enteredAt = Date.now();
+    },
+  };
 }
 
-export const COMBAT_MODE_UI = {
-  [COMBAT_MODE.PEACEFUL]: {
-    label: "",
-    color: "text-gray-500",
-    border: "border-gray-700",
-    bg: "",
-    indicator: null,
+// ─── COMBAT MODE INDICATOR DATA ──────────────────────────────────────────────
+
+export const COMBAT_MODE_DISPLAY = {
+  active: {
+    label: "COMBAT",
+    color: "#ef4444",
+    icon: "⚔️",
+    bgClass: "bg-red-900/60",
+    borderClass: "border-red-600",
   },
-  [COMBAT_MODE.TARGETED]: {
-    label: "Target Locked",
-    color: "text-amber-400",
-    border: "border-amber-700",
-    bg: "bg-amber-900/10",
-    indicator: "🎯",
-  },
-  [COMBAT_MODE.ENGAGED]: {
-    label: "IN COMBAT",
-    color: "text-red-400",
-    border: "border-red-700",
-    bg: "bg-red-900/20",
-    indicator: "⚔️",
-    pulse: true,
-  },
-  [COMBAT_MODE.PVP_PREP]: {
-    label: "PvP Target",
-    color: "text-orange-400",
-    border: "border-orange-600",
-    bg: "bg-orange-900/15",
-    indicator: "⚠️",
-    pulse: false,
+  inactive: {
+    label: "PEACE",
+    color: "#4ade80",
+    icon: "🕊️",
+    bgClass: "bg-green-900/30",
+    borderClass: "border-green-700",
   },
 };
