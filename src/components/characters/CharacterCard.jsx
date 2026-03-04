@@ -4,6 +4,7 @@ import { Bot, User, Sword, Heart, Coins, ChevronDown, ChevronUp } from "lucide-r
 import DerivedStatsPanel from "./DerivedStatsPanel";
 import AbilitiesPanel from "./AbilitiesPanel";
 import SpecializationPicker from "./SpecializationPicker";
+import { getRace } from "@/components/shared/raceData";
 
 const CLASS_EMOJI = {
   warrior: "⚔️", hunter: "🏹", healer: "💚", wizard: "🧙",
