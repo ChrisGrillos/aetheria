@@ -128,39 +128,8 @@ export function applyCooldown(cooldowns = {}, abilityId, rounds) {
   return { ...cooldowns, [abilityId]: rounds };
 }
 
-// ─── BUFFS / DEBUFFS ──────────────────────────────────────────────────────────
-
-export function buildBuff(id, name, emoji, stat_affected, magnitude, duration_rounds, is_percent = false) {
-  return {
-    id: id || `buff_${Date.now()}`,
-    name, emoji,
-    type: "buff",
-    stat_affected,
-    magnitude: Math.abs(magnitude),
-    is_percent,
-    duration_rounds,
-    rounds_remaining: duration_rounds,
-  };
-}
-
-export function buildDebuff(id, name, emoji, stat_affected, magnitude, duration_rounds, is_percent = false) {
-  return {
-    id: id || `debuff_${Date.now()}`,
-    name, emoji,
-    type: "debuff",
-    stat_affected,
-    magnitude: -Math.abs(magnitude),
-    is_percent,
-    duration_rounds,
-    rounds_remaining: duration_rounds,
-  };
-}
-
-export function tickEffects(effects = []) {
-  return effects
-    .map(e => ({ ...e, rounds_remaining: (e.rounds_remaining || 0) - 1 }))
-    .filter(e => e.rounds_remaining > 0);
-}
+// ─── BUFFS / DEBUFFS — delegate to charUtils (single source) ─────────────────
+export { buildBuff, buildDebuff, tickEffects, applyEffect } from "@/components/shared/charUtils";
 
 // ─── DEATH & RESPAWN ───────────────────────────────────────────────────────────
 
