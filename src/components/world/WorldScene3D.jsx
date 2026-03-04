@@ -384,7 +384,7 @@ function buildTerrain(scene, cx, cy) {
       }
 
       // Town cobble overlay
-      if (zone?.id === "town_center") {
+      if (zone?.id === "high_bastion") {
         const cobGeo = new THREE.BoxGeometry(TILE_SIZE - 0.12, 0.025, TILE_SIZE - 0.12);
         const cobMat = new THREE.MeshLambertMaterial({ color: 0x5a5044 });
         const cob    = new THREE.Mesh(cobGeo, cobMat);
@@ -449,7 +449,7 @@ function buildTerrain(scene, cx, cy) {
       const hasPOI = POINTS_OF_INTEREST.some(p => p.x === tx && p.y === ty);
       if (hasPOI) continue;
 
-      if (zone?.id === "dark_forest" && h1 < 0.28) {
+      if (zone?.id === "the_thornwild" && h1 < 0.28) {
         // Scattered trees + stumps
         const offX = (h2 - 0.5) * 1.2;
         const offZ = (h3 - 0.5) * 1.2;
@@ -463,7 +463,7 @@ function buildTerrain(scene, cx, cy) {
           stump.position.set(wx + offX, baseY + 0.11, wz + offZ);
           group.add(stump);
         }
-      } else if (zone?.id === "cursed_swamp" && h1 < 0.22) {
+      } else if (zone?.id === "greyfen_reach" && h1 < 0.22) {
         const offX = (h2 - 0.5) * 1.1;
         const offZ = (h3 - 0.5) * 1.1;
         if (h1 < 0.10) {
@@ -482,14 +482,14 @@ function buildTerrain(scene, cx, cy) {
           reed.position.set(wx + offX, baseY + 0.27, wz + offZ);
           group.add(reed);
         }
-      } else if ((zone?.id === "golden_plains" || zone?.id === "iron_hills") && h1 < 0.14) {
+      } else if ((zone?.id === "the_ashen_march" || zone?.id === "kharum_deep") && h1 < 0.14) {
         const offX = (h2 - 0.5) * 1.3;
         const offZ = (h3 - 0.5) * 1.3;
         if (zone?.id === "iron_hills" || h1 < 0.07) {
           // Rock
           const sz = 0.12 + h2 * 0.14;
           const rGeo = new THREE.DodecahedronGeometry(sz, 0);
-          const rMat = new THREE.MeshLambertMaterial({ color: zone?.id === "iron_hills" ? 0x666666 : 0x7a6a50 });
+          const rMat = new THREE.MeshLambertMaterial({ color: zone?.id === "kharum_deep" ? 0x666666 : 0x7a6a50 });
           const rock = new THREE.Mesh(rGeo, rMat);
           rock.position.set(wx + offX, baseY + sz * 0.5, wz + offZ);
           rock.rotation.set(h1 * 2, h2 * 3, h3 * 2);
@@ -521,7 +521,7 @@ function buildTerrain(scene, cx, cy) {
   }
 
   // ── Town walls / gate perimeter ───────────────────────────────────────────
-  const townZone = ZONES.find(z => z.id === "town_center");
+  const townZone = ZONES.find(z => z.id === "high_bastion");
   if (townZone) {
     buildTownWalls(group, townZone);
   }
@@ -720,7 +720,7 @@ function addPropMesh(group, poi) {
   } else if (poi.type === "resource_node") {
     // Ore node or tree cluster
     const zone = getZoneAt(poi.x, poi.y);
-    if (poi.resource === "wheat" || zone?.id === "golden_plains") {
+    if (poi.resource === "wheat" || zone?.id === "the_ashen_march") {
       // Wheat bunches
       for (let i = 0; i < 4; i++) {
         const angle = (i / 4) * Math.PI * 2;
@@ -761,7 +761,7 @@ function addPropMesh(group, poi) {
   }
 
   // Tree clusters for forest zone POIs
-  if (poi.zone === "dark_forest" || poi.zone === "cursed_swamp") {
+  if (poi.zone === "the_thornwild" || poi.zone === "greyfen_reach") {
     for (let i = 0; i < 3; i++) {
       const angle = (i / 3) * Math.PI * 2 + 0.5;
       const r = 0.8 + i * 0.2;
