@@ -344,7 +344,7 @@ export default function World() {
             worldObjects={worldObjects}
             onMove={handleMove}
             activeEvents={activeEvents}
-            onMonsterClick={(monster) => { lockTarget(monster); setSelectedTarget({ entity: monster, type: "monster" }); }}
+            onMonsterClick={(monster) => { lockTarget(monster); selectTarget(monster, "monster"); }}
           />
         </div>
 
