@@ -13,6 +13,7 @@
  */
 
 import * as THREE from "three";
+// worldZones imported for future zone-based patrol clamping (zone IDs: high_bastion, etc.)
 import { ZONES } from "@/components/shared/worldZones";
 
 // ─── TILE → WORLD COORDS (must match WorldScene3D convention) ─────────────────
