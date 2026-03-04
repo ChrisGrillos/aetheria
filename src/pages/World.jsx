@@ -7,7 +7,7 @@ import WorldScene3D from "@/components/world/WorldScene3D.jsx";
 import ViewToggle from "@/components/world/ViewToggle.jsx";
 import ChatDock from "@/components/chat/ChatDock.jsx";
 import CharacterHUD from "@/components/world/CharacterHUD.jsx";
-import NPCDialogue from "@/components/world/NPCDialogue.jsx";
+import NPCPanel from "@/components/world/NPCPanel.jsx";
 import GroupWindow from "@/components/world/GroupWindow.jsx";
 import TravelEncounterModal from "@/components/world/TravelEncounterModal.jsx";
 import ZoneInfoPanel from "@/components/world/ZoneInfoPanel.jsx";
@@ -198,10 +198,16 @@ export default function World() {
     }
 
     // NPC dialogue on POI visit
-    if (poi?.type === "npc" || ["rest","shop","mystery"].includes(poi?.type)) {
-      const npcTypeMap = { rest: "merchant", shop: "trader", mystery: "witch" };
-      const npcType = poi.npcType || npcTypeMap[poi.type] || "merchant";
-      setNpcDialogue({ npcType, zoneName: zone?.name || "Unknown" });
+    try {
+      if (poi && (poi.type === "npc" || ["rest","shop","mystery","heal_station","crafting_station"].includes(poi.type))) {
+        const npcTypeMap = { rest: "merchant", shop: "trader", mystery: "witch", heal_station: "herbalist", crafting_station: "miner" };
+        const npcType = poi?.npcType || npcTypeMap[poi?.type] || "merchant";
+        if (npcType) {
+          setNpcDialogue({ npcType, zoneName: zone?.name || "Unknown" });
+        }
+      }
+    } catch (error) {
+      console.error("[World] NPC dialogue error:", error, { poi, zone });
     }
 
     // POI rest/heal
@@ -482,11 +488,21 @@ export default function World() {
     )}
 
     {npcDialogue && myCharacter && (
-      <NPCDialogue
+      <NPCPanel
         npcType={npcDialogue.npcType}
         zoneName={npcDialogue.zoneName}
         character={myCharacter}
         onClose={() => setNpcDialogue(null)}
+        onInteract={(updates) => {
+          const updated = { ...myCharacter, ...updates };
+          setMyCharacter(updated);
+          setAllCharacters(prev => prev.map(c => c.id === myCharacter.id ? updated : c));
+          try {
+            handleSendMessage(`🗣️ Interacted with ${npcDialogue.npcType} in ${npcDialogue.zoneName}.`);
+          } catch(e) {
+            console.error("[World] Chat message error:", e);
+          }
+        }}
       />
     )}
 
