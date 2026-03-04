@@ -16,7 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { X, ChevronLeft, Plus, Minus, RefreshCw } from "lucide-react";
 import { calculateDerivedStats } from "@/components/shared/charUtils";
-import { getCharacterAbilities, BASE_CLASSES } from "@/components/shared/classDefinitions";
+import { getCharacterAbilities } from "@/components/shared/classDefinitions";
 import { rollStatsForRace, getRace, RACE_LIST } from "@/components/shared/raceData";
 
 // ─── CONSTANTS ────────────────────────────────────────────────────────────────
