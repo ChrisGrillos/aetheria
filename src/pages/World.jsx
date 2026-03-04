@@ -27,7 +27,6 @@ import { checkAchievements } from "@/components/shared/achievementData";
 import useInputController from "@/components/world/useInputController.jsx";
 import AbilityHotbar from "@/components/world/AbilityHotbar.jsx";
 import { computeCombatMode, COMBAT_MODE } from "@/components/shared/combatMode";
-import { canEngage } from "@/components/shared/targetAuthority";
 import { isSafeZone } from "@/components/shared/worldRules";
 
 export default function World() {
