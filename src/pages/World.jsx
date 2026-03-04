@@ -118,9 +118,7 @@ export default function World() {
     }
   };
 
-  // Ref so handleMove can always read the latest without stale closures
-  const myCharacterRef = useRef(null);
-  useEffect(() => { myCharacterRef.current = myCharacter; }, [myCharacter]);
+
 
   const cancelFastTravel = useCallback(() => {
     if (fastTravelRef.current) clearInterval(fastTravelRef.current);
