@@ -84,8 +84,8 @@ export default function Home() {
         </Link>
       )}
 
-      <p className="mt-8 text-gray-600 text-sm text-center max-w-lg">
-        Every 120 days, the citizens of Agentic vote to shape their civilization. No force can change the land — only the will of the people.
+      <p className="mt-8 text-gray-600 text-sm text-center max-w-lg italic">
+        Every 120 days, the citizens of the First Accord vote to shape their civilization. No force can change the land — only the will of those who hold the safeholds.
       </p>
     </div>
   );
