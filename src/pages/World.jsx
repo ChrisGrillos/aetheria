@@ -362,8 +362,32 @@ export default function World() {
             />
           </div>
 
-          {/* Party follower panel */}
-          <PartyFollower myCharacter={myCharacter} allCharacters={allCharacters} />
+          {/* Group window (replaces PartyFollower) */}
+          <GroupWindow
+            myCharacter={myCharacter}
+            allCharacters={allCharacters}
+            onMoveFollower={null}
+          />
+
+          {/* Target frame — shown when a target is selected or locked */}
+          {(selectedTarget || lockedTarget) && myCharacter && (
+            <div className="absolute top-12 left-1/2 -translate-x-1/2 z-25 pointer-events-auto">
+              <TargetFrame
+                target={selectedTarget || { entity: lockedTarget, type: "monster" }}
+                myCharacter={myCharacter}
+                combatMode={combatMode}
+                x={myCharacter.x}
+                y={myCharacter.y}
+                onEngage={(entity) => {
+                  if (entity.species || entity.is_alive !== undefined) {
+                    setCombatMonster(entity);
+                  }
+                }}
+                onInteract={null}
+                onClear={() => { setSelectedTarget(null); clearTarget(); }}
+              />
+            </div>
+          )}
 
           {/* Zone info overlay bottom-left */}
           {viewPos && (
