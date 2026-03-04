@@ -798,8 +798,8 @@ function billboardHpBar(mesh, entity, camera, showBars) {
   if (!showBars) { bg.visible = false; fill.visible = false; return; }
   bg.visible = fill.visible = true;
 
-  bg.quaternion.copy(camera.quaternion);
-  fill.quaternion.copy(camera.quaternion);
+  if (bg.quaternion && camera.quaternion) bg.quaternion.copy(camera.quaternion);
+  if (fill.quaternion && camera.quaternion) fill.quaternion.copy(camera.quaternion);
 
   const hp    = entity.hp ?? entity.max_hp ?? 100;
   const maxHp = entity.max_hp ?? 100;
@@ -807,7 +807,7 @@ function billboardHpBar(mesh, entity, camera, showBars) {
   fill.scale.x = pct;
   const barW = bg.geometry?.parameters?.width ?? 1.5;
   fill.position.x = (pct - 1) * (barW / 2);
-  if (fill.material && fill.material.color) {
+  if (fill.material?.color) {
     fill.material.color.setHex(pct > 0.6 ? 0x22c55e : pct > 0.3 ? 0xf59e0b : 0xef4444);
   }
 }
