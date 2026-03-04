@@ -239,9 +239,12 @@ export default function World() {
   }, [myCharacter]);
 
   // ─── Authoritative target selection ─────────────────────────────────────
+  // All click-based targeting flows through here. Tab-cycling goes through
+  // lockTarget (useInputController) which syncs into activeTarget via effect.
   const selectTarget = useCallback((entity, type = "monster") => {
     setActiveTarget({ entity, type });
-  }, []);
+    lockTarget(type === "monster" ? entity : null); // keep input controller in sync
+  }, [lockTarget]);
 
   const clearActiveTarget = useCallback(() => {
     setActiveTarget(null);
