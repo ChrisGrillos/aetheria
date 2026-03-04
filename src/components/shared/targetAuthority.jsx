@@ -142,5 +142,50 @@ export function getZoneRuleSummary(x, y) {
     dangerLevel: 0,
     pvpAllowed: false,
     zone: null,
+    emoji: "🛡️",
+    label: "Safe",
+    color: "text-green-400",
+    bgColor: "bg-green-900/30",
+    borderColor: "border-green-700",
   };
+}
+
+/**
+ * Determine hostility class for UI styling.
+ */
+export function getHostilityClass(myCharacter, target, zone) {
+  if (!target) return "neutral";
+  
+  // Self
+  if (myCharacter && target.id === myCharacter.id) return "self";
+  
+  // Monsters are always hostile
+  if (target.type === "monster" || target.monster_type) return "hostile";
+  
+  // Other players/agents are friendly by default (PvP flags handled elsewhere)
+  if (target.type === "human" || target.type === "ai_agent" || target.npc_type) return "friendly";
+  
+  return "neutral";
+}
+
+/**
+ * Can we engage (attack) this target?
+ */
+export function canEngage(myCharacter, target, x, y) {
+  if (!myCharacter || !target) {
+    return { legal: false, blockedBySafe: false };
+  }
+  
+  // Can't attack self
+  if (target.id === myCharacter.id) {
+    return { legal: false, blockedBySafe: true };
+  }
+  
+  // Monsters are always engageable
+  if (target.type === "monster" || target.monster_type) {
+    return { legal: true, blockedBySafe: false };
+  }
+  
+  // PvP targets depend on zone rules (for now, return true in contested zones)
+  return { legal: true, blockedBySafe: false };
 }
