@@ -141,3 +141,19 @@ export const FORMATIONS = {
   spread: { id: "spread", label: "Spread", emoji: "↔️",  desc: "Spread out horizontally" },
   wedge:  { id: "wedge",  label: "Wedge",  emoji: "🔻",  desc: "V-formation for combat" },
 };
+
+export const DEFAULT_FORMATION = "follow";
+
+/**
+ * Alias for getFormationOffsets for compatibility.
+ */
+export function computeFormationPositions(formation, memberCount) {
+  return getFormationOffsets(formation, memberCount);
+}
+
+/**
+ * Get the next tile in follow formation relative to leader.
+ */
+export function getFollowStep(stepIndex) {
+  return { dx: 0, dy: stepIndex };
+}
