@@ -1233,10 +1233,10 @@ export default function WorldScene3D({
   // ─── RENDER ───────────────────────────────────────────────────────────────
 
   const nameplateStyle = {
-    me:      "text-amber-300 border-amber-700/80 bg-gray-950/85",
-    player:  "text-sky-300   border-sky-800/80   bg-gray-950/85",
-    ai:      "text-cyan-300  border-cyan-800/80  bg-gray-950/85",
-    monster: "text-red-400   border-red-900/80   bg-gray-950/85",
+    me:      "text-amber-200 border-amber-600 bg-black/90 shadow-sm shadow-amber-900/40",
+    player:  "text-sky-200   border-sky-700   bg-black/90 shadow-sm shadow-sky-900/40",
+    ai:      "text-cyan-200  border-cyan-700  bg-black/90 shadow-sm shadow-cyan-900/40",
+    monster: "text-red-300   border-red-800   bg-black/90 shadow-sm shadow-red-900/40",
   };
 
   return (
