@@ -86,11 +86,16 @@ export default function useInputController({
       const ny = char.y + dir[1];
       if (!isPassable(nx, ny)) continue;
       const mon = monstersRef.current.find(m => m.is_alive && m.x === nx && m.y === ny);
-      if (mon) { lockTarget(mon); startAutoAttack(); return; }
+      if (mon) {
+        // Route through onStartCombat (authoritative path) — not directly startAutoAttack
+        lockTarget(mon);
+        if (onStartCombat) onStartCombat(mon);
+        return;
+      }
       if (onMove) onMove(nx, ny);
       return;
     }
-  }, [onMove, lockTarget, startAutoAttack]);
+  }, [onMove, lockTarget, onStartCombat]);
 
   const startMoveLoop = useCallback(() => {
     if (moveTimerRef.current) return;
