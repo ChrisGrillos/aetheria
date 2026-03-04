@@ -193,5 +193,4 @@ export default function useInputController({
   }, [monsters, clearTarget]);
 
   return { lockedTarget, lockTarget, clearTarget, autoAttacking, startAutoAttack, cooldowns };
-
 }
