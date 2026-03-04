@@ -240,6 +240,9 @@ export default function WorldScene3D({
   const cameraRef = useRef(null);
   const rendererRef = useRef(null);
   const rafRef = useRef(null);
+  const sunLightRef = useRef(null);
+  const ambientLightRef = useRef(null);
+  const fogRef = useRef(null);
 
   // Interpolated player position (smooth movement)
   const playerPosRef = useRef(null);
