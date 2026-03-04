@@ -259,15 +259,14 @@ export default function World() {
       enabled: !combatMonster && !showInventory && !npcDialogue && !encounter,
     });
 
-  // Keep activeTarget in sync with lockedTarget from input controller
+  // Keep activeTarget in sync with lockedTarget from input controller.
+  // lockedTarget is only set by useInputController (Tab/key cycling).
+  // Monster clicks go through selectTarget → setActiveTarget directly.
   useEffect(() => {
     if (lockedTarget && (!activeTarget || activeTarget.entity?.id !== lockedTarget.id)) {
       setActiveTarget({ entity: lockedTarget, type: "monster" });
     }
-    if (!lockedTarget && activeTarget?.type === "monster" && !combatMonster) {
-      // don't clear if combat overlay is open
-    }
-  }, [lockedTarget]);
+  }, [lockedTarget]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ─── Combat mode (derived from authoritative state) ──────────────────────
   const combatMode = computeCombatMode(COMBAT_MODE.PEACEFUL, {
