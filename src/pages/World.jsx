@@ -307,7 +307,7 @@ export default function World() {
             worldObjects={worldObjects}
             onMove={handleMove}
             activeEvents={activeEvents}
-            onMonsterClick={(monster) => { lockTarget(monster); setCombatMonster(monster); }}
+            onMonsterClick={(monster) => { lockTarget(monster); setSelectedTarget({ entity: monster, type: "monster" }); }}
           />
         </div>
 
@@ -320,7 +320,7 @@ export default function World() {
             worldObjects={worldObjects}
             activeEvents={activeEvents}
             onMove={handleMove}
-            onMonsterClick={(monster) => { lockTarget(monster); setCombatMonster(monster); }}
+            onMonsterClick={(monster) => { lockTarget(monster); setSelectedTarget({ entity: monster, type: "monster" }); }}
               sceneSettings={sceneSettings}
           />
         )}
