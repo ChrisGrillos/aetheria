@@ -188,6 +188,9 @@ export function rollStats(raceId) {
   return stats;
 }
 
+/** Alias for rollStats (for API compat) */
+export const rollStatsForRace = rollStats;
+
 /** Get the total stat points in a roll (for quality display) */
 export function statTotal(stats) {
   return STAT_NAMES.reduce((sum, s) => sum + (stats[s] || 0), 0);
