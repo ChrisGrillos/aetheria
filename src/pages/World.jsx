@@ -7,6 +7,8 @@ import WorldScene3D from "@/components/world/WorldScene3D.jsx";
 import ViewToggle from "@/components/world/ViewToggle.jsx";
 import ChatPanel from "@/components/world/ChatPanel.jsx";
 import CharacterHUD from "@/components/world/CharacterHUD.jsx";
+import NPCDialogue from "@/components/world/NPCDialogue.jsx";
+import PartyFollower from "@/components/world/PartyFollower.jsx";
 import TravelEncounterModal from "@/components/world/TravelEncounterModal.jsx";
 import ZoneInfoPanel from "@/components/world/ZoneInfoPanel.jsx";
 import CombatOverlay from "@/components/combat/CombatOverlay.jsx";
