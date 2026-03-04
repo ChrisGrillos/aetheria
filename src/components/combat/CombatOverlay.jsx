@@ -306,6 +306,7 @@ export default function CombatOverlay({ character, monster, onClose, onVictory, 
     }
 
     if (newHP <= 0) {
+      triggerEntityState(character.id, "death", 1200);
       setPhase("defeat");
       addLog("💀 You were defeated...");
       setTimeout(() => onDefeat && onDefeat(), 2000);
