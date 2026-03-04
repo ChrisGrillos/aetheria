@@ -40,6 +40,7 @@ export default function World() {
   const [encounterZone, setEncounterZone] = useState(null);
   const [viewPos, setViewPos] = useState(null);
   const [combatMonster, setCombatMonster] = useState(null);
+  const [selectedTarget, setSelectedTarget] = useState(null); // { entity, type }
   const [showInventory, setShowInventory] = useState(false);
   const [fastTravelTarget, setFastTravelTarget] = useState(null);
   const [fastTravelProgress, setFastTravelProgress] = useState(0);
