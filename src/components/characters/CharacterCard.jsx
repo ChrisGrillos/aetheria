@@ -20,6 +20,7 @@ export default function CharacterCard({ character, isMe, onRefresh }) {
   const [showDeep, setShowDeep] = useState(false);
   const isAI = character.type === "ai_agent";
   const classId = character.base_class || character.class;
+  const raceData = !isAI ? getRace(character.race || "human") : null;
   return (
     <div className={`bg-gray-900 border rounded-xl p-4 transition-all hover:scale-[1.02]
       ${isMe ? "border-amber-500" : isAI ? "border-cyan-800" : "border-gray-700"}`}>
@@ -35,7 +36,10 @@ export default function CharacterCard({ character, isMe, onRefresh }) {
               {character.active_title && <span className="text-xs text-purple-400 font-medium">«{character.active_title}»</span>}
               {isMe && <span className="text-xs text-amber-400">(you)</span>}
             </div>
-            <div className="text-xs text-gray-400 capitalize">{CLASS_EMOJI[character.class]} {character.class}</div>
+            <div className="text-xs text-gray-400 capitalize flex items-center gap-1.5">
+              {CLASS_EMOJI[character.class]} {character.class}
+              {raceData && <span className="text-gray-600">· {raceData.emoji} {raceData.name}</span>}
+            </div>
           </div>
         </div>
         <Badge className={isAI ? "bg-cyan-900 text-cyan-300 text-xs" : "bg-gray-800 text-gray-300 text-xs"}>
