@@ -750,7 +750,8 @@ export default function WorldScene3D({
         if (!mesh) return;
         const target = tileToWorld(c.x, c.y);
         mesh.position.lerp(new THREE.Vector3(target.x, 0, target.z), 0.12);
-        mesh.position.y = Math.sin(now * 0.0018 + c.id.charCodeAt(0)) * 0.04;
+        if (!entityStates[c.id]) mesh.position.y = Math.sin(now * 0.0018 + c.id.charCodeAt(0)) * 0.04;
+        applyEntityStateVisuals(mesh, c.id, now);
         billboardHpBar(mesh, c, camera, settings.showHealthBars);
       });
 
@@ -759,8 +760,11 @@ export default function WorldScene3D({
         if (!m.is_alive) return;
         const mesh = monsterMeshesRef.current[m.id];
         if (!mesh) return;
-        mesh.position.y = Math.sin(now * 0.0024 + m.id.charCodeAt(0)) * 0.06;
-        mesh.rotation.y = Math.sin(now * 0.0010 + m.id.charCodeAt(0)) * 0.18;
+        if (!entityStates[m.id]) {
+          mesh.position.y = Math.sin(now * 0.0024 + m.id.charCodeAt(0)) * 0.06;
+          mesh.rotation.y = Math.sin(now * 0.0010 + m.id.charCodeAt(0)) * 0.18;
+        }
+        applyEntityStateVisuals(mesh, m.id, now);
         billboardHpBar(mesh, m, camera, settings.showHealthBars);
 
         const ring = mesh.getObjectByName("selectionRing");
