@@ -205,6 +205,7 @@ export default function CombatOverlay({ character, monster, onClose, onVictory, 
       setPlayerEffects(prev => [...prev, eff]);
       addLog(`✨ ${ability.name}: +${ability.effect_magnitude} ${eff.stat.replace(/_/g, " ")} for ${eff.roundsLeft} rounds`);
       spawnDamageNumber(`+${ability.effect_magnitude}`, "buff", "player");
+      triggerEntityState(character.id, "cast", 800);
     } else if (ability.effect_type === "debuff") {
       const eff = buildEffect(ability);
       setEnemyEffects(prev => [...prev, eff]);
