@@ -391,10 +391,10 @@ export default function World() {
               cooldowns={cooldowns}
               onUseAbility={(slot) => {
                 const ab = characterAbilities[slot];
-                if (ab && lockedTarget) setCombatMonster(lockedTarget);
+                if (ab && activeTarget?.entity) startCombat(activeTarget.entity);
               }}
-              lockedTarget={lockedTarget}
-              onClearTarget={clearTarget}
+              lockedTarget={activeTarget?.entity || lockedTarget}
+              onClearTarget={() => { clearTarget(); clearActiveTarget(); }}
               autoAttacking={autoAttacking}
             />
           </div>
