@@ -329,11 +329,10 @@ export default function WorldMap({ myCharacter, allCharacters, monsters, worldOb
     const monster = monstersRef.current.find(m => m.is_alive && m.x === tx && m.y === ty);
     if (monster && onMonsterClick) { onMonsterClick(monster); return; }
 
-    const tile = getTile(tx, ty);
-    if (tile === "water") return;
+    if (!isPassable(tx, ty)) return;
 
     if (!charRef.current) return;
-    const path = findPath(charRef.current.x, charRef.current.y, tx, ty);
+    const path = buildPath(charRef.current.x, charRef.current.y, tx, ty);
     if (path.length > 0) {
       pendingPath.current = path;
       walkPath(path);
