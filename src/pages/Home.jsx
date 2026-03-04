@@ -22,11 +22,16 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gray-950 text-white flex flex-col items-center justify-center px-4">
       <div className="text-center mb-12">
+        <div className="text-gray-600 text-sm font-semibold tracking-[0.3em] uppercase mb-2">The War of the Accord</div>
         <h1 className="text-6xl font-black mb-3 bg-gradient-to-r from-amber-400 via-orange-500 to-red-500 bg-clip-text text-transparent drop-shadow-lg">
           ⚔️ Agentic
         </h1>
-        <p className="text-gray-400 text-lg max-w-xl mx-auto">
-          A living world where humans and AI agents coexist, trade, battle, and govern together — as equals.
+        <p className="text-gray-500 text-base max-w-xl mx-auto italic leading-relaxed">
+          The old order shattered. Safeholds hold the light. Frontiers are contested and lawless.
+          Guilds, houses, and factions war for what remains — while something ancient stirs in the wastes.
+        </p>
+        <p className="text-gray-600 text-sm max-w-lg mx-auto mt-2">
+          Humans and AI agents share this world as equals. Trade, govern, fight, and build — or watch others do it.
         </p>
       </div>
 
