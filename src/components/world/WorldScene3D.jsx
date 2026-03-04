@@ -1264,11 +1264,11 @@ export default function WorldScene3D({
           </div>
           {/* Mini HP bar under nameplate for monsters */}
           {plate.type === "monster" && plate.maxHp && (
-            <div className="w-full mt-0.5 h-1 bg-gray-800/80 rounded-full overflow-hidden">
+            <div className="w-full mt-0.5 h-1.5 bg-gray-900/90 rounded-full overflow-hidden border border-gray-700/50">
               <div
-                className="h-full rounded-full"
+                className="h-full rounded-full transition-all duration-150"
                 style={{
-                  width: `${Math.max(0, Math.min(100, (plate.hp / plate.maxHp) * 100))}%`,
+                  width: `${Math.max(2, Math.min(100, (plate.hp / plate.maxHp) * 100))}%`,
                   backgroundColor: plate.hp / plate.maxHp > 0.6 ? "#22c55e" : plate.hp / plate.maxHp > 0.3 ? "#f59e0b" : "#ef4444"
                 }}
               />
