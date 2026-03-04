@@ -327,7 +327,7 @@ export default function CreateCharacterModal({ user, onCreated, onClose }) {
                       <div className="w-full bg-gray-800 rounded-full h-1.5">
                         <div className={`h-1.5 rounded-full transition-all ${info.color.replace("text-","bg-")}`} style={{ width: `${pct}%` }} />
                       </div>
-                      <div className="text-xs text-gray-600 mt-0.5">{min}–{max}</div>
+
                     </div>
                   );
                 })}
