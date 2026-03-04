@@ -390,8 +390,6 @@ export default function World() {
                 const ab = characterAbilities[slot];
                 if (ab && activeTarget?.entity) startCombat(activeTarget.entity);
               }}
-              lockedTarget={activeTarget?.entity || lockedTarget}
-              onClearTarget={() => { clearTarget(); clearActiveTarget(); }}
               autoAttacking={autoAttacking}
             />
           </div>
