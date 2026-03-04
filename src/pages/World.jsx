@@ -214,9 +214,6 @@ export default function World() {
     // Check if we walked onto a monster tile — route through authoritative combat start
     const monsterOnTile = monsters.find(m => m.is_alive && m.x === newX && m.y === newY);
     if (monsterOnTile) {
-      // Use startCombat after this render; we need to defer since startCombat uses myCharacter
-      // which is about to be updated. Pass the updated character directly.
-      const zone = getZoneAt(newX, newY);
       const validation = initiateCombat(updated, monsterOnTile, zone);
       if (validation.valid) {
         setActiveTarget({ entity: monsterOnTile, type: "monster" });
