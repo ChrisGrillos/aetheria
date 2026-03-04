@@ -99,7 +99,7 @@ export default function NPCPanel({ npcType, zoneName, character, onClose, onInte
         const inv = [...(character.inventory || [])];
         const idx = inv.findIndex(i => i.id === rewards.resource);
         if (idx >= 0) {
-          inv[idx] = { ...inv[idx], qty: (inv[idx]?.qty || 1) + 1 };
+          inv[idx] = { ...inv[idx], qty: (inv[idx].qty || 0) + 1 };
         } else {
           inv.push({ id: rewards.resource, name: rewards.resource, qty: 1 });
         }

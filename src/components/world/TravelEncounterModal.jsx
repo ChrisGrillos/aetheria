@@ -86,7 +86,7 @@ export default function TravelEncounterModal({ encounter, character, zone, onClo
     if (npcData.resource) {
       const inv = [...(character.inventory || [])];
       const idx = inv.findIndex(i => i.id === npcData.resource);
-      if (idx >= 0) inv[idx] = { ...inv[idx], qty: (inv[idx].qty || 1) + 1 };
+      if (idx >= 0) inv[idx] = { ...inv[idx], qty: (inv[idx].qty || 0) + 1 };
       else inv.push({ id: npcData.resource, qty: 1 });
       updates.inventory = inv;
     }
