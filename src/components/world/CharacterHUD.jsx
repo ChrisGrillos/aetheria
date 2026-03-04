@@ -55,7 +55,8 @@ export default function CharacterHUD({ character, onInventory, onUpdateCharacter
   }[character.race || "human"] || "text-amber-500";
 
   return (
-    <div className="bg-gray-900 border-b border-gray-800 px-3 py-1.5 shrink-0 relative z-30">
+    <div className={`bg-gray-950 border-b px-3 py-1.5 shrink-0 relative z-30 transition-colors
+      ${zoneRule.isSafe ? "border-green-900/50" : "border-gray-800"}`}>
       {/* Main Row */}
       <div className="flex items-center gap-3 flex-wrap">
 
