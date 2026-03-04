@@ -213,7 +213,7 @@ export default function World() {
     // Check if we walked onto a monster tile — route through authoritative combat start
     const monsterOnTile = monsters.find(m => m.is_alive && m.x === newX && m.y === newY);
     if (monsterOnTile) {
-      startCombat(monsterOnTile); // single authoritative path
+      if (startCombatRef.current) startCombatRef.current(monsterOnTile);
       return "combat";
     }
 
