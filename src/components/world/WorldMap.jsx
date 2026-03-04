@@ -375,8 +375,8 @@ export default function WorldMap({ myCharacter, allCharacters, monsters, worldOb
     }
 
     // Show path preview on hover (not during movement)
-    if (!movingRef.current && charRef.current && getTile(tx, ty) !== "water") {
-      const previewPath = findPath(charRef.current.x, charRef.current.y, tx, ty);
+    if (!movingRef.current && charRef.current && isPassable(tx, ty)) {
+      const previewPath = buildPath(charRef.current.x, charRef.current.y, tx, ty);
       pendingPath.current = previewPath;
     }
   };
