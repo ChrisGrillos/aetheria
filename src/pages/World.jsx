@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import { createPageUrl } from "@/utils";
 import { Link } from "react-router-dom";
@@ -15,9 +16,9 @@ import CombatOverlay from "@/components/combat/CombatOverlay.jsx";
 import Minimap from "@/components/world/Minimap.jsx";
 import TargetFrame from "@/components/world/TargetFrame.jsx";
 import CombatModeIndicator from "@/components/world/CombatModeIndicator.jsx";
-import { getZoneAt, getPOIAt, rollEncounter } from "@/components/shared/worldZones";
-import { isPassable, getMovementContext, movementEnergyRegen } from "@/components/shared/movementAuthority";
-import { handleDeath } from "@/components/combat/authorizedCombatEngine";
+import { getZoneAt, getPOIAt, getTile, rollEncounter } from "@/components/shared/worldZones";
+import { isPassable, movementEnergyRegen } from "@/components/shared/movementAuthority";
+import { handleDeath, initiateCombat } from "@/components/combat/authorizedCombatEngine";
 import { RESOURCES } from "@/components/shared/craftingData";
 import InventoryPanel from "@/components/inventory/InventoryPanel.jsx";
 import { Button } from "@/components/ui/button";
@@ -25,7 +26,8 @@ import { checkAchievements } from "@/components/shared/achievementData";
 import useInputController from "@/components/world/useInputController.jsx";
 import AbilityHotbar from "@/components/world/AbilityHotbar.jsx";
 import { computeCombatMode, COMBAT_MODE } from "@/components/shared/combatMode";
-import { cycleNearestHostile, canEngage } from "@/components/shared/targetAuthority";
+import { canEngage } from "@/components/shared/targetAuthority";
+import { isSafeZone } from "@/components/shared/worldRules";
 
 export default function World() {
   const [user, setUser] = useState(null);
