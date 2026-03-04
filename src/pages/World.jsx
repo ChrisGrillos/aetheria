@@ -441,9 +441,9 @@ export default function World() {
         )}
       </div>
       <ChatDock messages={messages} onSend={handleSendMessage} myCharacter={myCharacter} />
-      </div>
+    </div>
 
-      {combatMonster && myCharacter && (
+    {combatMonster && myCharacter && (
         <CombatOverlay
           character={myCharacter}
           monster={combatMonster}
