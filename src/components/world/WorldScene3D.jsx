@@ -14,9 +14,6 @@ import { createTownWalkers } from "./TownWalkers";
 // ─── CONSTANTS ────────────────────────────────────────────────────────────────
 
 const TILE_SIZE   = 2;
-const CAM_HEIGHT  = 28;
-const CAM_DIST    = 24;
-const CAM_ANGLE   = 0.62; // ~35° offset — true classic 3/4 isometric tilt
 
 // ─── TERRAIN PALETTE ─────────────────────────────────────────────────────────
 
@@ -823,6 +820,7 @@ export default function WorldScene3D({
   onMove,
   onMonsterClick,
   sceneSettings = {},
+  getCurrentZoomConfig = () => ({ distance: 24, height: 28, angle: 0.62, fov: 42 }),
 }) {
   const mountRef     = useRef(null);
   const sceneRef     = useRef(null);
@@ -867,7 +865,8 @@ export default function WorldScene3D({
     fogRef.current = scene.fog;
 
     const aspect = mount.clientWidth / mount.clientHeight;
-    const camera = new THREE.PerspectiveCamera(42, aspect, 0.1, 400);
+    const zoomConfig = getCurrentZoomConfig();
+    const camera = new THREE.PerspectiveCamera(zoomConfig.fov || 42, aspect, 0.1, 400);
     cameraRef.current = camera;
 
     const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -934,15 +933,22 @@ export default function WorldScene3D({
 
         const px = playerPosRef.current.x;
         const pz = playerPosRef.current.z;
-        const dist = CAM_DIST * settings.cameraDistance;
+        
+        // Get current zoom config with smooth interpolation
+        const zoom = getCurrentZoomConfig();
+        const dist = zoom.distance;
+        const height = zoom.height;
+        const angle = zoom.angle;
 
-        // Classic 3/4 MMO camera: slightly behind and above, slight angle offset
+        // Classic 3/4 MMO camera with dynamic angle and height based on zoom
         camera.position.set(
-          px - Math.sin(CAM_ANGLE) * dist,
-          CAM_HEIGHT * settings.cameraDistance * 0.9,
-          pz + Math.cos(CAM_ANGLE) * dist
+          px - Math.sin(angle) * dist,
+          height,
+          pz + Math.cos(angle) * dist
         );
         camera.lookAt(px, 0, pz);
+        camera.fov = zoom.fov;
+        camera.updateProjectionMatrix();
 
         const myMesh = charMeshesRef.current[myChar.id];
         if (myMesh) {
