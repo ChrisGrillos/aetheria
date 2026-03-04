@@ -689,7 +689,7 @@ export default function WorldScene3D({
     if (terrainHits.length > 0) {
       const hit = terrainHits[0].object;
       const { tx, ty, tile } = hit.userData;
-      if (tile === "water") return;
+      if (!isPassable(tx, ty)) return;
       const myChar = myCharRef.current;
       if (!myChar) return;
 
