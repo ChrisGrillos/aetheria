@@ -125,7 +125,7 @@ export default function CreateCharacterModal({ user, onCreated, onClose }) {
   // ── Stat tweaking ───────────────────────────────────────────────────────────
   const adjustStat = (stat, delta) => {
     if (!stats || !race) return;
-    const [min, max] = race.statRanges[stat];
+    const { min, max } = race.statRanges[stat];
     const newVal = (stats[stat] || 10) + delta;
     if (newVal < min || newVal > max) return;
     if (delta > 0 && statPool <= 0) return;
