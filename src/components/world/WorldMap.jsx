@@ -1,6 +1,7 @@
 import { useEffect, useRef, useCallback, useState } from "react";
 import { drawEventOverlays } from "./EventOverlay.jsx";
 import { ZONES, POINTS_OF_INTEREST, TERRAIN_COLORS, getTile, getZoneAt, getPOIAt, MAP_W, MAP_H } from "@/components/shared/worldZones";
+import { buildPath, isPassable } from "@/components/shared/movementAuthority";
 
 const TILE = 40; // rendered tile size
 const VIEWPORT_W = 22; // tiles visible horizontally
