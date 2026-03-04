@@ -390,7 +390,7 @@ export default function CreateCharacterModalV2({ user, onCreated, onClose }) {
                   </div>
                   <div>
                     <div className="font-bold text-white text-lg">{name}</div>
-                    <div className="text-xs text-gray-400">{race?.name} · {BASE_CLASSES.find(c => c.id === classId)?.label}</div>
+                    <div className="text-xs text-gray-400">{race?.name} · {BASE_CLASSES_ARRAY.find(c => c.id === classId)?.label}</div>
                   </div>
                 </div>
               </div>

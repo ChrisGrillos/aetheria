@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import CharacterCard from "@/components/characters/CharacterCard.jsx";
-import CreateCharacterModal from "@/components/characters/CreateCharacterModal.jsx";
+import CreateCharacterModalV2 from "@/components/characters/CreateCharacterModalV2.jsx";
 
 export default function Characters() {
   const [myCharacters, setMyCharacters] = useState([]);
@@ -133,7 +133,7 @@ export default function Characters() {
         )}
 
         {showCreate && (
-          <CreateCharacterModal user={user} onCreated={handleCreated} onClose={() => setShowCreate(false)} />
+          <CreateCharacterModalV2 user={user} onCreated={handleCreated} onClose={() => setShowCreate(false)} />
         )}
       </div>
     </div>
