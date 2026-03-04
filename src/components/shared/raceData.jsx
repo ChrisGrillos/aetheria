@@ -210,19 +210,11 @@ export function rollQuality(stats) {
   return "poor";
 }
 
-/** Individual stat quality relative to race range */
+/** Individual stat quality based on absolute thresholds (no race ranges) */
 export function statQuality(raceId, statName, value) {
-  const race = RACES[raceId];
-  if (!race) return "average";
-  const range = race.statRanges[statName];
-  if (!range) return "average";
-
-  const span = range.max - range.min;
-  const pct  = (value - range.min) / (span || 1);
-
-  if (pct >= 0.85) return "exceptional";
-  if (pct >= 0.60) return "good";
-  if (pct >= 0.30) return "average";
+  if (value >= 16) return "exceptional";
+  if (value >= 13) return "good";
+  if (value >= 9)  return "average";
   return "poor";
 }
 

@@ -7,6 +7,7 @@
  */
 
 import { BASE_CLASSES } from "./classDefinitions";
+import { getDerivedModifiers } from "./getDerivedModifiers";
 
 // ─── DERIVED STATS ─────────────────────────────────────────────────────────────
 
@@ -15,10 +16,6 @@ export function calculateDerivedStats(character) {
   const skills = character.skills || {};
   const effects = character.active_effects || [];
   const level = character.level || 1;
-  const unlockedSkills = character.skill_tree_unlocked || [];
-
-  // SKILL TREE BONUSES: Import here to avoid circular dependency
-  // These stat bonuses are applied in unlockSkillUpdates, so character.stats already includes them
 
   const str = stats.strength || 10;
   const dex = stats.dexterity || 10;
@@ -27,22 +24,29 @@ export function calculateDerivedStats(character) {
   const con = stats.constitution || 10;
   const cha = stats.charisma || 10;
 
-  const combatSkill = skills.combat || 1;
-  const healSkill   = skills.healing || 1;
-  const tradeSkill  = skills.trading || 1;
-  const craftSkill  = skills.crafting || 1;
-  const dipSkill    = skills.diplomacy || 1;
+  // Use new expanded skill IDs
+  const healSkill   = skills.healing || skills.restoration || 0;
+  const tradeSkill  = skills.trading || 0;
+  const craftSkill  = skills.crafting || skills.smithing || 0;
+
+  // Get skill/feat modifiers
+  const mods = getDerivedModifiers(character);
 
   let derived = {
-    attack_power:        Math.floor(str * 1.5 + dex * 0.5 + combatSkill * 0.3 + level * 1.5),
-    defense:             Math.floor(con * 1.2 + str * 0.3 + level * 0.8),
-    magic_power:         Math.floor(int_ * 1.5 + wis * 0.7 + (skills.research || 1) * 0.3),
-    critical_hit_chance: Math.min(75, Math.floor(dex * 0.8 + combatSkill * 0.2 + level * 0.3)),
-    evasion:             Math.min(80, Math.floor(dex * 0.9 + (skills.resource_management || 1) * 0.2)),
+    attack_power:        Math.floor(str * 1.5 + dex * 0.5 + level * 1.5) + mods.meleeDamageBonus + mods.twoHandedDamageBonus,
+    defense:             Math.floor(con * 1.2 + str * 0.3 + level * 0.8) + mods.defenseBonus,
+    magic_power:         Math.floor(int_ * 1.5 + wis * 0.7 + (skills.arcana || 0) * 0.5) + mods.magicPowerBonus,
+    critical_hit_chance: Math.min(75, Math.floor(dex * 0.8 + level * 0.3) + mods.critBonus + mods.rangedCritBonus),
+    evasion:             Math.min(80, Math.floor(dex * 0.9) + mods.evasionBonus),
     movement_speed:      Math.min(20, Math.floor(5 + dex * 0.15 + level * 0.1)),
-    trade_efficiency:    Math.floor(cha * 1.2 + tradeSkill * 0.5 + dipSkill * 0.3),
+    trade_efficiency:    Math.floor(cha * 1.2 + tradeSkill * 0.5),
     craft_quality:       Math.floor((dex + int_) * 0.5 + craftSkill * 0.6),
-    healing_power:       Math.floor(wis * 1.3 + healSkill * 0.5 + int_ * 0.2),
+    healing_power:       Math.floor(wis * 1.3 + healSkill * 0.5 + int_ * 0.2 + (mods.healingBonus * 100)),
+    block_chance:        mods.blockChance,
+    parry_chance:        mods.parryChance,
+    damage_reduction:    mods.damageReduction,
+    ranged_damage:       mods.rangedDamageBonus,
+    stealth_rating:      mods.stealthRating,
   };
 
   // Apply passive bonuses from base class abilities
