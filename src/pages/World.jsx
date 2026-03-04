@@ -153,8 +153,7 @@ export default function World() {
     fastTravelRef.current = interval;
   }, [combatMonster, fastTravelTarget]);
 
-  // startCombat is defined below — hoisted via useCallback reference pattern.
-  // We keep a ref so handleMove can call it without stale closure issues.
+  // startCombat is defined after useInputController — use a ref to break the cycle.
   const startCombatRef = useRef(null);
 
   const handleMove = useCallback(async (newX, newY) => {
