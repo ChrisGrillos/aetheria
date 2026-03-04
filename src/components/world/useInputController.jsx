@@ -8,7 +8,8 @@
  */
 
 import { useEffect, useRef, useState, useCallback } from "react";
-import { getTile, MAP_W, MAP_H } from "@/components/shared/worldZones";
+import { MAP_W, MAP_H } from "@/components/shared/worldZones";
+import { isPassable } from "@/components/shared/movementAuthority";
 
 const MOVE_INTERVAL_MS = 180;
 
