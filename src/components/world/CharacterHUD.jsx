@@ -6,6 +6,7 @@ import { createPageUrl } from "@/utils";
 import { calculateDerivedStats } from "@/components/shared/charUtils";
 import { base44 } from "@/api/base44Client";
 import { getRace } from "@/components/shared/raceData";
+import { getZoneRuleSummary } from "@/components/shared/targetAuthority";
 
 function XPToNextLevel(level) { return Math.floor(100 * Math.pow(level, 1.5)); }
 
