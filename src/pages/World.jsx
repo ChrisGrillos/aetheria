@@ -444,9 +444,14 @@ export default function World() {
             />
           </div>
         )}
+      {/* Controls hint + Zoom level */}
+      <div className="absolute bottom-2 left-2 text-[10px] text-gray-600 bg-gray-900/70 px-2 py-1 rounded pointer-events-none">
+        Click terrain to move · Scroll to zoom
+        {viewMode === "3d" && <div className="text-xs text-amber-500 mt-1">Zoom: {ZOOM_LEVELS[Math.round(zoomLevel)]?.label || "Normal"}</div>}
+      </div>
       </div>
       <ChatDock messages={messages} onSend={handleSendMessage} myCharacter={myCharacter} />
-    </div>
+      </div>
 
     {combatMonster && myCharacter && (
       <CombatOverlay
