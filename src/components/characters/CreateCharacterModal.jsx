@@ -303,9 +303,9 @@ export default function CreateCharacterModal({ user, onCreated, onClose }) {
 
               <div className="grid grid-cols-2 gap-2">
                 {STAT_ORDER.map(stat => {
-                  const info = STAT_INFO[stat];
-                  const val = stats[stat] || 10;
-                  const [min, max] = race.statRanges[stat];
+                   const info = STAT_INFO[stat];
+                   const val = stats[stat] || 10;
+                   const { min, max } = race.statRanges[stat];
                   const pct = ((val - min) / Math.max(1, max - min)) * 100;
                   return (
                     <div key={stat} className={`${info.bg} rounded-xl p-3 border border-gray-700/40`}>
