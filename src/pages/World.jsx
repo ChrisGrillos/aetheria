@@ -102,7 +102,14 @@ export default function World() {
     setActiveEvents(events);
 
     if (u) {
-      const mine = chars.find(c => c.created_by === u.email && c.type === "human");
+      // Use active_character_id from user profile, fall back to first human character
+      let mine = null;
+      if (u.active_character_id) {
+        mine = chars.find(c => c.id === u.active_character_id && c.type === "human");
+      }
+      if (!mine) {
+        mine = chars.find(c => c.created_by === u.email && c.type === "human");
+      }
       if (mine) {
         setMyCharacter(mine);
         base44.entities.Character.update(mine.id, { is_online: true });
@@ -115,7 +122,13 @@ export default function World() {
     const chars = await base44.entities.Character.list("-updated_date", 100);
     setAllCharacters(chars);
     if (user) {
-      const mine = chars.find(c => c.created_by === user.email && c.type === "human");
+      let mine = null;
+      if (user.active_character_id) {
+        mine = chars.find(c => c.id === user.active_character_id && c.type === "human");
+      }
+      if (!mine) {
+        mine = chars.find(c => c.created_by === user.email && c.type === "human");
+      }
       if (mine) setMyCharacter(mine);
     }
   };
