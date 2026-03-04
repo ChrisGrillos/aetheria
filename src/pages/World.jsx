@@ -18,6 +18,8 @@ import { RESOURCES } from "@/components/shared/craftingData";
 import InventoryPanel from "@/components/inventory/InventoryPanel.jsx";
 import { Button } from "@/components/ui/button";
 import { checkAchievements } from "@/components/shared/achievementData";
+import useInputController from "@/components/world/useInputController.js";
+import AbilityHotbar from "@/components/world/AbilityHotbar.jsx";
 
 export default function World() {
   const [user, setUser] = useState(null);
