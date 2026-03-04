@@ -236,6 +236,18 @@ export function getDerivedModifiers(character) {
       mods.spellCostReduction += em.spellCostReduction;
       mods.breakdown.push(`${feat.name}: -${Math.round(em.spellCostReduction * 100)}% spell cost`);
     }
+    if (em.blockChanceBonus) {
+      mods.blockChance += em.blockChanceBonus;
+      mods.breakdown.push(`${feat.name}: +${em.blockChanceBonus}% block`);
+    }
+    if (em.parryChanceBonus) {
+      mods.parryChance += em.parryChanceBonus;
+      mods.breakdown.push(`${feat.name}: +${em.parryChanceBonus}% parry`);
+    }
+    if (em.accuracyBonus) {
+      mods.accuracyBonus += em.accuracyBonus;
+      mods.breakdown.push(`${feat.name}: +${em.accuracyBonus} accuracy`);
+    }
   }
 
   return mods;
