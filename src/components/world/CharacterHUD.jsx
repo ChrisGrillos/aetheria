@@ -120,6 +120,12 @@ export default function CharacterHUD({ character, onInventory, onUpdateCharacter
           <Coins className="w-3 h-3" />{character.gold||0}g
         </div>
 
+        {/* Zone indicator */}
+        <div className={`hidden sm:flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded border
+          ${zoneRule.borderColor} ${zoneRule.color} ${zoneRule.bgColor}`}>
+          {zoneRule.emoji} {zoneRule.label}
+        </div>
+
         {/* Buffs/Debuffs */}
         {(buffs.length > 0 || debuffs.length > 0) && (
           <div className="flex items-center gap-0.5">
