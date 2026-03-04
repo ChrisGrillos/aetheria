@@ -102,42 +102,44 @@ export default function TravelEncounterModal({ encounter, character, zone, onClo
   };
 
   return (
-    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-      <div className="bg-gray-900 border border-amber-800 rounded-2xl p-5 w-full max-w-md">
+    <div className="fixed bottom-16 left-1/2 -translate-x-1/2 z-40 p-4">
+      <div className="bg-gray-900/95 border border-amber-800 rounded-xl p-5 w-96 max-w-[calc(100vw-2rem)] backdrop-blur-sm">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-lg font-black text-amber-400">
-            {zone?.emoji} {encounter.label}
-          </h2>
-          <button onClick={onClose}><X className="w-4 h-4 text-gray-500 hover:text-white" /></button>
-        </div>
+           <h2 className="text-sm font-black text-amber-400">
+             {zone?.emoji} {encounter.label}
+           </h2>
+           <button onClick={onClose} className="text-gray-500 hover:text-white transition-colors">
+             <X className="w-4 h-4" />
+           </button>
+         </div>
 
         {phase === "intro" && (
           <div>
-            <p className="text-gray-300 text-sm mb-4">
+            <p className="text-gray-300 text-xs mb-3">
               {encounter.type === "combat"
-                ? `A ${encounter.monster} blocks your path in ${zone?.name || "the wilderness"}!`
+                ? `A ${encounter.monster} blocks your path!`
                 : encounter.type === "npc"
-                ? `You encounter ${encounter.label} in ${zone?.name || "the wilderness"}.`
-                : `Something is happening nearby!`}
+                ? `You encounter ${encounter.label}!`
+                : `Something is happening!`}
             </p>
             {encounter.type === "combat" && (
-              <div className="flex gap-2">
-                <Button onClick={handleFight} className="flex-1 bg-red-700 hover:bg-red-600 gap-1 font-bold">
-                  <Sword className="w-4 h-4" /> Fight!
+              <div className="flex gap-2 text-sm">
+                <Button size="sm" onClick={handleFight} className="flex-1 bg-red-700 hover:bg-red-600 gap-1 font-bold h-8">
+                  <Sword className="w-3 h-3" /> Fight
                 </Button>
-                <Button onClick={handleFlee} variant="outline" className="border-gray-600 text-gray-300">
+                <Button size="sm" onClick={handleFlee} variant="outline" className="border-gray-600 text-gray-300 h-8">
                   Flee
                 </Button>
               </div>
             )}
             {encounter.type === "npc" && (
-              <Button onClick={handleNPC} className="w-full bg-blue-700 hover:bg-blue-600 gap-1 font-bold">
-                <MessageCircle className="w-4 h-4" /> Interact
+              <Button size="sm" onClick={handleNPC} className="w-full bg-blue-700 hover:bg-blue-600 gap-1 font-bold h-8 text-sm">
+                <MessageCircle className="w-3 h-3" /> Interact
               </Button>
             )}
             {encounter.type === "event" && (
-              <Button onClick={handleNPC} className="w-full bg-amber-600 hover:bg-amber-500 font-bold">
-                🎉 Participate!
+              <Button size="sm" onClick={handleNPC} className="w-full bg-amber-600 hover:bg-amber-500 font-bold h-8 text-sm">
+                🎉 Participate
               </Button>
             )}
           </div>
@@ -145,39 +147,39 @@ export default function TravelEncounterModal({ encounter, character, zone, onClo
 
         {phase === "combat" && (
           <div>
-            {loading && <p className="text-amber-400 animate-pulse">⚔️ Combat in progress...</p>}
-            <div className="max-h-48 overflow-y-auto space-y-0.5 font-mono text-xs text-gray-300 bg-gray-800 rounded-lg p-2">
-              {combatLog.map((l, i) => <div key={i}>{l}</div>)}
+            {loading && <p className="text-amber-400 animate-pulse text-xs">⚔️ Combat...</p>}
+            <div className="max-h-32 overflow-y-auto space-y-0.5 font-mono text-[11px] text-gray-300 bg-gray-800 rounded-lg p-2">
+              {combatLog.slice(-6).map((l, i) => <div key={i}>{l}</div>)}
             </div>
           </div>
         )}
 
         {phase === "outcome" && outcome && (
-          <div className="text-center space-y-3">
+          <div className="text-center space-y-2">
             {outcome.won && (
               <>
-                <div className="text-4xl">🏆</div>
-                <p className="text-green-400 font-bold">Victory!</p>
-                <p className="text-sm text-gray-300">+{outcome.xp} XP &nbsp;|&nbsp; +{outcome.gold} gold</p>
-                {outcome.levelUp && <p className="text-amber-400 font-bold text-lg">🎉 LEVEL UP!</p>}
+                <div className="text-3xl">🏆</div>
+                <p className="text-green-400 font-bold text-sm">Victory!</p>
+                <p className="text-xs text-gray-400">+{outcome.xp} XP &nbsp;·&nbsp; +{outcome.gold} gold</p>
+                {outcome.levelUp && <p className="text-amber-400 font-bold text-xs">⭐ LEVEL UP!</p>}
               </>
             )}
             {outcome.fled && (
               <>
-                <div className="text-4xl">💨</div>
-                <p className="text-gray-400 font-medium">You escaped safely.</p>
+                <div className="text-3xl">💨</div>
+                <p className="text-gray-400 text-sm font-medium">Escaped safely.</p>
               </>
             )}
             {outcome.npc && (
               <>
-                <div className="text-4xl">💬</div>
-                <p className="text-gray-300 text-sm">{outcome.msg}</p>
+                <div className="text-3xl">💬</div>
+                <p className="text-gray-300 text-xs">{outcome.msg}</p>
                 {outcome.updates?.xp && <p className="text-purple-400 text-xs">+{(outcome.updates.xp - (character.xp || 0))} XP</p>}
                 {outcome.updates?.gold && <p className="text-amber-400 text-xs">+gold</p>}
-                {outcome.updates?.inventory && <p className="text-green-400 text-xs"><Package className="w-3 h-3 inline" /> Resource found!</p>}
+                {outcome.updates?.inventory && <p className="text-green-400 text-xs"><Package className="w-3 h-3 inline" /> Resource</p>}
               </>
             )}
-            <Button onClick={onClose} className="w-full bg-gray-700 hover:bg-gray-600">Continue</Button>
+            <Button size="sm" onClick={onClose} className="w-full bg-gray-700 hover:bg-gray-600 h-7 text-xs mt-1">Continue</Button>
           </div>
         )}
       </div>
