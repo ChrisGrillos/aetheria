@@ -12,14 +12,16 @@ export const TILE_SIZE = 20;
 export const ZONES = [
   {
     id: "town_center",
-    name: "Town of Agentica",
+    name: "Agentica — The First Safehold",
     emoji: "🏘️",
     x: 22, y: 18, w: 16, h: 14,
     danger: 0,
     color: "#3d5c2e",
-    description: "The heart of civilisation. Safe haven for all travelers.",
+    description: "The oldest chartered safehold in the known realm. Its walls were raised after the Sundering, when the old order shattered. Forge-smoke and market-bells echo day and night.",
     resources: ["wood", "stone", "herb"],
     encounter_types: ["npc_merchant", "npc_quest_giver", "festival"],
+    zone_type: "safehold",
+    structures: ["forge", "market", "temple", "inn", "barracks", "guild_hall", "gate_north", "gate_south", "walls"],
   },
   {
     id: "dark_forest",
