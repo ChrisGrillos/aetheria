@@ -447,26 +447,19 @@ export default function World() {
         <CombatOverlay
           character={myCharacter}
           monster={combatMonster}
-          onClose={() => setCombatMonster(null)}
-          onVictory={async (updates, drop) => {
-            // Check for new achievements
+          onClose={() => { setCombatMonster(null); clearActiveTarget(); clearTarget(); }}
+          onVictory={async (updates) => {
             const achievementUpdates = checkAchievements({ ...myCharacter, ...updates }, myCharacter);
             const finalUpdates = { ...updates, ...achievementUpdates };
-            
-            // Apply all updates (hp, xp, gold, energy, inventory, achievements) to local state
             const updatedChar = { ...myCharacter, ...finalUpdates };
             setMyCharacter(updatedChar);
             setAllCharacters(prev => prev.map(c => c.id === myCharacter.id ? updatedChar : c));
-            
-            // Persist monster death and all updates
-            await base44.entities.Monster.update(combatMonster.id, {
-              is_alive: false,
-              hp: 0,
-            });
+            await base44.entities.Monster.update(combatMonster.id, { is_alive: false, hp: 0 });
             await base44.entities.Character.update(myCharacter.id, finalUpdates);
-            
             setMonsters(prev => prev.map(m => m.id === combatMonster.id ? { ...m, is_alive: false, hp: 0 } : m));
             setCombatMonster(null);
+            clearActiveTarget();
+            clearTarget();
           }}
           onDefeat={() => {
             const zone = getZoneAt(myCharacter.x, myCharacter.y);
@@ -476,6 +469,8 @@ export default function World() {
             setAllCharacters(prev => prev.map(c => c.id === myCharacter.id ? respawned : c));
             base44.entities.Character.update(myCharacter.id, deathUpdates);
             setCombatMonster(null);
+            clearActiveTarget();
+            clearTarget();
           }}
         />
       )}
