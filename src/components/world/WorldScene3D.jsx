@@ -1256,10 +1256,11 @@ export default function WorldScene3D({
           className="absolute pointer-events-none select-none text-center"
           style={{ left: plate.x, top: plate.y, transform: "translate(-50%, -100%)" }}
         >
-          <div className={`text-[11px] font-bold px-1.5 py-0.5 rounded border leading-tight ${nameplateStyle[plate.type] || "text-gray-300 border-gray-700 bg-gray-950/85"}`}>
+          <div className={`text-[11px] font-bold px-2 py-0.5 rounded border leading-tight whitespace-nowrap ${nameplateStyle[plate.type] || "text-gray-300 border-gray-700 bg-black/90"}`}>
+            {plate.type === "me" && <span className="mr-1 text-[9px]">▶</span>}
             <span>{plate.name}</span>
-            {plate.level && <span className="ml-1 opacity-50 text-[9px]">Lv.{plate.level}</span>}
-            {plate.sub && <div className="opacity-40 text-[9px] capitalize font-normal leading-none mt-0.5">{plate.sub}</div>}
+            {plate.level && <span className="ml-1.5 opacity-55 text-[9px] font-normal">Lv.{plate.level}</span>}
+            {plate.sub && <span className="ml-1 opacity-35 text-[9px] capitalize font-normal">· {plate.sub}</span>}
           </div>
           {/* Mini HP bar under nameplate for monsters */}
           {plate.type === "monster" && plate.maxHp && (
