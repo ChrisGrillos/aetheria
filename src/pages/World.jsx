@@ -346,7 +346,7 @@ export default function World() {
             worldObjects={worldObjects}
             onMove={handleMove}
             activeEvents={activeEvents}
-            onMonsterClick={(monster) => { lockTarget(monster); selectTarget(monster, "monster"); }}
+            onMonsterClick={(monster) => selectTarget(monster, "monster")}
           />
         </div>
 
@@ -359,7 +359,7 @@ export default function World() {
             worldObjects={worldObjects}
             activeEvents={activeEvents}
             onMove={handleMove}
-            onMonsterClick={(monster) => { lockTarget(monster); selectTarget(monster, "monster"); }}
+            onMonsterClick={(monster) => selectTarget(monster, "monster")}
               sceneSettings={sceneSettings}
           />
         )}
