@@ -9,13 +9,13 @@ import ChatDock from "@/components/chat/ChatDock.jsx";
 import CharacterHUD from "@/components/world/CharacterHUD.jsx";
 import NPCPanel from "@/components/world/NPCPanel.jsx";
 import GroupWindow from "@/components/world/GroupWindow.jsx";
-import TravelEncounterModal from "@/components/world/TravelEncounterModal.jsx";
+// TravelEncounterModal removed — monsters are 3D entities on the map (MMO-style)
 import ZoneInfoPanel from "@/components/world/ZoneInfoPanel.jsx";
 import CombatOverlay from "@/components/combat/CombatOverlay.jsx";
 import Minimap from "@/components/world/Minimap.jsx";
 import TargetFrame from "@/components/world/TargetFrame.jsx";
 import CombatModeIndicator from "@/components/world/CombatModeIndicator.jsx";
-import { getZoneAt, getPOIAt, rollEncounter } from "@/components/shared/worldZones";
+import { getZoneAt, getPOIAt } from "@/components/shared/worldZones";
 import { isPassable, movementEnergyRegen } from "@/components/shared/movementAuthority";
 import { handleDeath, initiateCombat } from "@/components/combat/authorizedCombatEngine";
 import { RESOURCES } from "@/components/shared/craftingData";
@@ -37,8 +37,7 @@ export default function World() {
   const [messages, setMessages] = useState([]);
   const [activeEvents, setActiveEvents] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [encounter, setEncounter] = useState(null);
-  const [encounterZone, setEncounterZone] = useState(null);
+  // Encounters are now initiated by clicking 3D monsters directly (no random encounters)
   const [viewPos, setViewPos] = useState(null);
   const [showInventory, setShowInventory] = useState(false);
   const [fastTravelTarget, setFastTravelTarget] = useState(null);
@@ -255,12 +254,7 @@ export default function World() {
       return "combat";
     }
 
-    // Random encounter
-    const enc = rollEncounter(zone);
-    if (enc) {
-      setEncounter(enc);
-      setEncounterZone(zone);
-    }
+    // No random encounters — monsters are 3D entities on the map
   }, [myCharacter, monsters, cancelFastTravel]);
 
   // ─── Input controller (WASD, hotkeys, Tab-target, auto-attack) ──────────
@@ -272,7 +266,7 @@ export default function World() {
       onMove: handleMove,
       onStartCombat: startCombat,
       abilities: characterAbilities,
-      enabled: !combatMonster && !showInventory && !npcDialogue && !encounter,
+      enabled: !combatMonster && !showInventory && !npcDialogue,
     });
 
   // ─── Authoritative target selection (click-path) ─────────────────────────
@@ -529,21 +523,7 @@ export default function World() {
       />
     )}
 
-    {encounter && myCharacter && (
-      <TravelEncounterModal
-        encounter={encounter}
-        character={myCharacter}
-        zone={encounterZone}
-        onClose={() => setEncounter(null)}
-        onResult={(updates) => {
-          if (Object.keys(updates).length > 0) {
-            const updated = { ...myCharacter, ...updates };
-            setMyCharacter(updated);
-          }
-          setEncounter(null);
-        }}
-      />
-    )}
+    {/* Random encounter modal removed — monsters are persistent 3D world entities */}
   </div>
   );
 }
