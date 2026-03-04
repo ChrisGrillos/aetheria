@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
-import { MAP_W, MAP_H, getTile, getZoneAt } from "@/components/shared/worldZones";
+import { MAP_W, MAP_H, getTile } from "@/components/shared/worldZones";
+import { isPassable } from "@/components/shared/movementAuthority";
 
 const MINI_W = 150;
 const MINI_H = 120;
