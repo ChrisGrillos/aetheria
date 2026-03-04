@@ -12,15 +12,9 @@
 import { canAttack, applyDeathPenalty, getRespawnLocation } from "@/components/shared/worldRules";
 import { getZoneAt } from "@/components/shared/worldZones";
 
-// ─── RE-EXPORT PURE COMBAT MATH ──────────────────────────────────────────────
-// These are the stateless calculation functions from combatEngine.jsx.
-// Import them here so consumers only need one import.
-
-export {
-  calcAttackDamage,
-  resolveMonsterAttack,
-  calcRewards,
-} from "@/components/combat/combatEngine";
+// ─── PURE COMBAT MATH ────────────────────────────────────────────────────────
+// Import pure functions from combatEngine.jsx when needed.
+// Keep this file focused on authority/validation layer only.
 
 // ─── COMBAT INITIATION ──────────────────────────────────────────────────────
 
