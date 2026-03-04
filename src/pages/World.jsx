@@ -373,6 +373,15 @@ export default function World() {
         />
       )}
 
+      {npcDialogue && myCharacter && (
+        <NPCDialogue
+          npcType={npcDialogue.npcType}
+          zoneName={npcDialogue.zoneName}
+          character={myCharacter}
+          onClose={() => setNpcDialogue(null)}
+        />
+      )}
+
       {encounter && myCharacter && (
         <TravelEncounterModal
           encounter={encounter}
