@@ -6,7 +6,7 @@
  * Also displays the locked target frame (RuneScape-style) when a target is selected.
  */
 
-import { Swords, Zap, Shield, Heart, Crosshair, X } from "lucide-react";
+import { Swords, Zap, Shield, Heart, Crosshair } from "lucide-react";
 
 const EFFECT_COLORS = {
   damage:  "border-red-600 bg-red-950/60",
