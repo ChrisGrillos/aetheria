@@ -53,7 +53,6 @@ export default function useInputController({
   const stopAutoAttack = useCallback(() => {
     autoAtkRef.current = false;
     setAutoAttacking(false);
-    if (autoAtkTimer.current) { clearInterval(autoAtkTimer.current); autoAtkTimer.current = null; }
   }, []);
 
   const clearTarget = useCallback(() => {
