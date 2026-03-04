@@ -50,6 +50,7 @@
 import AgentArena from './pages/AgentArena';
 import AgentProfile from './pages/AgentProfile';
 import Agents from './pages/Agents';
+import CharacterProfile from './pages/CharacterProfile';
 import Characters from './pages/Characters';
 import Combat from './pages/Combat';
 import Crafting from './pages/Crafting';
@@ -65,7 +66,6 @@ import Recording from './pages/Recording';
 import World from './pages/World';
 import WorldEvents from './pages/WorldEvents';
 import WorldMapView from './pages/WorldMapView';
-import CharacterProfile from './pages/CharacterProfile';
 import __Layout from './Layout.jsx';
 
 
@@ -73,6 +73,7 @@ export const PAGES = {
     "AgentArena": AgentArena,
     "AgentProfile": AgentProfile,
     "Agents": Agents,
+    "CharacterProfile": CharacterProfile,
     "Characters": Characters,
     "Combat": Combat,
     "Crafting": Crafting,
@@ -88,7 +89,6 @@ export const PAGES = {
     "World": World,
     "WorldEvents": WorldEvents,
     "WorldMapView": WorldMapView,
-    "CharacterProfile": CharacterProfile,
 }
 
 export const pagesConfig = {

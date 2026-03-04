@@ -3,6 +3,8 @@ import { base44 } from "@/api/base44Client";
 import { createPageUrl } from "@/utils";
 import { Link } from "react-router-dom";
 import WorldMap from "@/components/world/WorldMap.jsx";
+import WorldScene3D from "@/components/world/WorldScene3D.jsx";
+import ViewToggle from "@/components/world/ViewToggle.jsx";
 import ChatPanel from "@/components/world/ChatPanel.jsx";
 import CharacterHUD from "@/components/world/CharacterHUD.jsx";
 import TravelEncounterModal from "@/components/world/TravelEncounterModal.jsx";
