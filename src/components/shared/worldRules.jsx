@@ -248,8 +248,11 @@ export function validateTarget(attacker, target, zone, relationshipState = {}) {
     return { valid: false, reason: "Target out of range or blocked" };
   }
 
+  // Resolve zone config before passing to canAttack
+  const resolvedZone = zone ? (ZONE_CONFIG[zone.id] || zone) : null;
+
   // Check hostility rules
-  const hostility = canAttack(attacker, target, zone, relationshipState);
+  const hostility = canAttack(attacker, target, resolvedZone, relationshipState);
   if (!hostility.canAttack) {
     return { valid: false, reason: hostility.reason };
   }
