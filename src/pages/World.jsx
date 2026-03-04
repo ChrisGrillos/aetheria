@@ -130,7 +130,7 @@ export default function World() {
 
   const requestFastTravel = useCallback((tx, ty) => {
     if (combatMonster || fastTravelTarget) return;
-    if (getTile(tx, ty) === "water") return;
+    if (!isPassable(tx, ty)) return;
 
     setFastTravelTarget({ x: tx, y: ty });
     setFastTravelProgress(0);
