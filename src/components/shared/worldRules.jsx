@@ -67,6 +67,15 @@ export function getPvpConsequence(attackerZoneX, attackerZoneY) {
   return "none";
 }
 
+/**
+ * Check if a location is in a safe zone (no PvP).
+ */
+export function isSafeZone(x, y) {
+  const zone = getZoneAt(x, y);
+  if (!zone) return false;
+  return zone.pvp === "safe";
+}
+
 // ─── DEATH & RESPAWN ──────────────────────────────────────────────────────────
 
 /**
