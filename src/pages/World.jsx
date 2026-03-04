@@ -145,6 +145,9 @@ export default function World() {
     if (!myCharacter) return;
     cancelFastTravel();
 
+    // Authority: validate tile passability
+    if (!isPassable(newX, newY)) return;
+
     const zone = getZoneAt(newX, newY);
     const poi  = getPOIAt(newX, newY);
     setViewPos({ x: newX, y: newY });
@@ -179,10 +182,8 @@ export default function World() {
       hpUpdate = myCharacter.max_hp || 100;
     }
 
-    // Regen energy on movement (out of combat)
-    const wisdomMax = 50 + ((myCharacter.stats?.wisdom || 10) * 2);
-    const curEnergy = myCharacter.energy ?? wisdomMax;
-    const newEnergy = Math.min(wisdomMax, curEnergy + 5);
+    // Authority: energy regen on movement (out of combat)
+    const { energy: newEnergy } = movementEnergyRegen(myCharacter);
 
     const updates = { x: newX, y: newY, energy: newEnergy };
     if (inventoryUpdates) updates.inventory = inventoryUpdates;
