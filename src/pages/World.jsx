@@ -24,7 +24,7 @@ import { Button } from "@/components/ui/button";
 import { checkAchievements } from "@/components/shared/achievementData";
 import useInputController from "@/components/world/useInputController.jsx";
 import AbilityHotbar from "@/components/world/AbilityHotbar.jsx";
-import { computeCombatMode, COMBAT_MODE } from "@/components/shared/combatMode";
+import { COMBAT_MODE } from "@/components/shared/combatMode";
 import { isSafeZone } from "@/components/shared/worldRules";
 
 export default function World() {
@@ -273,13 +273,7 @@ export default function World() {
   }, [lockedTarget]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ─── Combat mode (derived from authoritative state) ──────────────────────
-  const combatMode = computeCombatMode(COMBAT_MODE.PEACEFUL, {
-    hasTarget: !!(activeTarget),
-    targetIsHostile: !!(activeTarget?.entity?.species || activeTarget?.entity?.is_alive !== undefined),
-    inCombat: !!combatMonster,
-    targetIsPlayer: activeTarget?.type === "player",
-    inSafeZone: myCharacter ? isSafeZone(myCharacter.x, myCharacter.y) : false,
-  });
+  const combatMode = !!combatMonster ? COMBAT_MODE.ACTIVE : COMBAT_MODE.PEACEFUL;
 
   const handleSendMessage = async (text, channel = "global") => {
     if (!myCharacter || !text.trim()) return;
