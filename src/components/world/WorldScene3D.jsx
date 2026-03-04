@@ -19,6 +19,7 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import * as THREE from "three";
 import { getTile, getZoneAt, MAP_W, MAP_H, ZONES } from "@/components/shared/worldZones";
 import { getRace, RACES } from "@/components/shared/raceData";
+import { useAmbientWorld, AmbientHUDWidget } from "./AmbientWorld";
 
 // ─── CONSTANTS ────────────────────────────────────────────────────────────────
 
