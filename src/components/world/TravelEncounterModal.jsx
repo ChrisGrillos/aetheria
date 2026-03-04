@@ -39,18 +39,24 @@ export default function TravelEncounterModal({ encounter, character, zone, onClo
     };
 
     const derived = calculateDerivedStats(character);
-    const result = autoResolveCombat(character, derived, fakeMonster);
+    const result = autoResolveCombat(character, fakeMonster, zone);
     setCombatLog(result.log);
 
-    const newXp = (character.xp || 0) + result.xpGained;
-    const updates = {
-      hp: result.finalPlayerHP,
-      xp: newXp,
-      gold: result.won ? (character.gold || 0) + result.goldGained : (character.gold || 0),
-    };
-
-    if (result.won && shouldLevelUp({ ...character, xp: newXp })) {
-      Object.assign(updates, levelUpUpdates({ ...character, xp: newXp }));
+    let updates = {};
+    if (result.won) {
+     const newXp = (character.xp || 0) + result.xpGained;
+     updates = {
+       hp: result.finalPlayerHP,
+       xp: newXp,
+       gold: (character.gold || 0) + result.goldGained,
+     };
+     if (shouldLevelUp({ ...character, xp: newXp })) {
+       Object.assign(updates, levelUpUpdates({ ...character, xp: newXp }));
+     }
+    } else {
+     // Character died—apply world death rules
+     const deathResult = handleDeath(character, zone?.id, true);
+     updates = deathResult.updates;
     }
 
     await base44.entities.Character.update(character.id, updates);
