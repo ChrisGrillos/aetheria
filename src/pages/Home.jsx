@@ -54,68 +54,88 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gray-950 text-white flex flex-col items-center justify-center px-4 py-8">
-      <div className="text-center mb-8">
-        <h1 className="text-5xl font-black mb-1 bg-gradient-to-r from-amber-400 via-orange-500 to-red-500 bg-clip-text text-transparent">
+      <div className="text-center mb-12">
+        <h1 className="text-6xl font-black mb-3 bg-gradient-to-r from-amber-400 via-orange-500 to-red-500 bg-clip-text text-transparent drop-shadow-lg">
           ⚔️ Agentic
         </h1>
-        <p className="text-gray-400 text-sm">Welcome back, {user.full_name}</p>
+        <p className="text-gray-500 text-base max-w-lg mx-auto italic">
+          The old order shattered. Safeholds hold the light. Frontiers are contested and lawless.
+        </p>
+        <p className="text-gray-600 text-sm mt-2">Welcome, {user.full_name}</p>
       </div>
 
-      <div className="w-full max-w-3xl">
+      <div className="w-full max-w-4xl">
         {loading ? (
           <div className="text-center text-gray-500 py-12">Loading your characters...</div>
         ) : characters.length === 0 ? (
           <div className="text-center space-y-4">
-            <p className="text-gray-400">You don't have a character yet.</p>
+            <p className="text-gray-400 mb-6">You don't have a character yet. Begin your journey.</p>
             <Link to={createPageUrl("Characters")}>
-              <Button className="bg-amber-500 hover:bg-amber-600 text-black font-bold px-6 py-2">
-                + Create Character
+              <Button className="bg-amber-500 hover:bg-amber-600 text-black font-bold px-8 py-3 text-lg">
+                ⚔️ Create Your Character
               </Button>
             </Link>
           </div>
         ) : (
-          <div className="space-y-4">
-            <h2 className="text-2xl font-bold text-amber-400 mb-4">Select Your Character</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-              {characters.map(c => (
-                <button
-                  key={c.id}
-                  onClick={() => handleSelectCharacter(c.id)}
-                  className="bg-gray-900 border border-gray-800 hover:border-amber-500 rounded-xl p-4 text-left transition-all hover:scale-105 cursor-pointer"
-                >
-                  <div className="text-4xl mb-2">{c.avatar_emoji || "🧑"}</div>
-                  <div className="font-bold text-white text-lg">{c.name}</div>
-                  <div className="text-xs text-gray-500 mt-1">{c.race || "human"} · Lv. {c.level || 1}</div>
-                  <div className="text-xs text-gray-600 mt-1">{c.base_class || "—"}</div>
-                  {c.hp && (
-                    <div className="mt-2 bg-gray-800 rounded-full h-2 overflow-hidden">
-                      <div className="bg-green-500 h-2" style={{ width: `${Math.min(100, ((c.hp || 0) / (c.max_hp || 100)) * 100)}%` }} />
-                    </div>
-                  )}
-                </button>
-              ))}
-
-              {characters.length < 6 && (
-                <Link to={createPageUrl("Characters")} className="contents">
-                  <button className="bg-gray-900/50 border-2 border-dashed border-gray-700 hover:border-amber-500 rounded-xl p-4 flex flex-col items-center justify-center text-center transition-all hover:scale-105 cursor-pointer">
-                    <div className="text-3xl mb-2">+</div>
-                    <div className="font-bold text-gray-400">Create Character</div>
-                    <div className="text-xs text-gray-600 mt-1">{6 - characters.length} slot{6 - characters.length !== 1 ? 's' : ''} available</div>
+          <div className="space-y-6">
+            <div>
+              <h2 className="text-xl font-black text-amber-400 mb-1">CONTINUE YOUR ADVENTURE</h2>
+              <p className="text-xs text-gray-500 mb-4">Select a character to enter the world</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                {characters.map(c => (
+                  <button
+                    key={c.id}
+                    onClick={() => handleSelectCharacter(c.id)}
+                    className="bg-gradient-to-b from-gray-800 to-gray-900 border border-gray-700 hover:border-amber-500 rounded-xl p-4 text-left transition-all hover:shadow-lg hover:shadow-amber-500/20 hover:scale-102 cursor-pointer group"
+                  >
+                    <div className="text-5xl mb-3 group-hover:scale-110 transition-transform">{c.avatar_emoji || "🧑"}</div>
+                    <div className="font-bold text-white text-lg">{c.name}</div>
+                    <div className="text-xs text-gray-500 mt-1">{c.race || "human"} · {c.base_class || "—"}</div>
+                    <div className="text-xs text-gray-600 mt-0.5">Level {c.level || 1}</div>
+                    {c.hp && (
+                      <div className="mt-3 bg-gray-800 rounded-full h-2 overflow-hidden border border-gray-700/50">
+                        <div className="bg-green-500 h-2 transition-all" style={{ width: `${Math.min(100, ((c.hp || 0) / (c.max_hp || 100)) * 100)}%` }} />
+                      </div>
+                    )}
+                    <div className="text-xs text-gray-600 mt-1">Click to continue</div>
                   </button>
+                ))}
+
+                {characters.length < 6 && (
+                  <Link to={createPageUrl("Characters")} className="contents">
+                    <button className="bg-gray-900/30 border-2 border-dashed border-gray-700 hover:border-amber-500 rounded-xl p-4 flex flex-col items-center justify-center text-center transition-all hover:scale-102 cursor-pointer group">
+                      <div className="text-4xl mb-2 group-hover:scale-125 transition-transform">+</div>
+                      <div className="font-bold text-gray-400 text-sm">New Character</div>
+                      <div className="text-xs text-gray-600 mt-2">{6 - characters.length} slot{6 - characters.length !== 1 ? 's' : ''} available</div>
+                    </button>
+                  </Link>
+                )}
+              </div>
+            </div>
+
+            <div className="border-t border-gray-800 pt-6">
+              <p className="text-xs text-gray-600 mb-3 text-center">Other options:</p>
+              <div className="flex gap-2 justify-center flex-wrap">
+                <Link to={createPageUrl("Characters")}>
+                  <Button variant="outline" size="sm" className="border-gray-700 text-gray-400 hover:text-white">
+                    👥 Roster
+                  </Button>
                 </Link>
-              )}
+                <Link to={createPageUrl("Agents")}>
+                  <Button variant="outline" size="sm" className="border-gray-700 text-gray-400 hover:text-white">
+                    🤖 Agents
+                  </Button>
+                </Link>
+                <Link to={createPageUrl("Guilds")}>
+                  <Button variant="outline" size="sm" className="border-gray-700 text-gray-400 hover:text-white">
+                    🏰 Guilds
+                  </Button>
+                </Link>
+              </div>
             </div>
           </div>
         )}
-
-        <div className="mt-12 border-t border-gray-800 pt-6">
-          <Link to={createPageUrl("Characters")}>
-            <Button variant="outline" className="border-gray-700 text-gray-400 hover:text-white w-full">
-              ↓ Manage Roster
-            </Button>
-          </Link>
-        </div>
       </div>
     </div>
   );
-}
+  }
