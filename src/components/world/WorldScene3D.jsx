@@ -995,6 +995,9 @@ export default function WorldScene3D({
         if (ring) ring.material.opacity = 0.25 + Math.sin(now * 0.003 + m.id.charCodeAt(0)) * 0.18;
       });
 
+      // Animate visual NPC walkers
+      if (townWalkersRef.current) townWalkersRef.current.update(now);
+
       updateNameplateDom(camera, renderer);
       renderer.render(scene, camera);
     };
