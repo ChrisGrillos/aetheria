@@ -69,30 +69,6 @@ function AbilitySlot({ ability, slot, cooldownMs, onClick }) {
   );
 }
 
-function TargetFrame({ target, onClear, autoAttacking }) {
-  if (!target) return null;
-  const hpPct = Math.max(0, Math.min(100, (target.hp / target.max_hp) * 100));
-  const hpColor = hpPct > 60 ? "bg-green-500" : hpPct > 30 ? "bg-yellow-500" : "bg-red-500";
-
-  return (
-    <div className="flex items-center gap-2 bg-gray-900/90 border border-red-800/70 rounded-lg px-3 py-2 mb-1 min-w-48">
-      <Crosshair className={`w-4 h-4 shrink-0 ${autoAttacking ? "text-red-400 animate-pulse" : "text-red-600"}`} />
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center justify-between gap-1">
-          <span className="text-red-300 font-bold text-xs truncate">{target.name}</span>
-          <span className="text-gray-500 text-[10px] shrink-0">Lv.{target.level}</span>
-        </div>
-        <div className="w-full bg-gray-800 rounded-full h-1.5 mt-1">
-          <div className={`${hpColor} h-1.5 rounded-full transition-all`} style={{ width: `${hpPct}%` }} />
-        </div>
-        <div className="text-[9px] text-gray-500 mt-0.5">{target.hp}/{target.max_hp} HP{autoAttacking ? " · ⚔ Auto" : ""}</div>
-      </div>
-      <button onClick={onClear} className="text-gray-600 hover:text-red-400 shrink-0 ml-1">
-        <X className="w-3 h-3" />
-      </button>
-    </div>
-  );
-}
 
 export default function AbilityHotbar({ abilities = [], cooldowns = {}, onUseAbility, autoAttacking }) {
   // Show up to 9 slots. Target is displayed by the authoritative TargetFrame overlay in World.
