@@ -837,6 +837,7 @@ export default function WorldScene3D({
 
   const charMeshesRef    = useRef({});
   const monsterMeshesRef = useRef({});
+  const townWalkersRef   = useRef(null);
 
   const [nameplates, setNameplates] = useState([]);
 
