@@ -90,13 +90,21 @@ export function canAttack(attacker, target, zone, relationshipState = {}) {
     return { canAttack: false, reason: "Cannot attack yourself" };
   }
 
+  // Monsters are always attackable (player attacking monster)
+  if (target.species || (target.is_alive !== undefined && !target.type)) {
+    return { canAttack: true, reason: "Monster — always attackable" };
+  }
+
   // Monster vs anything: always can attack (will be controlled by encounter logic)
   if (attacker.type === "monster") {
     return { canAttack: true, reason: "Monster can attack" };
   }
 
+  // Resolve zone config — zone may be a raw zone object or a config object
+  const zoneConfig = zone ? (ZONE_CONFIG[zone.id] || zone) : null;
+
   // Safe zone: no player/agent attacks allowed
-  if (zone?.type === ZONE_TYPES.SAFE_TOWN) {
+  if (zoneConfig?.type === ZONE_TYPES.SAFE_TOWN) {
     // Exception: duel consent overrides safe zone
     if (relationshipState.duelActive) {
       return { canAttack: true, reason: "Duel active in safe zone" };
