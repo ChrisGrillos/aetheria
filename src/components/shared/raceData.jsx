@@ -168,15 +168,20 @@ function roll3d6() {
   );
 }
 
-/** Roll a single stat for a given race. Returns the clamped value. */
+/** Roll a single stat for a given race using weighted tendencies. */
 function rollStat(raceId, statName) {
   const race = RACES[raceId];
   if (!race) return 10;
-  const range = race.statRanges[statName];
-  if (!range) return 10;
-
-  const raw = roll3d6() + range.bias;
-  return Math.max(range.min, Math.min(range.max, raw));
+  
+  const weight = race.statWeights?.[statName] || 0;
+  const base = roll3d6();
+  
+  // Apply weight as a modifier (can range from -3 to +4 total)
+  // Weights shift the roll slightly but don't hard-lock outcomes
+  const weighted = base + weight;
+  
+  // Clamp to reasonable bounds (3–18, the standard fantasy RPG range)
+  return Math.max(3, Math.min(18, weighted));
 }
 
 /** Roll a full stat block for a race. Returns { strength, dexterity, ... } */
