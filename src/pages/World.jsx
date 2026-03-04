@@ -34,6 +34,8 @@ export default function World() {
   const [fastTravelTarget, setFastTravelTarget] = useState(null);
   const [fastTravelProgress, setFastTravelProgress] = useState(0);
   const fastTravelRef = useRef(null);
+  const [viewMode, setViewMode] = useState("3d"); // "map" | "3d"
+  const [sceneSettings, setSceneSettings] = useState({ showNameplates: true, showHealthBars: true, cameraDistance: 1.0 });
 
   useEffect(() => {
     loadWorld();
