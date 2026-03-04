@@ -31,6 +31,8 @@ export const ZONE_CONFIG = {
     duelAllowed: true,                 // Can initiate duels here
     deathPenalty: { goldLoss: 0.05, lootDrop: false },
     respawnX: 30, respawnY: 25,        // Safe town center
+    loreLabel: "Safehold",
+    loreDescription: "A chartered safehold. Steel stays sheathed within these walls.",
   },
   dark_forest: {
     type: ZONE_TYPES.FRONTIER,
