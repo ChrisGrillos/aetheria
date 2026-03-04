@@ -529,6 +529,124 @@ function buildTerrain(scene, cx, cy) {
   return group;
 }
 
+// ─── TOWN WALLS ──────────────────────────────────────────────────────────────
+
+function buildTownWalls(group, zone) {
+  const wallH = 1.0;
+  const wallThick = 0.28;
+  const wallColor = 0x7a6a54;
+  const parapetColor = 0x6a5a44;
+  const towerColor = 0x8a7a64;
+
+  const x0w = zone.x * TILE_SIZE - TILE_SIZE * 0.5;
+  const x1w = (zone.x + zone.w) * TILE_SIZE - TILE_SIZE * 0.5;
+  const z0w = zone.y * TILE_SIZE - TILE_SIZE * 0.5;
+  const z1w = (zone.y + zone.h) * TILE_SIZE - TILE_SIZE * 0.5;
+  const wallY = 0.12 + wallH * 0.5;
+
+  const td = TERRAIN_3D.grass;
+  const baseY = td.height - 0.05;
+
+  // Helper: add a wall segment
+  const addWall = (cx, cy, cz, lenX, lenZ) => {
+    const wGeo = new THREE.BoxGeometry(lenX, wallH, lenZ);
+    const wMat = new THREE.MeshLambertMaterial({ color: wallColor });
+    const wall = new THREE.Mesh(wGeo, wMat);
+    wall.position.set(cx, cy, cz);
+    wall.castShadow = true;
+    wall.receiveShadow = true;
+    group.add(wall);
+
+    // Parapet crenellations
+    const crenW = lenX > lenZ ? lenX : lenZ;
+    const isHoriz = lenX > lenZ;
+    const count = Math.floor(crenW / (TILE_SIZE * 0.8));
+    for (let i = 0; i < count; i++) {
+      if (i % 2 === 0) continue; // every other one
+      const cGeo = new THREE.BoxGeometry(
+        isHoriz ? TILE_SIZE * 0.32 : wallThick + 0.1,
+        wallH * 0.35,
+        isHoriz ? wallThick + 0.1 : TILE_SIZE * 0.32
+      );
+      const cMat = new THREE.MeshLambertMaterial({ color: parapetColor });
+      const cren = new THREE.Mesh(cGeo, cMat);
+      const offset = (i / (count - 1) - 0.5) * crenW * 0.85;
+      cren.position.set(
+        cx + (isHoriz ? offset : 0),
+        cy + wallH * 0.5 + wallH * 0.175,
+        cz + (isHoriz ? 0 : offset)
+      );
+      group.add(cren);
+    }
+  };
+
+  // Helper: corner tower
+  const addTower = (tx, tz) => {
+    const tGeo = new THREE.BoxGeometry(0.9, wallH + 0.5, 0.9);
+    const tMat = new THREE.MeshLambertMaterial({ color: towerColor });
+    const tower = new THREE.Mesh(tGeo, tMat);
+    tower.position.set(tx, baseY + (wallH + 0.5) * 0.5, tz);
+    tower.castShadow = true;
+    group.add(tower);
+    // Tower top battlement
+    const ttGeo = new THREE.BoxGeometry(1.1, 0.25, 1.1);
+    const ttMat = new THREE.MeshLambertMaterial({ color: parapetColor });
+    const ttop = new THREE.Mesh(ttGeo, ttMat);
+    ttop.position.set(tx, baseY + wallH + 0.5 + 0.12, tz);
+    group.add(ttop);
+  };
+
+  const midX = (x0w + x1w) / 2;
+  const midZ = (z0w + z1w) / 2;
+  const lenX = x1w - x0w;
+  const lenZ = z1w - z0w;
+
+  // North wall (with gate gap at center)
+  const gateGap = TILE_SIZE * 2.4;
+  addWall(midX - (gateGap / 2 + lenX * 0.25) * 0.5, baseY + wallY, z0w, lenX * 0.5 - gateGap * 0.5 - 0.2, wallThick);
+  addWall(midX + (gateGap / 2 + lenX * 0.25) * 0.5, baseY + wallY, z0w, lenX * 0.5 - gateGap * 0.5 - 0.2, wallThick);
+  // South wall
+  addWall(midX, baseY + wallY, z1w, lenX, wallThick);
+  // West wall
+  addWall(x0w, baseY + wallY, midZ, wallThick, lenZ);
+  // East wall
+  addWall(x1w, baseY + wallY, midZ, wallThick, lenZ);
+
+  // Corner towers
+  addTower(x0w, z0w);
+  addTower(x1w, z0w);
+  addTower(x0w, z1w);
+  addTower(x1w, z1w);
+
+  // Gate arch — two pillars + lintel at north center
+  const gx = midX;
+  const gz = z0w;
+  const pillarH = wallH + 0.7;
+
+  [-1, 1].forEach(side => {
+    const pGeo = new THREE.BoxGeometry(0.4, pillarH, 0.4);
+    const pMat = new THREE.MeshLambertMaterial({ color: 0x9a8870 });
+    const pillar = new THREE.Mesh(pGeo, pMat);
+    pillar.position.set(gx + side * (gateGap / 2), baseY + pillarH * 0.5, gz);
+    pillar.castShadow = true;
+    group.add(pillar);
+  });
+
+  // Lintel beam
+  const lGeo = new THREE.BoxGeometry(gateGap + 0.4, 0.28, 0.44);
+  const lMat = new THREE.MeshLambertMaterial({ color: 0x7a6850 });
+  const lintel = new THREE.Mesh(lGeo, lMat);
+  lintel.position.set(gx, baseY + pillarH + 0.14, gz);
+  group.add(lintel);
+
+  // Gate sign block (small colored plaque)
+  const sgGeo = new THREE.BoxGeometry(gateGap * 0.55, 0.30, 0.12);
+  const sgMat = new THREE.MeshLambertMaterial({ color: 0xd4a017 });
+  const sg = new THREE.Mesh(sgGeo, sgMat);
+  sg.position.set(gx, baseY + pillarH + 0.46, gz);
+  group.add(sg);
+}
+
 // ─── PROP BUILDER ────────────────────────────────────────────────────────────
 
 function addPropMesh(group, poi) {
