@@ -314,6 +314,9 @@ export default function World() {
                 onClick={e => { e.stopPropagation(); cancelFastTravel(); }}>Cancel</Button>
             </div>
           )}
+          {/* Party follower panel */}
+          <PartyFollower myCharacter={myCharacter} allCharacters={allCharacters} />
+
           {/* Zone info overlay bottom-left */}
           {viewPos && (
             <div className="absolute bottom-8 left-2 w-56">
