@@ -2,7 +2,8 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { base44 } from "@/api/base44Client";
 import { calculateDerivedStats, shouldLevelUp, levelUpUpdates } from "@/components/shared/charUtils";
-import { autoResolveCombat, handleDeath } from "@/components/combat/authorizedCombatEngine";
+import { autoResolveCombat } from "@/components/combat/combatEngine";
+import { handleDeath } from "@/components/combat/authorizedCombatEngine";
 import { getZoneAt } from "@/components/shared/worldZones";
 import { Sword, Package, MessageCircle, X } from "lucide-react";
 
