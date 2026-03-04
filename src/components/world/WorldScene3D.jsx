@@ -375,7 +375,7 @@ function buildTerrain(scene, cx, cy) {
 
       // Road: horizontal bands through golden_plains + town paths
       const zone = getZoneAt(tx, ty);
-      if (zone?.id === "golden_plains" && (tx % 4 === 0 || ty % 4 === 0)) {
+      if (zone?.id === "the_ashen_march" && (tx % 4 === 0 || ty % 4 === 0)) {
         const roadGeo = new THREE.BoxGeometry(TILE_SIZE, 0.03, TILE_SIZE);
         const roadMat = new THREE.MeshLambertMaterial({ color: 0x7a6040 });
         const road    = new THREE.Mesh(roadGeo, roadMat);
@@ -485,7 +485,7 @@ function buildTerrain(scene, cx, cy) {
       } else if ((zone?.id === "the_ashen_march" || zone?.id === "kharum_deep") && h1 < 0.14) {
         const offX = (h2 - 0.5) * 1.3;
         const offZ = (h3 - 0.5) * 1.3;
-        if (zone?.id === "iron_hills" || h1 < 0.07) {
+        if (zone?.id === "kharum_deep" || h1 < 0.07) {
           // Rock
           const sz = 0.12 + h2 * 0.14;
           const rGeo = new THREE.DodecahedronGeometry(sz, 0);
