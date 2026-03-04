@@ -227,6 +227,28 @@ export default function World() {
     }
   }, [myCharacter, monsters, combatMonster]);
 
+  // ─── Authoritative combat start — all paths route through here ──────────
+  const startCombat = useCallback((monster) => {
+    if (!monster || !myCharacter) return;
+    const zone = getZoneAt(myCharacter.x, myCharacter.y);
+    const validation = initiateCombat(myCharacter, monster, zone);
+    if (!validation.valid) {
+      console.warn("[CombatAuthority] Blocked:", validation.reason);
+      return;
+    }
+    setActiveTarget({ entity: monster, type: "monster" });
+    setCombatMonster(monster);
+  }, [myCharacter]);
+
+  // ─── Authoritative target selection ─────────────────────────────────────
+  const selectTarget = useCallback((entity, type = "monster") => {
+    setActiveTarget({ entity, type });
+  }, []);
+
+  const clearActiveTarget = useCallback(() => {
+    setActiveTarget(null);
+  }, []);
+
   // ─── Input controller (WASD, hotkeys, target lock, auto-attack) ─────────
   const characterAbilities = myCharacter?.abilities || [];
   const { lockedTarget, lockTarget, clearTarget, autoAttacking, startAutoAttack, cooldowns } =
@@ -234,20 +256,28 @@ export default function World() {
       myCharacter,
       monsters,
       onMove: handleMove,
-      onStartCombat: (monster) => {
-        if (monster) { setCombatMonster(monster); setSelectedTarget({ entity: monster, type: "monster" }); }
-      },
+      onStartCombat: startCombat,
       abilities: characterAbilities,
       enabled: !combatMonster && !showInventory && !npcDialogue && !encounter,
     });
 
-  // ─── Combat mode (derived from all state) ───────────────────────────────
+  // Keep activeTarget in sync with lockedTarget from input controller
+  useEffect(() => {
+    if (lockedTarget && (!activeTarget || activeTarget.entity?.id !== lockedTarget.id)) {
+      setActiveTarget({ entity: lockedTarget, type: "monster" });
+    }
+    if (!lockedTarget && activeTarget?.type === "monster" && !combatMonster) {
+      // don't clear if combat overlay is open
+    }
+  }, [lockedTarget]);
+
+  // ─── Combat mode (derived from authoritative state) ──────────────────────
   const combatMode = computeCombatMode(COMBAT_MODE.PEACEFUL, {
-    hasTarget: !!(selectedTarget || lockedTarget),
-    targetIsHostile: !!(lockedTarget?.species || lockedTarget?.is_alive !== undefined),
+    hasTarget: !!(activeTarget),
+    targetIsHostile: !!(activeTarget?.entity?.species || activeTarget?.entity?.is_alive !== undefined),
     inCombat: !!combatMonster,
-    targetIsPlayer: selectedTarget?.type === "player",
-    inSafeZone: myCharacter ? (getZoneAt(myCharacter.x, myCharacter.y)?.id === "town_center") : false,
+    targetIsPlayer: activeTarget?.type === "player",
+    inSafeZone: myCharacter ? isSafeZone(myCharacter.x, myCharacter.y) : false,
   });
 
   const handleSendMessage = async (text, channel = "global") => {
