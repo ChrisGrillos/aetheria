@@ -313,6 +313,16 @@ export const BASE_CLASSES = {
 
 export const ALL_CLASSES = Object.values(BASE_CLASSES);
 
+// For CreateCharacterModalV2, array format
+export const BASE_CLASSES_ARRAY = [
+  { id: "warrior", emoji: "⚔️", label: "Warrior", desc: "Frontline melee fighter. High strength & constitution." },
+  { id: "wizard", emoji: "🧙", label: "Wizard", desc: "Scholar of arcane. Leads research and handles omens." },
+  { id: "hunter", emoji: "🏹", label: "Hunter", desc: "Scout and tracker. Excels at quests and resource finds." },
+  { id: "healer", emoji: "💚", label: "Healer", desc: "Protector of life. Heals, mediates, and researches." },
+  { id: "merchant", emoji: "💰", label: "Merchant", desc: "Economy driver. Masters trading and diplomacy." },
+  { id: "craftsman", emoji: "🔨", label: "Craftsman", desc: "Builder of worlds. Resource and crafting focused." },
+];
+
 export function getSpecializations(baseClassId) {
   return Object.values(BASE_CLASSES[baseClassId]?.specializations || {});
 }
