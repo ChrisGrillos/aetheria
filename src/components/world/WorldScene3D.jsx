@@ -1202,7 +1202,21 @@ export default function WorldScene3D({
     const ray = new THREE.Raycaster();
     ray.setFromCamera(mouse, camera);
 
-    // Monsters first
+    // NPCs first (High Bastion traders/merchants)
+    if (npcEntitiesRef.current) {
+      const npcHits = ray.intersectObjects(Object.values(npcEntitiesRef.current.meshes), true);
+      if (npcHits.length > 0) {
+        let obj = npcHits[0].object;
+        while (obj.parent && !obj.userData.isNPC) obj = obj.parent;
+        if (obj.userData.poiId && obj.userData.npcType) {
+          // Trigger NPC interaction in World.jsx
+          // This would call a handler passed from World
+          console.log("[WorldScene3D] NPC clicked:", obj.userData.poiName, obj.userData.npcType);
+        }
+      }
+    }
+
+    // Monsters next
     const mHits = ray.intersectObjects(Object.values(monsterMeshesRef.current), true);
     if (mHits.length > 0) {
       let obj = mHits[0].object;
