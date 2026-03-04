@@ -10,6 +10,7 @@ import { getTile, getZoneAt, MAP_W, MAP_H, ZONES, POINTS_OF_INTEREST } from "@/c
 import { buildPath, isPassable } from "@/components/shared/movementAuthority";
 import { useAmbientWorld, AmbientHUDWidget } from "./AmbientWorld";
 import { createTownWalkers } from "./TownWalkers";
+import { createNPCEntities } from "./NPCEntities";
 
 // ─── CONSTANTS ────────────────────────────────────────────────────────────────
 
@@ -838,6 +839,7 @@ export default function WorldScene3D({
   const charMeshesRef    = useRef({});
   const monsterMeshesRef = useRef({});
   const townWalkersRef   = useRef(null);
+  const npcEntitiesRef   = useRef(null);
 
   const [nameplates, setNameplates] = useState([]);
 
@@ -906,6 +908,9 @@ export default function WorldScene3D({
 
     // Spawn visual-only town walker NPCs
     townWalkersRef.current = createTownWalkers(scene);
+
+    // Create 3D merchant/NPC entities in High Bastion
+    npcEntitiesRef.current = createNPCEntities(scene);
 
     // Resize
     const onResize = () => {
@@ -1006,6 +1011,9 @@ export default function WorldScene3D({
       // Animate visual NPC walkers
       if (townWalkersRef.current) townWalkersRef.current.update(now);
 
+      // Update NPC entities
+      if (npcEntitiesRef.current) npcEntitiesRef.current.update(now);
+
       updateNameplateDom(camera, renderer);
       try {
         renderer.render(scene, camera);
@@ -1019,6 +1027,7 @@ export default function WorldScene3D({
       window.removeEventListener("resize", onResize);
       cancelAnimationFrame(rafRef.current);
       if (townWalkersRef.current) townWalkersRef.current.dispose();
+      if (npcEntitiesRef.current) npcEntitiesRef.current.dispose();
       renderer.dispose();
       if (mount.contains(renderer.domElement)) mount.removeChild(renderer.domElement);
     };
