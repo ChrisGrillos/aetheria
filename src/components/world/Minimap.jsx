@@ -66,8 +66,7 @@ export default function Minimap({ myCharacter, allCharacters, monsters, onFastTr
     const my = e.clientY - rect.top;
     const tx = Math.floor(mx / TX);
     const ty = Math.floor(my / TY);
-    const tile = getTile(tx, ty);
-    if (tile !== "water") onFastTravel(tx, ty);
+    if (isPassable(tx, ty)) onFastTravel(tx, ty);
   };
 
   return (
