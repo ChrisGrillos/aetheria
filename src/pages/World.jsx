@@ -8,11 +8,13 @@ import ViewToggle from "@/components/world/ViewToggle.jsx";
 import ChatDock from "@/components/chat/ChatDock.jsx";
 import CharacterHUD from "@/components/world/CharacterHUD.jsx";
 import NPCDialogue from "@/components/world/NPCDialogue.jsx";
-import PartyFollower from "@/components/world/PartyFollower.jsx";
+import GroupWindow from "@/components/world/GroupWindow.jsx";
 import TravelEncounterModal from "@/components/world/TravelEncounterModal.jsx";
 import ZoneInfoPanel from "@/components/world/ZoneInfoPanel.jsx";
 import CombatOverlay from "@/components/combat/CombatOverlay.jsx";
 import Minimap from "@/components/world/Minimap.jsx";
+import TargetFrame from "@/components/world/TargetFrame.jsx";
+import CombatModeIndicator from "@/components/world/CombatModeIndicator.jsx";
 import { getZoneAt, getPOIAt, rollEncounter } from "@/components/shared/worldZones";
 import { isPassable, getMovementContext, movementEnergyRegen } from "@/components/shared/movementAuthority";
 import { handleDeath } from "@/components/combat/authorizedCombatEngine";
@@ -22,6 +24,8 @@ import { Button } from "@/components/ui/button";
 import { checkAchievements } from "@/components/shared/achievementData";
 import useInputController from "@/components/world/useInputController.jsx";
 import AbilityHotbar from "@/components/world/AbilityHotbar.jsx";
+import { computeCombatMode, COMBAT_MODE } from "@/components/shared/combatMode";
+import { cycleNearestHostile, canEngage } from "@/components/shared/targetAuthority";
 
 export default function World() {
   const [user, setUser] = useState(null);
