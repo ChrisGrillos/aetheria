@@ -209,12 +209,8 @@ export default function World() {
     // Check if we walked onto a monster tile — route through authoritative combat start
     const monsterOnTile = monsters.find(m => m.is_alive && m.x === newX && m.y === newY);
     if (monsterOnTile) {
-      const validation = initiateCombat(updated, monsterOnTile, zone);
-      if (validation.valid) {
-        setActiveTarget({ entity: monsterOnTile, type: "monster" });
-        setCombatMonster(monsterOnTile);
-        return "combat";
-      }
+      startCombat(monsterOnTile); // single authoritative path
+      return "combat";
     }
 
     // Roll for random encounter after moving
