@@ -387,9 +387,12 @@ export default function World() {
             setCombatMonster(null);
           }}
           onDefeat={() => {
-            const respawned = { ...myCharacter, x: 30, y: 25, hp: Math.floor((myCharacter.max_hp || 100) * 0.5), gold: Math.floor((myCharacter.gold || 0) * 0.9) };
+            const zone = getZoneAt(myCharacter.x, myCharacter.y);
+            const { updates: deathUpdates } = handleDeath(myCharacter, zone?.id, true);
+            const respawned = { ...myCharacter, ...deathUpdates };
             setMyCharacter(respawned);
-            base44.entities.Character.update(myCharacter.id, { x: 30, y: 25, hp: respawned.hp, gold: respawned.gold });
+            setAllCharacters(prev => prev.map(c => c.id === myCharacter.id ? respawned : c));
+            base44.entities.Character.update(myCharacter.id, deathUpdates);
             setCombatMonster(null);
           }}
         />
