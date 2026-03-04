@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { calculateDerivedStats } from "@/components/shared/charUtils";
 import { base44 } from "@/api/base44Client";
+import { getRace } from "@/components/shared/raceData";
 
 function XPToNextLevel(level) { return Math.floor(100 * Math.pow(level, 1.5)); }
 
