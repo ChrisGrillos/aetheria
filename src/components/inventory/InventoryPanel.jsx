@@ -110,7 +110,8 @@ export default function InventoryPanel({ open, onClose, character, onUpdate }) {
   };
 
   const dropItem = async (item) => {
-    if (!window.confirm(`Drop ${item.name}?`)) return;
+    // Note: drop confirmation could be a toast instead of window.confirm
+    // For now, silently drop the item
     const idx = inventory.findIndex(i => i.id === item.id);
     if (idx < 0) return;
     let newInv;
@@ -233,9 +234,9 @@ export default function InventoryPanel({ open, onClose, character, onUpdate }) {
                   Equip → {slotLabel(inferSlot(selected))}
                 </Button>
               )}
-              <Button size="sm" variant="outline" className="border-red-800 text-red-400 hover:bg-red-900/30" onClick={() => dropItem(selected)}>
-                Drop
-              </Button>
+              <Button size="sm" variant="outline" className="border-red-800 text-red-400 hover:bg-red-900/30" onClick={() => { dropItem(selected); setSelected(null); }}>
+                 Drop
+               </Button>
               <Button size="sm" variant="ghost" className="text-gray-500 ml-auto" onClick={() => setSelected(null)}>
                 Close
               </Button>

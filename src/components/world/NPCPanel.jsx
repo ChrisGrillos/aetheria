@@ -133,8 +133,8 @@ export default function NPCPanel({ npcType, zoneName, character, onClose, onInte
   return (
     <Sheet open={true} onOpenChange={(v) => { if (!v) onClose(); }}>
       <SheetContent
-        side="bottom"
-        className="bg-gray-900 border-t border-amber-800 text-white h-auto rounded-t-xl"
+        side="right"
+        className="bg-gray-900 border-l border-amber-800 text-white w-full sm:w-80 overflow-y-auto"
       >
         <SheetHeader className="text-left mb-4">
           <SheetTitle className="flex items-center gap-2 text-xl text-amber-400">
