@@ -41,7 +41,7 @@ export default function TravelEncounterModal({ encounter, character, zone, onClo
 
     const derived = calculateDerivedStats(character);
     const result = autoResolveCombat(character, fakeMonster, zone);
-    setCombatLog(result.log);
+    setCombatLog(result.log || []);
 
     let updates = {};
     if (result.won) {
@@ -56,12 +56,12 @@ export default function TravelEncounterModal({ encounter, character, zone, onClo
      }
     } else {
      // Character died—apply world death rules
-     const deathResult = handleDeath(character, zone?.id, true);
-     updates = deathResult.updates;
+     const deathResult = handleDeath(character, zone?.id, "monster");
+     updates = deathResult;
     }
 
     await base44.entities.Character.update(character.id, updates);
-    setOutcome({ won: result.won, xp: result.xpGained, gold: result.goldGained, levelUp: updates.level > (character.level || 1) });
+    setOutcome({ won: result.won, xp: result.xpGained || 0, gold: result.goldGained || 0, levelUp: (updates.level || 0) > (character.level || 1) });
     setPhase("outcome");
     setLoading(false);
     onResult(updates);
