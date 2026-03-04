@@ -105,18 +105,23 @@ export const ZONES = [
 
 // ─── POINTS OF INTEREST ───────────────────────────────────────────────────────
 export const POINTS_OF_INTEREST = [
-  { id: "blacksmith",   x: 27, y: 22, emoji: "⚒️",  name: "Blacksmith",      zone: "town_center",   type: "crafting_station", station: "forge" },
-  { id: "alchemy_lab",  x: 32, y: 24, emoji: "⚗️",  name: "Alchemy Lab",     zone: "town_center",   type: "crafting_station", station: "alchemy" },
-  { id: "woodshop",     x: 29, y: 29, emoji: "🪵",  name: "Carpenter's Shop",zone: "town_center",   type: "crafting_station", station: "workbench" },
-  { id: "market",       x: 34, y: 20, emoji: "🏪",  name: "Market Square",   zone: "town_center",   type: "shop" },
-  { id: "tavern",       x: 24, y: 26, emoji: "🍺",  name: "The Rusty Flagon",zone: "town_center",   type: "rest", hp_restore: 30 },
-  { id: "temple",       x: 36, y: 28, emoji: "⛪",  name: "Temple of Light", zone: "town_center",   type: "heal_station" },
-  { id: "forest_shrine",x: 7,  y: 14, emoji: "🗿",  name: "Ancient Shrine",  zone: "dark_forest",   type: "mystery", xp_bonus: 50 },
-  { id: "mine_entrance",x: 47, y: 8,  emoji: "⛏️",  name: "Mine Entrance",   zone: "iron_hills",    type: "resource_node", resource: "iron_ore" },
-  { id: "dragon_lair",  x: 50, y: 38, emoji: "🐉",  name: "Dragon's Lair",   zone: "volcanic_badlands", type: "boss_encounter" },
-  { id: "ruined_temple",x: 28, y: 41, emoji: "🏛️",  name: "Lost Temple",     zone: "coastal_ruins", type: "dungeon", xp_bonus: 200 },
-  { id: "farm",         x: 24, y: 7,  emoji: "🌾",  name: "Sunhaven Farm",   zone: "golden_plains", type: "resource_node", resource: "wheat" },
-  { id: "swamp_hut",    x: 8,  y: 38, emoji: "🛖",  name: "Witch's Hut",     zone: "cursed_swamp",  type: "mystery", xp_bonus: 75 },
+  // ─── Safehold: Agentica ──────────────────────────────────────────────
+  { id: "forge",        x: 27, y: 22, emoji: "⚒️",  name: "The Iron Covenant Forge", zone: "town_center", type: "crafting_station", station: "forge", npcType: "blacksmith" },
+  { id: "alchemy_lab",  x: 32, y: 24, emoji: "⚗️",  name: "Order of the Alembic",    zone: "town_center", type: "crafting_station", station: "alchemy", npcType: "alchemist" },
+  { id: "woodshop",     x: 29, y: 29, emoji: "🪵",  name: "Carpenter's Lodge",        zone: "town_center", type: "crafting_station", station: "workbench", npcType: "merchant" },
+  { id: "market",       x: 34, y: 20, emoji: "🏪",  name: "The Accord Market",        zone: "town_center", type: "shop", npcType: "trader" },
+  { id: "tavern",       x: 24, y: 26, emoji: "🍺",  name: "The Shattered Crown Inn",  zone: "town_center", type: "rest", hp_restore: 30, npcType: "merchant" },
+  { id: "temple",       x: 36, y: 28, emoji: "⛪",  name: "Shrine of the First Compact", zone: "town_center", type: "heal_station", npcType: "healer" },
+  { id: "barracks",     x: 26, y: 19, emoji: "🛡️",  name: "The Watch Barracks",       zone: "town_center", type: "npc", npcType: "guard" },
+  { id: "guild_hall",   x: 33, y: 28, emoji: "🏰",  name: "Hall of Guilds",            zone: "town_center", type: "npc", npcType: "quest_giver" },
+  { id: "gate_north",   x: 30, y: 18, emoji: "🚪",  name: "North Gate",                zone: "town_center", type: "npc", npcType: "guard" },
+  // ─── Frontier landmarks ────────────────────────────────────────────────
+  { id: "thornwood_shrine", x: 7, y: 14, emoji: "🗿",  name: "Shrine of the Forgotten", zone: "dark_forest",      type: "mystery", xp_bonus: 50, npcType: "witch" },
+  { id: "ironspine_mine",   x: 47, y: 8, emoji: "⛏️",  name: "The Ironspine Pit",        zone: "iron_hills",       type: "resource_node", resource: "iron_ore" },
+  { id: "wyrm_crater",      x: 50, y: 38, emoji: "🐉", name: "Ashgate Wyrm-Crater",      zone: "volcanic_badlands", type: "boss_encounter" },
+  { id: "tideworn_vault",   x: 28, y: 41, emoji: "🏛️", name: "The Tideworn Vault",       zone: "coastal_ruins",    type: "dungeon", xp_bonus: 200 },
+  { id: "sunreach_farm",    x: 24, y: 7,  emoji: "🌾", name: "Sunreach Waystation",      zone: "golden_plains",    type: "resource_node", resource: "wheat" },
+  { id: "greyfen_hut",      x: 8,  y: 38, emoji: "🛖", name: "The Bonewitch's Hut",      zone: "cursed_swamp",     type: "mystery", xp_bonus: 75, npcType: "witch" },
 ];
 
 // ─── TERRAIN ──────────────────────────────────────────────────────────────────
