@@ -19,8 +19,8 @@ import { X, ChevronLeft, Plus, Minus, RefreshCw } from "lucide-react";
 import { calculateDerivedStats } from "@/components/shared/charUtils";
 import { getCharacterAbilities, BASE_CLASSES_ARRAY } from "@/components/shared/classDefinitions";
 import { rollStats, getRace, RACE_LIST } from "@/components/shared/raceData";
-import { SKILL_CATEGORIES, ALL_SKILLS } from "@/components/shared/skillsData";
-import { getBeginnerTalents, canSelectTalent } from "@/components/shared/talentsData";
+import { SKILL_CATEGORIES, ALL_SKILLS, getRecommendedSkills } from "@/components/shared/skillsData";
+import { getStarterFeats, canSelectFeat, getSuggestedStarterFeats } from "@/components/shared/featsData";
 
 // ─── CONSTANTS ────────────────────────────────────────────────────────────────
 
@@ -60,12 +60,12 @@ export default function CreateCharacterModalV2({ user, onCreated, onClose }) {
   const [rerollsLeft, setRerollsLeft] = useState(MAX_REROLLS);
   const [classId, setClassId] = useState(null);
   const [skills, setSkills] = useState({});
-  const [skillPointsLeft, setSkillPointsLeft] = useState({ adventuring: 6, combat: 5, world_craft: 5 });
+  const [skillPointsLeft, setSkillPointsLeft] = useState({ combat: 8, magic: 5, world_craft: 5 });
   const [talents, setTalents] = useState([]);
   const [avatarColor, setAvatarColor] = useState(AVATAR_COLORS[0]);
   const [saving, setSaving] = useState(false);
   const [rolling, setRolling] = useState(false);
-  const [skillTab, setSkillTab] = useState("adventuring");
+  const [skillTab, setSkillTab] = useState("combat");
 
   const stepId = STEPS[step]?.id;
   const race = raceId ? getRace(raceId) : null;
@@ -111,14 +111,18 @@ export default function CreateCharacterModalV2({ user, onCreated, onClose }) {
     }));
   };
 
-  // ── Talent selection ────────────────────────────────────────────────────────
-  const handleSelectTalent = (talentId) => {
-    if (talents.includes(talentId)) {
-      setTalents(talents.filter(t => t !== talentId));
-    } else if (talents.length < 1) { // Only 1 talent at creation
-      setTalents([talentId]);
+  // ── Feat selection (replaces talents) ──────────────────────────────────────
+  const handleSelectTalent = (featId) => {
+    if (talents.includes(featId)) {
+      setTalents(talents.filter(t => t !== featId));
+    } else if (talents.length < 1) { // Only 1 feat at creation
+      setTalents([featId]);
     }
   };
+
+  // Recommended skills for current class+race
+  const recommendedSkills = (classId && raceId) ? getRecommendedSkills(classId, raceId) : [];
+  const suggestedFeats = (raceId && classId) ? getSuggestedStarterFeats(raceId, classId) : [];
 
   // ── Final create ────────────────────────────────────────────────────────────
   const handleCreate = async () => {
@@ -155,7 +159,9 @@ export default function CreateCharacterModalV2({ user, onCreated, onClose }) {
         max_hp: maxHp,
         stats: rolledStats,
         skills,
+        feats: talents,
         talents,
+        unspent_skill_points: { combat: 0, magic: 0, world_craft: 0 },
         derived_stats: derived,
         abilities,
         active_effects: [],
@@ -323,15 +329,25 @@ export default function CreateCharacterModalV2({ user, onCreated, onClose }) {
                 ))}
               </div>
 
+              {recommendedSkills.length > 0 && (
+                <div className="mb-2 text-[10px] text-amber-400/70 bg-amber-900/20 rounded px-2 py-1">
+                  ⭐ Recommended: {recommendedSkills.filter(s => SKILL_CATEGORIES[skillTab]?.skills.some(sk => sk.id === s)).join(", ") || "—"}
+                </div>
+              )}
+
               {/* Skills in current tab */}
-              <div className="space-y-2">
+              <div className="space-y-1.5 max-h-[40vh] overflow-y-auto pr-1">
                 {SKILL_CATEGORIES[skillTab]?.skills.map(sk => {
                   const val = skills[sk.id] || 0;
+                  const isRecommended = recommendedSkills.includes(sk.id);
                   return (
-                    <div key={sk.id} className="flex items-center gap-3 bg-gray-800/50 rounded-lg px-3 py-2">
+                    <div key={sk.id} className={`flex items-center gap-3 rounded-lg px-3 py-2 ${isRecommended ? "bg-amber-900/20 border border-amber-800/30" : "bg-gray-800/50"}`}>
                       <div className="flex-1 min-w-0">
-                        <div className="text-sm font-semibold text-white">{sk.name}</div>
-                        <div className="text-xs text-gray-500">{sk.desc}</div>
+                        <div className="text-sm font-semibold text-white flex items-center gap-1">
+                          {sk.name}
+                          {isRecommended && <span className="text-[9px] text-amber-400">⭐</span>}
+                        </div>
+                        <div className="text-xs text-gray-500 line-clamp-1">{sk.desc}</div>
                       </div>
                       <div className="flex items-center gap-1 shrink-0">
                         <button
@@ -357,25 +373,39 @@ export default function CreateCharacterModalV2({ user, onCreated, onClose }) {
             </div>
           )}
 
-          {/* ── Talents ── */}
+          {/* ── Feats ── */}
           {stepId === "talents" && (
             <div>
-              <p className="text-xs text-gray-400 mb-3">Choose one talent. More unlock as you progress.</p>
-              <div className="grid grid-cols-1 gap-2">
-                {getBeginnerTalents().map(t => (
-                  <button
-                    key={t.id}
-                    onClick={() => handleSelectTalent(t.id)}
-                    className={`p-3 rounded-xl border-2 text-left transition-all
-                      ${talents.includes(t.id) ? "border-amber-500 bg-amber-900/25" : "border-gray-700 bg-gray-800/50 hover:border-gray-600"}`}
-                  >
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="font-bold text-white text-sm">{t.name}</span>
-                      {talents.includes(t.id) && <span className="ml-auto text-amber-400 text-xs">✓</span>}
-                    </div>
-                    <p className="text-xs text-gray-400 leading-snug">{t.desc}</p>
-                  </button>
-                ))}
+              <p className="text-xs text-gray-400 mb-3">Choose one feat. More unlock as you level up.</p>
+              {suggestedFeats.length > 0 && (
+                <div className="mb-2 text-[10px] text-amber-400/70 bg-amber-900/20 rounded px-2 py-1">
+                  ⭐ Suggested for your build: {suggestedFeats.map(f => f.name).join(", ")}
+                </div>
+              )}
+              <div className="grid grid-cols-1 gap-2 max-h-[40vh] overflow-y-auto pr-1">
+                {getStarterFeats().map(feat => {
+                  const isSuggested = suggestedFeats.some(s => s.id === feat.id);
+                  return (
+                    <button
+                      key={feat.id}
+                      onClick={() => handleSelectTalent(feat.id)}
+                      className={`p-3 rounded-xl border-2 text-left transition-all
+                        ${talents.includes(feat.id) ? "border-amber-500 bg-amber-900/25" : isSuggested ? "border-amber-800/40 bg-amber-900/10 hover:border-amber-600" : "border-gray-700 bg-gray-800/50 hover:border-gray-600"}`}
+                    >
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="font-bold text-white text-sm">{feat.name}</span>
+                        {isSuggested && <span className="text-[9px] text-amber-400">⭐</span>}
+                        {talents.includes(feat.id) && <span className="ml-auto text-amber-400 text-xs">✓</span>}
+                      </div>
+                      <p className="text-xs text-gray-400 leading-snug">{feat.desc}</p>
+                      <div className="flex gap-1 mt-1">
+                        {feat.tags.slice(0, 3).map(tag => (
+                          <span key={tag} className="text-[9px] px-1.5 py-0.5 bg-gray-700 text-gray-400 rounded">{tag}</span>
+                        ))}
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
             </div>
           )}
