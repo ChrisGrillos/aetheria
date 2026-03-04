@@ -33,13 +33,13 @@ const TERRAIN_3D = {
 
 // Zone-border accent color for visual separation
 const ZONE_BORDER_COLORS = {
-  town_center:       0xd4a017,
-  dark_forest:       0x163a16,
-  iron_hills:        0x444444,
-  cursed_swamp:      0x1a3010,
-  golden_plains:     0x6d8420,
-  volcanic_badlands: 0x7a1800,
-  coastal_ruins:     0x3a5a6e,
+  high_bastion:      0xd4a017,
+  the_thornwild:     0x163a16,
+  kharum_deep:       0x444444,
+  greyfen_reach:     0x1a3010,
+  the_ashen_march:   0x6d8420,
+  vale_of_cinders:   0x7a1800,
+  the_sunken_crown:  0x3a5a6e,
 };
 
 // ─── RACE VISUALS ─────────────────────────────────────────────────────────────
