@@ -103,6 +103,9 @@ export default function useInputController({
     moveTimerRef.current = setInterval(doStep, MOVE_INTERVAL_MS);
   }, [doStep]);
 
+  // startAutoAttack kept for Enter/Space hotkey — routes through onStartCombat
+
+
   const stopMoveLoop = useCallback(() => {
     if (moveTimerRef.current) { clearInterval(moveTimerRef.current); moveTimerRef.current = null; }
   }, []);
