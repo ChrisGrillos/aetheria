@@ -58,6 +58,7 @@ function buildPassiveBonuses(abilities) {
 function applyEffects(baseStats, effects) {
   const s = { ...baseStats };
   effects.forEach(e => {
+    if (e.stat === "_skillMods") return; // preserve internal metadata
     const sign = e.type === "buff" ? 1 : -1;
     s[e.stat] = Math.max(0, (s[e.stat] || 0) + sign * e.value);
   });
