@@ -230,7 +230,7 @@ export default function World() {
       setEncounter(enc);
       setEncounterZone(zone);
     }
-  }, [myCharacter, monsters, combatMonster]);
+  }, [myCharacter, monsters]);
 
   // ─── Authoritative combat start — all paths route through here ──────────
   const startCombat = useCallback((monster) => {
