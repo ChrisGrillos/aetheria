@@ -36,7 +36,6 @@ export default function useInputController({
   const monstersRef  = useRef(monsters);
   const heldKeys     = useRef(new Set());
   const moveTimerRef = useRef(null);
-  const autoAtkTimer = useRef(null);
   const lockedRef    = useRef(null);
   const autoAtkRef   = useRef(false);
   const enabledRef   = useRef(enabled);
