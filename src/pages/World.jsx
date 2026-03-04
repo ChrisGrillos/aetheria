@@ -23,7 +23,7 @@ import InventoryPanel from "@/components/inventory/InventoryPanel.jsx";
 import { Button } from "@/components/ui/button";
 import { checkAchievements } from "@/components/shared/achievementData";
 import useInputController from "@/components/world/useInputController.jsx";
-import { useZoomController, ZOOM_LEVELS } from "@/components/world/useZoomController.js";
+import { useZoomController, ZOOM_LEVELS } from "@/components/world/useZoomController";
 import AbilityHotbar from "@/components/world/AbilityHotbar.jsx";
 import { COMBAT_MODE } from "@/components/shared/combatMode";
 import { isSafeZone } from "@/components/shared/worldRules";
