@@ -130,3 +130,17 @@ export function getTargetInfo(entity) {
     class: entity.class || entity.monster_type || null,
   };
 }
+
+/**
+ * Get zone rule summary for a given coordinate.
+ * Returns info about zone safety, danger, and PvP rules.
+ */
+export function getZoneRuleSummary(x, y) {
+  // Placeholder: returns safe by default, to be extended with worldRules
+  return {
+    isSafe: true,
+    dangerLevel: 0,
+    pvpAllowed: false,
+    zone: null,
+  };
+}
