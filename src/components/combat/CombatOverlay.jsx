@@ -246,6 +246,7 @@ export default function CombatOverlay({ character, monster, onClose, onVictory, 
 
     if (ability.effect_type === "damage") {
       const { dmg, isCrit, evaded } = calcDamage(monDerived, playerDefStats, ability);
+      triggerEntityState(monster.id, "attack", 380);
       if (evaded) {
         addLog(`💨 You evaded ${ability.name}!`);
         spawnDamageNumber("DODGE", "dodge", "player");
@@ -256,6 +257,7 @@ export default function CombatOverlay({ character, monster, onClose, onVictory, 
         addLog(`💢 ${monster.name} used ${ability.name}: ${finalDmg} damage${critLabel}`);
         spawnDamageNumber(isCrit ? `${finalDmg}!` : finalDmg, isCrit ? "crit" : "damage", "player");
         flashAndShake("player", "damage");
+        triggerEntityState(character.id, "hurt", 400);
       }
     } else if (ability.effect_type === "heal") {
       const healed = ability.effect_magnitude;
