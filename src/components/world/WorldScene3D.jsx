@@ -96,8 +96,8 @@ function applyEntityStateVisuals(mesh, entityId, now) {
     mesh.rotation.z = 0;
     mesh.scale.setScalar(1);
     mesh.traverse(child => {
-      if (child.isMesh && child.material?.emissive) {
-        child.material.emissive.setHex(mesh.userData.baseEmissive ?? 0x000000);
+      if (child.isMesh && child.material && child.material.emissive) {
+        try { child.material.emissive.setHex(mesh.userData.baseEmissive ?? 0x000000); } catch(e) {}
         child.material.emissiveIntensity = mesh.userData.baseEmissiveIntensity ?? 0;
       }
     });
@@ -145,7 +145,7 @@ function applyEntityStateVisuals(mesh, entityId, now) {
     mesh.traverse(child => {
       if (child.isMesh && child.material) {
         if (child.material.emissive) {
-          child.material.emissive.setHex(0x220000);
+          try { child.material.emissive.setHex(0x220000); } catch(e) {}
           child.material.emissiveIntensity = 0.2;
         }
         if (child.material.opacity !== undefined && child.material.transparent) {
