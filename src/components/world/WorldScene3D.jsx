@@ -13,9 +13,9 @@ import { useAmbientWorld, AmbientHUDWidget } from "./AmbientWorld";
 // ─── CONSTANTS ────────────────────────────────────────────────────────────────
 
 const TILE_SIZE   = 2;
-const CAM_HEIGHT  = 26;
-const CAM_DIST    = 22;
-const CAM_ANGLE   = 0.18; // radians offset from straight-back (classic 3/4 tilt)
+const CAM_HEIGHT  = 28;
+const CAM_DIST    = 24;
+const CAM_ANGLE   = 0.62; // ~35° offset — true classic 3/4 isometric tilt
 
 // ─── TERRAIN PALETTE ─────────────────────────────────────────────────────────
 
