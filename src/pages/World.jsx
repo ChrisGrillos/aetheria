@@ -355,7 +355,7 @@ export default function World() {
             </div>
           )}
         </div>
-        <ChatPanel messages={messages} onSend={handleSendMessage} myCharacter={myCharacter} />
+        <ChatDock messages={messages} onSend={handleSendMessage} myCharacter={myCharacter} />
       </div>
 
       {combatMonster && myCharacter && (
