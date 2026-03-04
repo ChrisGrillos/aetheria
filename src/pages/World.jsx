@@ -17,7 +17,7 @@ import CombatOverlay from "@/components/combat/CombatOverlay.jsx";
 import Minimap from "@/components/world/Minimap.jsx";
 import TargetFrame from "@/components/world/TargetFrame.jsx";
 import CombatModeIndicator from "@/components/world/CombatModeIndicator.jsx";
-import { getZoneAt, getPOIAt, getTile, rollEncounter } from "@/components/shared/worldZones";
+import { getZoneAt, getPOIAt, rollEncounter } from "@/components/shared/worldZones";
 import { isPassable, movementEnergyRegen } from "@/components/shared/movementAuthority";
 import { handleDeath, initiateCombat } from "@/components/combat/authorizedCombatEngine";
 import { RESOURCES } from "@/components/shared/craftingData";
