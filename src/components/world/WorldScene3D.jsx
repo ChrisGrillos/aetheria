@@ -311,6 +311,7 @@ export default function WorldScene3D({
     // Lights
     const ambient = new THREE.AmbientLight(0xffeedd, 0.5);
     scene.add(ambient);
+    ambientLightRef.current = ambient;
 
     const sun = new THREE.DirectionalLight(0xfff3cd, 1.2);
     sun.position.set(20, 40, -20);
@@ -323,11 +324,15 @@ export default function WorldScene3D({
     sun.shadow.camera.top = 60;
     sun.shadow.camera.bottom = -60;
     scene.add(sun);
+    sunLightRef.current = sun;
 
     // Subtle fill from below
     const fill = new THREE.DirectionalLight(0x4466bb, 0.2);
     fill.position.set(-10, -5, 10);
     scene.add(fill);
+
+    // Expose fog ref for ambient system
+    if (scene.fog) fogRef.current = scene.fog;
 
     // Build terrain (chunked — only near player)
     buildTerrain(scene);
