@@ -220,15 +220,6 @@ export default function World() {
     }
   }, [myCharacter, monsters, combatMonster]);
 
-  // ─── Combat mode authority ──────────────────────────────────────────────
-  const combatMode = computeCombatMode(COMBAT_MODE.PEACEFUL, {
-    hasTarget: !!(selectedTarget || lockedTarget),
-    targetIsHostile: !!(lockedTarget?.species || lockedTarget?.is_alive),
-    inCombat: !!combatMonster,
-    targetIsPlayer: selectedTarget?.type === "player",
-    inSafeZone: myCharacter ? (getZoneAt(myCharacter.x, myCharacter.y)?.id === "town_center") : false,
-  });
-
   // ─── Input controller (WASD, hotkeys, target lock, auto-attack) ─────────
   const characterAbilities = myCharacter?.abilities || [];
   const { lockedTarget, lockTarget, clearTarget, autoAttacking, startAutoAttack, cooldowns } =
