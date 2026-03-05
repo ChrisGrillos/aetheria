@@ -433,7 +433,7 @@ export default function WorldScene3D({
     const scene = sceneRef.current;
     if (!scene || !myCharacter) return;
     if (!charMeshesRef.current[myCharacter.id]) {
-      const mesh = buildCharacterMesh(myCharacter.race || "human", false, false);
+      const mesh = buildCharacterMesh(myCharacter.race || "human", false, false, null, myCharacter.base_class || myCharacter.class);
       const wp   = tileToWorld(myCharacter.x, myCharacter.y);
       mesh.position.copy(wp);
       mesh.userData = { charId: myCharacter.id, isMe: true };
