@@ -1,5 +1,6 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+﻿import { useState, useEffect, useCallback, useRef } from "react";
 import { base44 } from "@/api/base44Client";
+import gameService from "@/api/gameService";
 import { createPageUrl } from "@/utils";
 import { Link } from "react-router-dom";
 import WorldMap from "@/components/world/WorldMap.jsx";
@@ -9,7 +10,7 @@ import ChatDock from "@/components/chat/ChatDock.jsx";
 import CharacterHUD from "@/components/world/CharacterHUD.jsx";
 import NPCPanel from "@/components/world/NPCPanel.jsx";
 import GroupWindow from "@/components/world/GroupWindow.jsx";
-// TravelEncounterModal removed — monsters are 3D entities on the map (MMO-style)
+// TravelEncounterModal removed â€” monsters are 3D entities on the map (MMO-style)
 import ZoneInfoPanel from "@/components/world/ZoneInfoPanel.jsx";
 import CombatOverlay from "@/components/combat/CombatOverlay.jsx";
 import Minimap from "@/components/world/Minimap.jsx";
@@ -17,7 +18,7 @@ import TargetFrame from "@/components/world/TargetFrame.jsx";
 import CombatModeIndicator from "@/components/world/CombatModeIndicator.jsx";
 import { getZoneAt, getPOIAt } from "@/components/shared/worldZones";
 import { isPassable, movementEnergyRegen } from "@/components/shared/movementAuthority";
-import { handleDeath, initiateCombat } from "@/components/combat/authorizedCombatEngine";
+import { initiateCombat } from "@/components/combat/authorizedCombatEngine";
 import { RESOURCES } from "@/components/shared/craftingData";
 import InventoryPanel from "@/components/inventory/InventoryPanel.jsx";
 import { Button } from "@/components/ui/button";
@@ -27,6 +28,7 @@ import { useZoomController, ZOOM_LEVELS } from "@/components/world/useZoomContro
 import AbilityHotbar from "@/components/world/AbilityHotbar.jsx";
 import { COMBAT_MODE } from "@/components/shared/combatMode";
 import { isSafeZone } from "@/components/shared/worldRules";
+import { getTileEffects } from "@/components/shared/worldEventEffects";
 
 export default function World() {
   const [user, setUser] = useState(null);
@@ -47,10 +49,10 @@ export default function World() {
   const [sceneSettings, setSceneSettings] = useState({ showNameplates: true, showHealthBars: true, cameraDistance: 1.0 });
   const [npcDialogue, setNpcDialogue] = useState(null); // { npcType, zoneName }
   
-  // ─── ZOOM CONTROLLER ─────────────────────────────────────────────────────────
+  // â”€â”€â”€ ZOOM CONTROLLER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const { getCurrentZoomConfig, zoomLevel } = useZoomController();
 
-  // ─── AUTHORITATIVE TARGET STATE ─────────────────────────────────────────────
+  // â”€â”€â”€ AUTHORITATIVE TARGET STATE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   // Single source of truth. No parallel lockedTarget / combatMonster / selectedTarget concepts.
   // { entity, type: "monster"|"player"|"ai_agent"|"npc" }
   const [activeTarget, setActiveTarget] = useState(null);
@@ -60,7 +62,8 @@ export default function World() {
   useEffect(() => {
     loadWorld();
     const interval = setInterval(loadCharacters, 5000);
-    return () => clearInterval(interval);
+    const worldInterval = setInterval(() => { gameService.worldTick().catch(() => {}); }, 30000);
+    return () => { clearInterval(interval); clearInterval(worldInterval); };
   }, []);
 
   useEffect(() => {
@@ -169,16 +172,16 @@ export default function World() {
     fastTravelRef.current = interval;
   }, [combatMonster, fastTravelTarget]);
 
-  // ─── Combat start ref — breaks the handleMove ↔ startCombat circular dep ──
+  // â”€â”€â”€ Combat start ref â€” breaks the handleMove â†” startCombat circular dep â”€â”€
   const startCombatRef = useRef(null);
 
-  // ─── Authoritative combat start — ALL paths route through here ──────────
-  // Sources: walk-onto-monster, click-monster → engage button, Tab+Enter, ability hotbar.
+  // â”€â”€â”€ Authoritative combat start â€” ALL paths route through here â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // Sources: walk-onto-monster, click-monster â†’ engage button, Tab+Enter, ability hotbar.
   const startCombat = useCallback((monster) => {
     if (!monster || !myCharacter) return;
     const zone = getZoneAt(myCharacter.x, myCharacter.y);
     const validation = initiateCombat(myCharacter, monster, zone);
-    if (!validation.valid) {
+    if (!validation.success) {
       console.warn("[CombatAuthority] Blocked:", validation.reason);
       return;
     }
@@ -238,7 +241,14 @@ export default function World() {
     // Authority: energy regen on movement (out of combat)
     const { energy: newEnergy } = movementEnergyRegen(myCharacter);
 
-    const updates = { x: newX, y: newY, energy: newEnergy };
+    const tileFx = getTileEffects(activeEvents, newX, newY);
+    const updates = { x: newX, y: newY, energy: Math.max(0, newEnergy - tileFx.energyPenalty) };
+    if (tileFx.healPerMove > 0) {
+      updates.hp = Math.min(myCharacter.max_hp || 100, ((hpUpdate ?? myCharacter.hp) || 0) + tileFx.healPerMove);
+    }
+    if (tileFx.lawEffect) {
+      updates.active_law_effect = tileFx.lawEffect;
+    }
     if (inventoryUpdates) updates.inventory = inventoryUpdates;
     if (hpUpdate !== null) updates.hp = hpUpdate;
 
@@ -247,17 +257,17 @@ export default function World() {
     setAllCharacters(prev => prev.map(c => c.id === myCharacter.id ? updated : c));
     await base44.entities.Character.update(myCharacter.id, updates);
 
-    // Walk-onto-monster → authoritative combat via ref (avoids stale closure)
+    // Walk-onto-monster â†’ authoritative combat via ref (avoids stale closure)
     const monsterOnTile = monsters.find(m => m.is_alive && m.x === newX && m.y === newY);
     if (monsterOnTile) {
       startCombatRef.current?.(monsterOnTile);
       return "combat";
     }
 
-    // No random encounters — monsters are 3D entities on the map
-  }, [myCharacter, monsters, cancelFastTravel]);
+    // No random encounters â€” monsters are 3D entities on the map
+  }, [myCharacter, monsters, cancelFastTravel, activeEvents]);
 
-  // ─── Input controller (WASD, hotkeys, Tab-target, auto-attack) ──────────
+  // â”€â”€â”€ Input controller (WASD, hotkeys, Tab-target, auto-attack) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const characterAbilities = myCharacter?.abilities || [];
   const { lockedTarget, lockTarget, clearTarget, autoAttacking, cooldowns } =
     useInputController({
@@ -269,9 +279,9 @@ export default function World() {
       enabled: !combatMonster && !showInventory && !npcDialogue,
     });
 
-  // ─── Authoritative target selection (click-path) ─────────────────────────
-  // Tab-cycling → lockTarget (in useInputController) → lockedTarget state → effect below.
-  // Click-path → selectTarget → setActiveTarget + lockTarget (keep controller in sync).
+  // â”€â”€â”€ Authoritative target selection (click-path) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // Tab-cycling â†’ lockTarget (in useInputController) â†’ lockedTarget state â†’ effect below.
+  // Click-path â†’ selectTarget â†’ setActiveTarget + lockTarget (keep controller in sync).
   const selectTarget = useCallback((entity, type = "monster") => {
     setActiveTarget({ entity, type });
     lockTarget(type === "monster" ? entity : null);
@@ -289,7 +299,7 @@ export default function World() {
     );
   }, [lockedTarget]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ─── Combat mode (derived from authoritative state) ──────────────────────
+  // â”€â”€â”€ Combat mode (derived from authoritative state) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const combatMode = !!combatMonster ? COMBAT_MODE.ACTIVE : COMBAT_MODE.PEACEFUL;
 
   const handleSendMessage = async (text, channel = "global") => {
@@ -385,20 +395,20 @@ export default function World() {
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-30
               bg-gray-900/95 border border-amber-600 rounded-xl px-6 py-4 text-center pointer-events-auto"
               onClick={cancelFastTravel}>
-              <p className="text-sm text-amber-400 font-bold mb-2">⚡ Fast Traveling...</p>
+              <p className="text-sm text-amber-400 font-bold mb-2">âš¡ Fast Traveling...</p>
               <div className="w-48 bg-gray-800 rounded-full h-3 mb-2">
                 <div className="bg-amber-500 h-3 rounded-full transition-all"
                   style={{ width: `${fastTravelProgress}%` }} />
               </div>
               <p className="text-xs text-gray-500 mb-2">
-                To ({fastTravelTarget.x}, {fastTravelTarget.y}) · Click to cancel
+                To ({fastTravelTarget.x}, {fastTravelTarget.y}) Â· Click to cancel
               </p>
               <Button size="sm" variant="outline" className="border-gray-700 text-xs"
                 onClick={e => { e.stopPropagation(); cancelFastTravel(); }}>Cancel</Button>
           </div>
         )}
 
-        {/* Ability hotbar — bottom-center */}
+        {/* Ability hotbar â€” bottom-center */}
         <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-20 pointer-events-auto">
           <AbilityHotbar
             abilities={characterAbilities}
@@ -411,14 +421,14 @@ export default function World() {
           />
         </div>
 
-        {/* Group window — top-left */}
+        {/* Group window â€” top-left */}
         <GroupWindow
           myCharacter={myCharacter}
           allCharacters={allCharacters}
           onMoveFollower={null}
         />
 
-        {/* Target frame — top-center, authoritative, single instance */}
+        {/* Target frame â€” top-center, authoritative, single instance */}
         {activeTarget && myCharacter && (
           <div className="absolute top-12 left-1/2 -translate-x-1/2 z-[25] pointer-events-auto">
             <TargetFrame
@@ -434,14 +444,14 @@ export default function World() {
           </div>
         )}
 
-        {/* Zone info — bottom-left */}
+        {/* Zone info â€” bottom-left */}
         {viewPos && (
           <div className="absolute bottom-8 left-2 w-56">
             <ZoneInfoPanel x={viewPos.x} y={viewPos.y} />
           </div>
         )}
 
-        {/* Combat mode indicator — bottom-right, single instance */}
+        {/* Combat mode indicator â€” bottom-right, single instance */}
         {myCharacter && (
           <div className="absolute bottom-24 right-2 z-20 pointer-events-none">
             <CombatModeIndicator
@@ -453,7 +463,7 @@ export default function World() {
         )}
       {/* Controls hint + Zoom level */}
       <div className="absolute bottom-2 left-2 text-[10px] text-gray-600 bg-gray-900/70 px-2 py-1 rounded pointer-events-none">
-        Click terrain to move · Scroll to zoom
+        Click terrain to move Â· Scroll to zoom
         {viewMode === "3d" && <div className="text-xs text-amber-500 mt-1">Zoom: {ZOOM_LEVELS[Math.round(zoomLevel)]?.label || "Normal"}</div>}
       </div>
       </div>
@@ -465,26 +475,27 @@ export default function World() {
         character={myCharacter}
         monster={combatMonster}
         onClose={() => { setCombatMonster(null); clearActiveTarget(); clearTarget(); }}
-        onVictory={async (updates) => {
-          const achievementUpdates = checkAchievements({ ...myCharacter, ...updates }, myCharacter);
-          const finalUpdates = { ...updates, ...achievementUpdates };
-          const updatedChar = { ...myCharacter, ...finalUpdates };
-          setMyCharacter(updatedChar);
-          setAllCharacters(prev => prev.map(c => c.id === myCharacter.id ? updatedChar : c));
-          await base44.entities.Monster.update(combatMonster.id, { is_alive: false, hp: 0 });
-          await base44.entities.Character.update(myCharacter.id, finalUpdates);
-          setMonsters(prev => prev.map(m => m.id === combatMonster.id ? { ...m, is_alive: false, hp: 0 } : m));
+        onVictory={async () => {
+          await gameService.creatorEventHook({
+            marker_type: "combat_victory",
+            title: `Victory vs ${combatMonster?.name || "enemy"}`,
+            summary: `${myCharacter?.name || "Player"} won a directional combat exchange.`,
+            context: { monster_id: combatMonster?.id, zone_x: myCharacter?.x, zone_y: myCharacter?.y },
+          }).catch(() => {});
+          await loadWorld();
+          const refreshed = await base44.entities.Character.get(myCharacter.id).catch(() => null);
+          if (refreshed) {
+            const achievementUpdates = checkAchievements(refreshed, myCharacter);
+            if (Object.keys(achievementUpdates).length > 0) {
+              await base44.entities.Character.update(myCharacter.id, achievementUpdates);
+            }
+          }
           setCombatMonster(null);
           clearActiveTarget();
           clearTarget();
         }}
-        onDefeat={() => {
-          const zone = getZoneAt(myCharacter.x, myCharacter.y);
-          const { updates: deathUpdates } = handleDeath(myCharacter, zone?.id, true);
-          const respawned = { ...myCharacter, ...deathUpdates };
-          setMyCharacter(respawned);
-          setAllCharacters(prev => prev.map(c => c.id === myCharacter.id ? respawned : c));
-          base44.entities.Character.update(myCharacter.id, deathUpdates);
+        onDefeat={async () => {
+          await loadWorld();
           setCombatMonster(null);
           clearActiveTarget();
           clearTarget();
@@ -515,7 +526,7 @@ export default function World() {
           setMyCharacter(updated);
           setAllCharacters(prev => prev.map(c => c.id === myCharacter.id ? updated : c));
           try {
-            handleSendMessage(`🗣️ Interacted with ${npcDialogue.npcType} in ${npcDialogue.zoneName}.`);
+            handleSendMessage(`ðŸ—£ï¸ Interacted with ${npcDialogue.npcType} in ${npcDialogue.zoneName}.`);
           } catch(e) {
             console.error("[World] Chat message error:", e);
           }
@@ -523,7 +534,15 @@ export default function World() {
       />
     )}
 
-    {/* Random encounter modal removed — monsters are persistent 3D world entities */}
+    {/* Random encounter modal removed â€” monsters are persistent 3D world entities */}
   </div>
   );
 }
+
+
+
+
+
+
+
+

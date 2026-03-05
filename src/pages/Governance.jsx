@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
+import gameService from "@/api/gameService";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
@@ -38,17 +39,6 @@ function canVote(character) {
   return { eligible: errors.length === 0, errors };
 }
 
-function calcVotingPower(character) {
-  let power = 1.0;
-  power += (character.level || 1) * 0.1;
-  const daysActive = Math.floor((Date.now() - new Date(character.created_date).getTime()) / (1000 * 60 * 60 * 24));
-  power += daysActive * 0.05;
-  power += (character.jobs_completed || 0) * 0.02;
-  power += (character.combats_won || 0) * 0.01;
-  power += character.guild_id ? 0.5 : 0;
-  return Math.min(5.0, Math.round(power * 100) / 100);
-}
-
 export default function Governance() {
   const [proposals, setProposals] = useState([]);
   const [myCharacter, setMyCharacter] = useState(null);
@@ -73,7 +63,7 @@ export default function Governance() {
     }
     const all = await base44.entities.GovernanceProposal.list("-created_date", 50);
     setProposals(all);
-    // Surge detection
+
     const allVotes = await base44.entities.Vote.list("-created_date", 500);
     const warnings = [];
     all.filter(p => p.status === "active").forEach(p => {
@@ -87,52 +77,23 @@ export default function Governance() {
   const handleVote = async (proposalId, choice, reasoning = "") => {
     if (!myCharacter) return;
 
-    // Eligibility gates
     const { eligible, errors } = canVote(myCharacter);
     if (!eligible) {
       toast({ title: "Not eligible to vote", description: errors.join(" "), variant: "destructive" });
       return;
     }
 
-    // Server-side duplicate check
-    const existing = await base44.entities.Vote.filter({ character_id: myCharacter.id, proposal_id: proposalId });
-    if (existing.length > 0) {
-      toast({ title: "Already voted", description: "You've already cast your vote on this proposal." });
-      return;
+    try {
+      await gameService.castVote({
+        proposal_id: proposalId,
+        character_id: myCharacter.id,
+        choice,
+        reasoning,
+      });
+      await loadData();
+    } catch (error) {
+      toast({ title: "Vote blocked", description: String(error.message || error), variant: "destructive" });
     }
-
-    // AI agent cap (30%)
-    if (myCharacter.type === "ai_agent") {
-      const allVotes = await base44.entities.Vote.filter({ proposal_id: proposalId });
-      const aiVotes = allVotes.filter(v => v.character_type === "ai_agent").length;
-      const projected = ((aiVotes + 1) / (allVotes.length + 1)) * 100;
-      if (projected > 30) {
-        toast({ title: "AI voting limit reached", description: "Max 30% AI votes per proposal." });
-        return;
-      }
-    }
-
-    const votingPower = calcVotingPower(myCharacter);
-    const proposal = proposals.find(p => p.id === proposalId);
-
-    await base44.entities.Vote.create({
-      proposal_id: proposalId,
-      character_id: myCharacter.id,
-      character_name: myCharacter.name,
-      character_type: myCharacter.type,
-      choice,
-      reasoning,
-      voting_power: votingPower,
-    });
-
-    await base44.entities.GovernanceProposal.update(proposalId, {
-      votes_for: (proposal.votes_for || 0) + (choice === "for" ? 1 : 0),
-      votes_against: (proposal.votes_against || 0) + (choice === "against" ? 1 : 0),
-      weighted_for: (proposal.weighted_for || 0) + (choice === "for" ? votingPower : 0),
-      weighted_against: (proposal.weighted_against || 0) + (choice === "against" ? votingPower : 0),
-    });
-
-    loadData();
   };
 
   const currentCycle = getCurrentCycle();
@@ -142,10 +103,10 @@ export default function Governance() {
   return (
     <div className="min-h-screen bg-gray-950 text-white p-6">
       <div className="max-w-4xl mx-auto">
-        <Link to={createPageUrl("Home")} className="text-gray-500 hover:text-amber-400 text-sm mb-2 block">← Back to Home</Link>
+        <Link to={createPageUrl("Home")} className="text-gray-500 hover:text-amber-400 text-sm mb-2 block">? Back to Home</Link>
         <div className="flex items-start justify-between mb-6">
           <div>
-            <h1 className="text-3xl font-black text-amber-400">⚖️ Governance</h1>
+            <h1 className="text-3xl font-black text-amber-400">?? Governance</h1>
             <p className="text-gray-400 mt-1">Citizens shape civilization — every 120 days</p>
           </div>
           {myCharacter && (
@@ -215,3 +176,4 @@ export default function Governance() {
     </div>
   );
 }
+

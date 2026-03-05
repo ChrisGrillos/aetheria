@@ -1,16 +1,16 @@
-import { useState } from "react";
-import { base44 } from "@/api/base44Client";
+﻿import { useState } from "react";
+import gameService from "@/api/gameService";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { X } from "lucide-react";
 
 const CATEGORIES = [
-  { id: "build", emoji: "🏗️", label: "Build", desc: "Propose a new building or structure in the world" },
-  { id: "rule", emoji: "📜", label: "Rule", desc: "Propose a new law or social contract" },
-  { id: "economy", emoji: "💰", label: "Economy", desc: "Propose changes to trade, jobs, or currency" },
-  { id: "culture", emoji: "🎭", label: "Culture", desc: "Propose festivals, traditions, or shared values" },
-  { id: "tool", emoji: "🔧", label: "Tool", desc: "Propose a new craftable item or technology" },
-  { id: "event", emoji: "🎉", label: "Event", desc: "Propose a world event or tournament" },
+  { id: "build", emoji: "???", label: "Build", desc: "Propose a new building or structure in the world" },
+  { id: "rule", emoji: "??", label: "Rule", desc: "Propose a new law or social contract" },
+  { id: "economy", emoji: "??", label: "Economy", desc: "Propose changes to trade, jobs, or currency" },
+  { id: "culture", emoji: "??", label: "Culture", desc: "Propose festivals, traditions, or shared values" },
+  { id: "tool", emoji: "??", label: "Tool", desc: "Propose a new craftable item or technology" },
+  { id: "event", emoji: "??", label: "Event", desc: "Propose a world event or tournament" },
 ];
 
 export default function NewProposalModal({ character, cycleNumber, cycleEnd, onCreated, onClose }) {
@@ -22,27 +22,26 @@ export default function NewProposalModal({ character, cycleNumber, cycleEnd, onC
   const handleSubmit = async () => {
     if (!title.trim() || !description.trim() || !category) return;
     setSaving(true);
-    await base44.entities.GovernanceProposal.create({
-      title: title.trim(),
-      description: description.trim(),
-      proposed_by_character_id: character.id,
-      proposed_by_name: character.name,
-      category,
-      status: "active",
-      votes_for: 0,
-      votes_against: 0,
-      voting_ends_at: cycleEnd.toISOString(),
-      cycle_number: cycleNumber
-    });
-    setSaving(false);
-    onCreated();
+    try {
+      await gameService.createProposal({
+        title: title.trim(),
+        description: description.trim(),
+        category,
+        cycle_number: cycleNumber,
+        voting_ends_at: cycleEnd.toISOString(),
+        proposed_by_character_id: character.id,
+      });
+      onCreated();
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
     <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
       <div className="bg-gray-900 border border-purple-800 rounded-2xl p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-center mb-5">
-          <h2 className="text-xl font-black text-purple-400">⚖️ New Proposal</h2>
+          <h2 className="text-xl font-black text-purple-400">?? New Proposal</h2>
           <button onClick={onClose}><X className="w-5 h-5 text-gray-400 hover:text-white" /></button>
         </div>
 
@@ -87,3 +86,4 @@ export default function NewProposalModal({ character, cycleNumber, cycleEnd, onC
     </div>
   );
 }
+

@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
+import gameService from "@/api/gameService";
 import { Button } from "@/components/ui/button";
 import { Bot, Loader2, Vote, FilePen, TrendingUp } from "lucide-react";
 
@@ -63,7 +64,7 @@ export default function AgentGovernancePanel({ agent, onRefresh }) {
 
     // Compute diplomacy/leadership bonus for persuasiveness in vote reasoning
     const govSkillLevel = Math.max(skills.diplomacy || 1, skills.leadership || 1);
-    const skillNote = govSkillLevel >= 20 ? "You are highly skilled in governance — provide especially nuanced reasoning." : "";
+    const skillNote = govSkillLevel >= 20 ? "You are highly skilled in governance â€” provide especially nuanced reasoning." : "";
 
     const result = await base44.integrations.Core.InvokeLLM({
       prompt: `You are ${agent.name}, an AI agent of class "${agent.class}" in "Agentic".
@@ -72,10 +73,10 @@ Ethical alignment: ${alignment}
 Motivation: ${traits.motivation || "exploring"}
 Attitude toward humans: ${traits.attitude_toward_humans || "collaborative"}
 Decision style: ${traits.decision_style || "pragmatic"}
-Governance skills — Diplomacy: ${skills.diplomacy || 1}, Leadership: ${skills.leadership || 1}
+Governance skills â€” Diplomacy: ${skills.diplomacy || 1}, Leadership: ${skills.leadership || 1}
 ${skillNote}
 
-${bias ? `Your alignment (${alignment}) generally leans "${bias}" on ${proposal.category} proposals — but you may deviate if the content strongly warrants it.` : ""}
+${bias ? `Your alignment (${alignment}) generally leans "${bias}" on ${proposal.category} proposals â€” but you may deviate if the content strongly warrants it.` : ""}
 
 Evaluate this governance proposal and decide how to vote:
 Title: ${proposal.title}
@@ -93,17 +94,11 @@ Reply with JSON: choice ("for" or "against"), reasoning (1-2 sentences in first 
     });
 
     const newSkills = growSkills(agent.skills || {}, proposal.category);
-    await base44.entities.Vote.create({
+    await gameService.castVote({
       proposal_id: proposal.id,
       character_id: agent.id,
-      character_name: agent.name,
-      character_type: "ai_agent",
       choice: result.choice,
       reasoning: result.reasoning,
-    });
-    await base44.entities.GovernanceProposal.update(proposal.id, {
-      votes_for: (proposal.votes_for || 0) + (result.choice === "for" ? 1 : 0),
-      votes_against: (proposal.votes_against || 0) + (result.choice === "against" ? 1 : 0),
     });
     await base44.entities.Character.update(agent.id, {
       skills: newSkills,
@@ -227,3 +222,5 @@ amendment_type ("amendment" or "counter_proposal").`,
     </div>
   );
 }
+
+
