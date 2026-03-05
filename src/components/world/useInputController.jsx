@@ -8,8 +8,8 @@
  * - Auto-attack loop against locked target
  */
 
-import { useEffect, useRef, useState, useCallback } from "react";
-import { isPassable } from "@/components/shared/movementAuthority";
+import { useEffect, useRef, useState, useCallback, useMemo } from "react";
+import { validateStep } from "@/components/shared/movementAuthority";
 
 const WALK_INTERVAL_MS = 180;
 const SPRINT_INTERVAL_MS = 120;
@@ -30,9 +30,11 @@ export default function useInputController({
   monsters,
   onMove,
   onStartCombat,
+  onAbilityInput,
   onInteractIntent,
   onMovementBlocked,
   abilities = [],
+  externalCooldowns = {},
   enabled = true,
 }) {
   const [lockedTarget, setLockedTarget] = useState(null);
@@ -53,16 +55,20 @@ export default function useInputController({
   const loopActiveRef = useRef(false);
   const onMoveRef = useRef(onMove);
   const onStartCombatRef = useRef(onStartCombat);
+  const onAbilityInputRef = useRef(onAbilityInput);
   const onInteractIntentRef = useRef(onInteractIntent);
   const onMovementBlockedRef = useRef(onMovementBlocked);
+  const externalCooldownsRef = useRef(externalCooldowns);
 
   charRef.current = myCharacter;
   monstersRef.current = monsters;
   enabledRef.current = enabled;
   onMoveRef.current = onMove;
   onStartCombatRef.current = onStartCombat;
+  onAbilityInputRef.current = onAbilityInput;
   onInteractIntentRef.current = onInteractIntent;
   onMovementBlockedRef.current = onMovementBlocked;
+  externalCooldownsRef.current = externalCooldowns || {};
 
   const lockTarget = useCallback((monster) => {
     lockedRef.current = monster;
@@ -133,7 +139,18 @@ export default function useInputController({
 
       const nx = char.x + dir[0];
       const ny = char.y + dir[1];
-      if (!isPassable(nx, ny)) continue;
+      const step = validateStep(char.x, char.y, nx, ny, {
+        ignoreOccupantId: `character:${char.id}`,
+      });
+      if (!step.valid) {
+        onMovementBlockedRef.current?.("collision", {
+          x: nx,
+          y: ny,
+          reason: step.reason || "Blocked",
+          collisionReason: step.collisionReason || "blocked",
+        });
+        continue;
+      }
 
       const mon = monstersRef.current.find((m) => m.is_alive && m.x === nx && m.y === ny);
       if (mon) {
@@ -172,11 +189,23 @@ export default function useInputController({
   const fireAbility = useCallback((slotIndex) => {
     const ability = abilities[slotIndex];
     if (!ability) return;
-    if ((cooldowns[ability.id] || 0) > 0) return;
+    const localCd = Number(cooldowns[ability.id] || 0);
+    const remoteCd = Number(externalCooldownsRef.current?.[ability.id] || 0);
+    if (Math.max(localCd, remoteCd) > 0) return;
     const cdMs = (ability.cooldown_rounds || 0) * 1500;
     if (cdMs > 0) setCooldowns((prev) => ({ ...prev, [ability.id]: cdMs }));
-    if (lockedRef.current) onStartCombatRef.current?.(lockedRef.current, ability);
+    const handled = !!onAbilityInputRef.current;
+    onAbilityInputRef.current?.(ability, slotIndex);
+    if (!handled && lockedRef.current) onStartCombatRef.current?.(lockedRef.current, ability);
   }, [abilities, cooldowns]);
+
+  const mergedCooldowns = useMemo(() => {
+    const merged = { ...(externalCooldowns || {}) };
+    Object.entries(cooldowns).forEach(([k, v]) => {
+      merged[k] = Math.max(Number(v || 0), Number(merged[k] || 0));
+    });
+    return merged;
+  }, [cooldowns, externalCooldowns]);
 
   useEffect(() => {
     const id = setInterval(() => {
@@ -297,7 +326,7 @@ export default function useInputController({
     clearTarget,
     autoAttacking,
     startAutoAttack,
-    cooldowns,
+    cooldowns: mergedCooldowns,
     runEnergy,
     isSprinting,
     setInteractIntent,

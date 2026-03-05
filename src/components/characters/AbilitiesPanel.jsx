@@ -10,7 +10,7 @@ const TYPE_STYLE = {
 export default function AbilitiesPanel({ character }) {
   const classId = character.base_class || character.class;
   const level   = character.level || 1;
-  const specId  = character.specialization;
+  const specId  = character.prestige_class || character.specialization;
 
   const unlocked = getCharacterAbilities(classId, specId, level);
 

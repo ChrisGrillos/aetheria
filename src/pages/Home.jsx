@@ -5,6 +5,12 @@ import { Link } from "react-router-dom";
 import { Sword, Bot, Users, Vote, Briefcase, Map, Zap, Hammer, Video, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
+function isArchivedCharacter(character) {
+  if (!character) return true;
+  if (character.is_deleted === true) return true;
+  return String(character.status || "").toLowerCase() === "archived";
+}
+
 export default function Home() {
   const [user, setUser] = useState(null);
   const [characters, setCharacters] = useState([]);
@@ -20,7 +26,7 @@ export default function Home() {
     setUser(u);
     if (u) {
       const chars = await base44.entities.Character.filter({ created_by: u.email, type: "human" }, "-updated_date", 10);
-      setCharacters(chars);
+      setCharacters((chars || []).filter((c) => !isArchivedCharacter(c)));
     }
     setLoading(false);
   };

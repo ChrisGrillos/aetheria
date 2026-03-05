@@ -259,6 +259,159 @@ export const BASE_CLASSES = {
     }
   },
 
+  rogue: {
+    id: "rogue", emoji: "🗡️", label: "Rogue",
+    desc: "Precision skirmisher. Excels in positioning, crits, and disruption.",
+    primaryStats: { strength: 9, dexterity: 15, intelligence: 10, wisdom: 10, constitution: 9, charisma: 11 },
+    primarySkills: ["combat", "resource_management"],
+    startingSkills: { combat: 13, resource_management: 10, trading: 6, diplomacy: 5, research: 3, healing: 2, crafting: 3, leadership: 3 },
+    baseAbilities: [
+      { id: "quick_stab", name: "Quick Stab", description: "Fast strike with high precision.", type: "active", effect_type: "damage", effect_magnitude: 130, cooldown_rounds: 2, energy_cost: 10, unlocked_at_level: 1, source: "base_class" },
+      { id: "evasive_step", name: "Evasive Step", description: "Gain +20 evasion for 2 rounds.", type: "active", effect_type: "buff", effect_magnitude: 20, cooldown_rounds: 3, energy_cost: 12, unlocked_at_level: 1, source: "base_class" },
+      { id: "cheap_shot", name: "Cheap Shot", description: "Briefly stagger the target.", type: "active", effect_type: "utility", effect_magnitude: 1, cooldown_rounds: 4, energy_cost: 14, unlocked_at_level: 3, source: "base_class" },
+    ],
+    specializations: {
+      shadowblade: {
+        id: "shadowblade", label: "Shadowblade", emoji: "🌒",
+        desc: "Night duelist focused on burst and stealth windows.",
+        unlockLevel: 5,
+        statBonuses: { dexterity: 4, intelligence: 2, constitution: -1 },
+        abilities: [
+          { id: "void_slash", name: "Void Slash", description: "Heavy strike from the shadows.", type: "active", effect_type: "damage", effect_magnitude: 210, cooldown_rounds: 4, energy_cost: 18, unlocked_at_level: 5, source: "specialization" },
+          { id: "smoke_veil", name: "Smoke Veil", description: "Increase evasion and break focus.", type: "active", effect_type: "buff", effect_magnitude: 35, cooldown_rounds: 5, energy_cost: 16, unlocked_at_level: 6, source: "specialization" },
+          { id: "umbral_edge", name: "Umbral Edge", description: "Passive crit and finisher bonus.", type: "passive", effect_type: "buff", effect_magnitude: 15, cooldown_rounds: 0, energy_cost: 0, unlocked_at_level: 8, source: "specialization" },
+          { id: "nightfall_mark", name: "Nightfall Mark", description: "Ultimate finisher preparation.", type: "ultimate", effect_type: "utility", effect_magnitude: 1, cooldown_rounds: 10, energy_cost: 35, unlocked_at_level: 10, source: "specialization" },
+        ]
+      },
+      duelist: {
+        id: "duelist", label: "Duelist", emoji: "⚜️",
+        desc: "Tempo fighter with riposte pressure and control.",
+        unlockLevel: 5,
+        statBonuses: { dexterity: 3, charisma: 2, strength: 1 },
+        abilities: [
+          { id: "riposte", name: "Riposte", description: "Counter-attack after guard timing.", type: "active", effect_type: "damage", effect_magnitude: 160, cooldown_rounds: 3, energy_cost: 14, unlocked_at_level: 5, source: "specialization" },
+          { id: "flourish", name: "Flourish", description: "Debuff target accuracy.", type: "active", effect_type: "debuff", effect_magnitude: 15, cooldown_rounds: 4, energy_cost: 15, unlocked_at_level: 6, source: "specialization" },
+          { id: "poised_stance", name: "Poised Stance", description: "Passive offense/defense balance.", type: "passive", effect_type: "buff", effect_magnitude: 10, cooldown_rounds: 0, energy_cost: 0, unlocked_at_level: 8, source: "specialization" },
+          { id: "final_lunge", name: "Final Lunge", description: "Ultimate burst thrust.", type: "ultimate", effect_type: "damage", effect_magnitude: 320, cooldown_rounds: 10, energy_cost: 36, unlocked_at_level: 10, source: "specialization" },
+        ]
+      },
+      saboteur: {
+        id: "saboteur", label: "Saboteur", emoji: "🧨",
+        desc: "Disruptor with traps, poisons, and anti-caster pressure.",
+        unlockLevel: 5,
+        statBonuses: { intelligence: 3, dexterity: 3, wisdom: 1 },
+        abilities: [
+          { id: "spike_trap", name: "Spike Trap", description: "Trap that punctures and slows.", type: "active", effect_type: "debuff", effect_magnitude: 20, cooldown_rounds: 4, energy_cost: 16, unlocked_at_level: 5, source: "specialization" },
+          { id: "rupture_poison", name: "Rupture Poison", description: "Apply stacking poison damage.", type: "active", effect_type: "debuff", effect_magnitude: 12, cooldown_rounds: 3, energy_cost: 14, unlocked_at_level: 6, source: "specialization" },
+          { id: "tools_of_ruin", name: "Tools of Ruin", description: "Passive utility potency bonus.", type: "passive", effect_type: "buff", effect_magnitude: 15, cooldown_rounds: 0, energy_cost: 0, unlocked_at_level: 8, source: "specialization" },
+          { id: "collapse_grid", name: "Collapse Grid", description: "Ultimate anti-mobility detonation.", type: "ultimate", effect_type: "damage", effect_magnitude: 280, cooldown_rounds: 11, energy_cost: 37, unlocked_at_level: 10, source: "specialization" },
+        ]
+      }
+    }
+  },
+
+  bard: {
+    id: "bard", emoji: "🎼", label: "Bard",
+    desc: "Battle performer with group buffs and control rhythms.",
+    primaryStats: { strength: 8, dexterity: 11, intelligence: 12, wisdom: 10, constitution: 9, charisma: 15 },
+    primarySkills: ["diplomacy", "leadership"],
+    startingSkills: { diplomacy: 14, leadership: 12, trading: 8, research: 6, combat: 6, healing: 3, crafting: 2, resource_management: 4 },
+    baseAbilities: [
+      { id: "discordant_note", name: "Discordant Note", description: "Sonic strike with minor debuff.", type: "active", effect_type: "damage", effect_magnitude: 120, cooldown_rounds: 2, energy_cost: 11, unlocked_at_level: 1, source: "base_class" },
+      { id: "marching_tune", name: "Marching Tune", description: "Party haste and control resist.", type: "active", effect_type: "buff", effect_magnitude: 12, cooldown_rounds: 3, energy_cost: 14, unlocked_at_level: 1, source: "base_class" },
+      { id: "inspiring_chorus", name: "Inspiring Chorus", description: "Strengthen nearby allies.", type: "active", effect_type: "buff", effect_magnitude: 18, cooldown_rounds: 5, energy_cost: 18, unlocked_at_level: 3, source: "base_class" },
+    ],
+    specializations: {
+      skald: {
+        id: "skald", label: "Skald", emoji: "🛡️",
+        desc: "War-chant frontliner mixing melee and rally songs.",
+        unlockLevel: 5,
+        statBonuses: { charisma: 2, strength: 3, constitution: 2 },
+        abilities: [
+          { id: "war_anthem", name: "War Anthem", description: "Boost party damage output.", type: "active", effect_type: "buff", effect_magnitude: 22, cooldown_rounds: 4, energy_cost: 18, unlocked_at_level: 5, source: "specialization" },
+          { id: "shout_breaker", name: "Shout Breaker", description: "Interrupt target casting window.", type: "active", effect_type: "utility", effect_magnitude: 1, cooldown_rounds: 4, energy_cost: 16, unlocked_at_level: 6, source: "specialization" },
+          { id: "blood_verse", name: "Blood Verse", description: "Passive sustain in combat.", type: "passive", effect_type: "buff", effect_magnitude: 10, cooldown_rounds: 0, energy_cost: 0, unlocked_at_level: 8, source: "specialization" },
+          { id: "valhalla_call", name: "Valhalla Call", description: "Ultimate rally with burst heal/damage.", type: "ultimate", effect_type: "utility", effect_magnitude: 1, cooldown_rounds: 10, energy_cost: 36, unlocked_at_level: 10, source: "specialization" },
+        ]
+      },
+      minstrel: {
+        id: "minstrel", label: "Minstrel", emoji: "🎻",
+        desc: "Support specialist with sustain and cooldown rhythm.",
+        unlockLevel: 5,
+        statBonuses: { charisma: 4, wisdom: 3, intelligence: 1 },
+        abilities: [
+          { id: "restorative_ballad", name: "Restorative Ballad", description: "Steady healing over time.", type: "active", effect_type: "heal", effect_magnitude: 14, cooldown_rounds: 3, energy_cost: 15, unlocked_at_level: 5, source: "specialization" },
+          { id: "cadence_shift", name: "Cadence Shift", description: "Reduce ally cooldown pressure.", type: "active", effect_type: "utility", effect_magnitude: 1, cooldown_rounds: 5, energy_cost: 18, unlocked_at_level: 6, source: "specialization" },
+          { id: "harmonic_focus", name: "Harmonic Focus", description: "Passive cast stability bonus.", type: "passive", effect_type: "buff", effect_magnitude: 15, cooldown_rounds: 0, energy_cost: 0, unlocked_at_level: 8, source: "specialization" },
+          { id: "grand_refrain", name: "Grand Refrain", description: "Ultimate teamwide empower.", type: "ultimate", effect_type: "buff", effect_magnitude: 28, cooldown_rounds: 11, energy_cost: 38, unlocked_at_level: 10, source: "specialization" },
+        ]
+      },
+      dirge: {
+        id: "dirge", label: "Dirge", emoji: "☠️",
+        desc: "Debuff maestro who weakens and executes enemies.",
+        unlockLevel: 5,
+        statBonuses: { intelligence: 3, charisma: 3, dexterity: 2 },
+        abilities: [
+          { id: "dread_chord", name: "Dread Chord", description: "Apply fear-like combat penalty.", type: "active", effect_type: "debuff", effect_magnitude: 20, cooldown_rounds: 4, energy_cost: 16, unlocked_at_level: 5, source: "specialization" },
+          { id: "mourning_echo", name: "Mourning Echo", description: "Sonic burst with weaken effect.", type: "active", effect_type: "damage", effect_magnitude: 170, cooldown_rounds: 4, energy_cost: 18, unlocked_at_level: 6, source: "specialization" },
+          { id: "fatal_meter", name: "Fatal Meter", description: "Passive execute threshold bonus.", type: "passive", effect_type: "buff", effect_magnitude: 12, cooldown_rounds: 0, energy_cost: 0, unlocked_at_level: 8, source: "specialization" },
+          { id: "requiem_end", name: "Requiem End", description: "Ultimate ending strike.", type: "ultimate", effect_type: "damage", effect_magnitude: 340, cooldown_rounds: 11, energy_cost: 39, unlocked_at_level: 10, source: "specialization" },
+        ]
+      }
+    }
+  },
+
+  sorcerer: {
+    id: "sorcerer", emoji: "🔮", label: "Sorcerer",
+    desc: "Innate arcane caster with explosive elemental control.",
+    primaryStats: { strength: 6, dexterity: 10, intelligence: 13, wisdom: 11, constitution: 8, charisma: 13 },
+    primarySkills: ["research", "combat"],
+    startingSkills: { research: 12, combat: 9, diplomacy: 6, healing: 4, crafting: 5, trading: 3, leadership: 4, resource_management: 3 },
+    baseAbilities: [
+      { id: "arc_spark", name: "Arc Spark", description: "Quick arcane projectile.", type: "active", effect_type: "damage", effect_magnitude: 140, cooldown_rounds: 2, energy_cost: 12, unlocked_at_level: 1, source: "base_class" },
+      { id: "mana_surge", name: "Mana Surge", description: "Recover combat energy and cast speed.", type: "active", effect_type: "buff", effect_magnitude: 15, cooldown_rounds: 4, energy_cost: 10, unlocked_at_level: 1, source: "base_class" },
+      { id: "flux_barrier", name: "Flux Barrier", description: "Temporary arcane shield.", type: "active", effect_type: "buff", effect_magnitude: 22, cooldown_rounds: 4, energy_cost: 16, unlocked_at_level: 3, source: "base_class" },
+    ],
+    specializations: {
+      pyromancer: {
+        id: "pyromancer", label: "Pyromancer", emoji: "🔥",
+        desc: "Burn-focused destruction caster.",
+        unlockLevel: 5,
+        statBonuses: { intelligence: 4, charisma: 2, constitution: -1 },
+        abilities: [
+          { id: "ember_lance", name: "Ember Lance", description: "Piercing fire bolt.", type: "active", effect_type: "damage", effect_magnitude: 200, cooldown_rounds: 3, energy_cost: 18, unlocked_at_level: 5, source: "specialization" },
+          { id: "living_flame", name: "Living Flame", description: "Apply burning damage over time.", type: "active", effect_type: "debuff", effect_magnitude: 14, cooldown_rounds: 3, energy_cost: 16, unlocked_at_level: 6, source: "specialization" },
+          { id: "kindled_core", name: "Kindled Core", description: "Passive fire damage amplification.", type: "passive", effect_type: "buff", effect_magnitude: 18, cooldown_rounds: 0, energy_cost: 0, unlocked_at_level: 8, source: "specialization" },
+          { id: "sunfall", name: "Sunfall", description: "Ultimate inferno strike.", type: "ultimate", effect_type: "damage", effect_magnitude: 420, cooldown_rounds: 11, energy_cost: 40, unlocked_at_level: 10, source: "specialization" },
+        ]
+      },
+      stormcaller: {
+        id: "stormcaller", label: "Stormcaller", emoji: "⚡",
+        desc: "Chain lightning and control magic specialist.",
+        unlockLevel: 5,
+        statBonuses: { intelligence: 3, wisdom: 3, dexterity: 1 },
+        abilities: [
+          { id: "arc_chain", name: "Arc Chain", description: "Lightning chain strikes.", type: "active", effect_type: "damage", effect_magnitude: 175, cooldown_rounds: 3, energy_cost: 17, unlocked_at_level: 5, source: "specialization" },
+          { id: "ion_lock", name: "Ion Lock", description: "Debuff target mobility and evasion.", type: "active", effect_type: "debuff", effect_magnitude: 22, cooldown_rounds: 4, energy_cost: 16, unlocked_at_level: 6, source: "specialization" },
+          { id: "charged_reserve", name: "Charged Reserve", description: "Passive cooldown pressure reduction.", type: "passive", effect_type: "utility", effect_magnitude: 1, cooldown_rounds: 0, energy_cost: 0, unlocked_at_level: 8, source: "specialization" },
+          { id: "tempest_crown", name: "Tempest Crown", description: "Ultimate storm burst.", type: "ultimate", effect_type: "damage", effect_magnitude: 390, cooldown_rounds: 11, energy_cost: 39, unlocked_at_level: 10, source: "specialization" },
+        ]
+      },
+      arcanist: {
+        id: "arcanist", label: "Arcanist", emoji: "📘",
+        desc: "Precision mage focused on control and consistency.",
+        unlockLevel: 5,
+        statBonuses: { intelligence: 3, wisdom: 4, charisma: 1 },
+        abilities: [
+          { id: "sigil_bolt", name: "Sigil Bolt", description: "Accurate force projectile.", type: "active", effect_type: "damage", effect_magnitude: 165, cooldown_rounds: 2, energy_cost: 14, unlocked_at_level: 5, source: "specialization" },
+          { id: "null_field", name: "Null Field", description: "Suppress enemy buffs briefly.", type: "active", effect_type: "debuff", effect_magnitude: 1, cooldown_rounds: 4, energy_cost: 17, unlocked_at_level: 6, source: "specialization" },
+          { id: "perfect_cast", name: "Perfect Cast", description: "Passive cast stability and crit tuning.", type: "passive", effect_type: "buff", effect_magnitude: 14, cooldown_rounds: 0, energy_cost: 0, unlocked_at_level: 8, source: "specialization" },
+          { id: "runic_overload", name: "Runic Overload", description: "Ultimate amplified cast.", type: "ultimate", effect_type: "damage", effect_magnitude: 360, cooldown_rounds: 10, energy_cost: 38, unlocked_at_level: 10, source: "specialization" },
+        ]
+      }
+    }
+  },
+
   craftsman: {
     id: "craftsman", emoji: "🔨", label: "Craftsman",
     desc: "Builder of worlds. Resource and crafting focused.",
@@ -315,13 +468,27 @@ export const ALL_CLASSES = Object.values(BASE_CLASSES);
 
 // For CreateCharacterModalV2, array format
 export const BASE_CLASSES_ARRAY = [
-  { id: "warrior", emoji: "⚔️", label: "Warrior", desc: "Frontline melee fighter. High strength & constitution." },
-  { id: "wizard", emoji: "🧙", label: "Wizard", desc: "Scholar of arcane. Leads research and handles omens." },
-  { id: "hunter", emoji: "🏹", label: "Hunter", desc: "Scout and tracker. Excels at quests and resource finds." },
-  { id: "healer", emoji: "💚", label: "Healer", desc: "Protector of life. Heals, mediates, and researches." },
-  { id: "merchant", emoji: "💰", label: "Merchant", desc: "Economy driver. Masters trading and diplomacy." },
-  { id: "craftsman", emoji: "🔨", label: "Craftsman", desc: "Builder of worlds. Resource and crafting focused." },
+  { id: "warrior", emoji: "[WAR]", label: "Warrior", desc: "Frontline melee fighter. High strength & constitution." },
+  { id: "rogue", emoji: "[ROG]", label: "Rogue", desc: "Precision skirmisher with burst and control." },
+  { id: "wizard", emoji: "[WIZ]", label: "Wizard", desc: "Scholar of arcane. Leads research and handles omens." },
+  { id: "sorcerer", emoji: "[SOR]", label: "Sorcerer", desc: "Innate arcane caster with explosive control." },
+  { id: "hunter", emoji: "[HNT]", label: "Hunter", desc: "Scout and tracker. Excels at quests and resource finds." },
+  { id: "healer", emoji: "[HEA]", label: "Healer", desc: "Protector of life. Heals, mediates, and researches." },
+  { id: "bard", emoji: "[BRD]", label: "Bard", desc: "Battle performer with buffs and disruption." },
+  { id: "merchant", emoji: "[MER]", label: "Merchant", desc: "Economy driver. Masters trading and diplomacy." },
+  { id: "craftsman", emoji: "[CRF]", label: "Craftsman", desc: "Builder of worlds. Resource and crafting focused." },
 ];
+
+export const PRESTIGE_DEFINITIONS = Object.values(BASE_CLASSES).flatMap((baseClass) =>
+  Object.values(baseClass.specializations || {}).map((spec) => ({
+    id: spec.id,
+    label: spec.label,
+    baseClassId: baseClass.id,
+    unlockRules: { level: Number(spec.unlockLevel || 5) },
+    statBonuses: spec.statBonuses || {},
+    abilities: spec.abilities || [],
+  }))
+);
 
 export function getSpecializations(baseClassId) {
   return Object.values(BASE_CLASSES[baseClassId]?.specializations || {});
@@ -351,3 +518,4 @@ export function getCharacterAbilities(baseClassId, specId, level) {
   }
   return abilities;
 }
+

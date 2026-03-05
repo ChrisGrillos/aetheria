@@ -65,8 +65,9 @@ export function calculateDerivedStats(character) {
     }
 
     // Specialization stat bonuses feed into derived stats
-    if (character.specialization && baseClass.specializations?.[character.specialization]) {
-      const spec = baseClass.specializations[character.specialization];
+    const specId = character.prestige_class || character.specialization;
+    if (specId && baseClass.specializations?.[specId]) {
+      const spec = baseClass.specializations[specId];
       const sb = spec.statBonuses || {};
       derived.attack_power        += (sb.strength || 0) * 1.5;
       derived.defense             += (sb.constitution || 0) * 1.2 + (sb.strength || 0) * 0.3;
@@ -144,9 +145,12 @@ export function levelUpUpdates(character) {
 
 const CLASS_STAT_GAINS = {
   warrior:   { strength: 1, constitution: 1 },
+  rogue:     { dexterity: 1, intelligence: 1 },
   hunter:    { dexterity: 1, wisdom: 1 },
   wizard:    { intelligence: 1, wisdom: 1 },
+  sorcerer:  { intelligence: 1, charisma: 1 },
   healer:    { wisdom: 1, charisma: 1 },
+  bard:      { charisma: 1, wisdom: 1 },
   merchant:  { charisma: 1, intelligence: 1 },
   craftsman: { dexterity: 1, strength: 1 },
 };

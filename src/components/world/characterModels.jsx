@@ -44,6 +44,28 @@ const CLASS_COLORS = {
   craftsman: 0x8b6040,
 };
 
+const SKIN_TONE_COLORS = {
+  light: 0xe0bf96,
+  tan: 0xc6925f,
+  olive: 0xa67f54,
+  dark: 0x6b4a2e,
+};
+
+const HAIR_COLORS = {
+  black: 0x1b1714,
+  brown: 0x4d3320,
+  blonde: 0xcfa45c,
+  red: 0x9c4f27,
+  gray: 0x9da1a7,
+  silver: 0xc7c8d3,
+};
+
+const MARKING_COLORS = {
+  tattoo: 0x19304f,
+  warpaint: 0xa01212,
+  scar: 0x6c3b31,
+};
+
 // ─── SHARED GEOMETRY CACHE ───────────────────────────────────────────────────
 
 const _geoCache = {};
@@ -83,13 +105,19 @@ function makeLimb(width, height, depth, color) {
 
 // ─── BUILD CHARACTER MESH ────────────────────────────────────────────────────
 
-export function buildCharacterMesh(raceId, isAI = false, baseClass = null) {
+export function buildCharacterMesh(raceId, isAI = false, baseClass = null, appearance = null) {
   const vis = RACE_VIS[raceId] || RACE_VIS.human;
   const group = new THREE.Group();
 
   const h = vis.h;
   const bw = vis.bw;
-  const skinColor = vis.skinColor;
+  const skinTone = String(appearance?.skinTone || "");
+  const hairTone = String(appearance?.hairColor || "");
+  const markingType = String(appearance?.marking || "none");
+  const hairPreset = String(appearance?.hairPreset || "short");
+  const facialHair = String(appearance?.facialHair || "none");
+  const skinColor = SKIN_TONE_COLORS[skinTone] || vis.skinColor;
+  const hairColor = HAIR_COLORS[hairTone] || 0x3b2a1d;
   const accentColor = isAI ? 0x22ccdd : vis.accent;
   const classColor = CLASS_COLORS[baseClass] || 0x888888;
 
@@ -205,6 +233,22 @@ export function buildCharacterMesh(raceId, isAI = false, baseClass = null) {
   head.castShadow = true;
   group.add(head);
 
+  if (hairPreset !== "shaved") {
+    const hairGeo = cachedGeo("hairCap", () => new THREE.SphereGeometry(1, 8, 6, 0, Math.PI * 2, 0, Math.PI * 0.55));
+    const hair = new THREE.Mesh(
+      hairGeo,
+      new THREE.MeshLambertMaterial({ color: hairColor }),
+    );
+    const presetScale =
+      hairPreset === "long" ? 1.18 :
+      hairPreset === "braid" ? 1.1 :
+      hairPreset === "crown" ? 1.06 :
+      1.02;
+    hair.scale.set(headR * presetScale, headR * (hairPreset === "long" ? 1.2 : 1.0), headR * presetScale);
+    hair.position.set(0, headY + headR * 0.22, 0);
+    group.add(hair);
+  }
+
   // ── EYES ──
   [-1, 1].forEach(side => {
     const eyeGeo = cachedGeo("eye", () => new THREE.SphereGeometry(headR * 0.12, 5, 4));
@@ -237,7 +281,7 @@ export function buildCharacterMesh(raceId, isAI = false, baseClass = null) {
   if (raceId === "dwarf") {
     // Thick beard
     const beardGeo = new THREE.BoxGeometry(headR * 1.5, headR * 1.0, headR * 0.7);
-    const beardMat = new THREE.MeshLambertMaterial({ color: 0xc87820 });
+    const beardMat = new THREE.MeshLambertMaterial({ color: hairColor });
     const beard = new THREE.Mesh(beardGeo, beardMat);
     beard.position.set(0, headY - headR * 0.7, headR * 0.3);
     group.add(beard);
@@ -276,6 +320,27 @@ export function buildCharacterMesh(raceId, isAI = false, baseClass = null) {
     const jaw = new THREE.Mesh(jawGeo, jawMat);
     jaw.position.set(0, headY - headR * 0.6, headR * 0.15);
     group.add(jaw);
+  }
+
+  if (facialHair !== "none" && raceId !== "dwarf") {
+    const facialGeo = new THREE.BoxGeometry(headR * 0.95, headR * 0.42, headR * 0.28);
+    const facial = new THREE.Mesh(
+      facialGeo,
+      new THREE.MeshLambertMaterial({ color: hairColor }),
+    );
+    facial.position.set(0, headY - headR * 0.54, headR * 0.42);
+    group.add(facial);
+  }
+
+  if (markingType !== "none") {
+    const markingColor = MARKING_COLORS[markingType] || MARKING_COLORS.tattoo;
+    const markingGeo = new THREE.BoxGeometry(headR * 0.16, headR * 0.55, 0.01);
+    const marking = new THREE.Mesh(
+      markingGeo,
+      new THREE.MeshBasicMaterial({ color: markingColor, transparent: true, opacity: 0.9 }),
+    );
+    marking.position.set(0, headY, headR * 0.95);
+    group.add(marking);
   }
 
   // ── CLASS-SPECIFIC WEAPONS/ACCESSORIES ──

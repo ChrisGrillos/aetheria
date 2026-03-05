@@ -72,7 +72,7 @@ export default function GroupWindow({ myCharacter, allCharacters, onMoveFollower
   const memberCount = liveParty.length;
 
   return (
-    <div className="absolute top-12 left-2 z-20 flex flex-col items-start gap-1.5">
+    <div className="absolute bottom-24 right-3 z-20 flex flex-col items-end gap-1.5">
       {/* Group member bars — always visible if in party */}
       {liveParty.map(member => {
         const hpPct = Math.min(100, ((member.hp || 100) / (member.max_hp || 100)) * 100);

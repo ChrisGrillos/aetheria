@@ -25,6 +25,8 @@ export const gameService = {
   worldTick: (payload = {}) => invoke("worldTick", payload),
   siegeAction: (payload, idempotencyKey) => invoke("siegeAction", payload, idempotencyKey),
   creatorEventHook: (payload, idempotencyKey) => invoke("creatorEventHook", payload, idempotencyKey),
+  voiceSignal: (payload, idempotencyKey) => invoke("voiceSignal", payload, idempotencyKey),
+  characterDelete: (payload, idempotencyKey) => invoke("characterDelete", payload, idempotencyKey),
 };
 
 export default gameService;

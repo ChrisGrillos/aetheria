@@ -7,16 +7,14 @@ import WorldMap from "@/components/world/WorldMap.jsx";
 import WorldScene3D from "@/components/world/WorldScene3D.jsx";
 import ViewToggle from "@/components/world/ViewToggle.jsx";
 import ChatDock from "@/components/chat/ChatDock.jsx";
-import CharacterHUD from "@/components/world/CharacterHUD.jsx";
 import GroupWindow from "@/components/world/GroupWindow.jsx";
 // TravelEncounterModal removed â€” monsters are 3D entities on the map (MMO-style)
-import ZoneInfoPanel from "@/components/world/ZoneInfoPanel.jsx";
-import CombatOverlay from "@/components/combat/CombatOverlay.jsx";
 import Minimap from "@/components/world/Minimap.jsx";
 import TargetFrame from "@/components/world/TargetFrame.jsx";
-import CombatModeIndicator from "@/components/world/CombatModeIndicator.jsx";
+import ShadowbaneHUD from "@/components/world/ShadowbaneHUD.jsx";
+import InWorldCombatPanel from "@/components/world/InWorldCombatPanel.jsx";
 import { getZoneAt, getPOIAt } from "@/components/shared/worldZones";
-import { isPassable, movementEnergyRegen } from "@/components/shared/movementAuthority";
+import { isPassable, movementEnergyRegen, setMovementDynamicBlockers, validateStep } from "@/components/shared/movementAuthority";
 import { initiateCombat } from "@/components/combat/authorizedCombatEngine";
 import { RESOURCES } from "@/components/shared/craftingData";
 import InventoryPanel from "@/components/inventory/InventoryPanel.jsx";
@@ -28,6 +26,12 @@ import AbilityHotbar from "@/components/world/AbilityHotbar.jsx";
 import { COMBAT_MODE } from "@/components/shared/combatMode";
 import { getTileEffects } from "@/components/shared/worldEventEffects";
 import QuestOfferModal from "@/components/world/QuestOfferModal.jsx";
+import useVoiceAbilityCommands from "@/components/voice/useVoiceAbilityCommands.jsx";
+import usePartyVoiceChat from "@/components/voice/usePartyVoiceChat.jsx";
+import VoiceOverlayPanel from "@/components/voice/VoiceOverlayPanel.jsx";
+import { createEngineAdapterState, pushReplayFrame } from "@/components/shared/engineAdapterContracts";
+import useCombatAudioBus from "@/components/audio/useCombatAudioBus.jsx";
+import { triggerEntityState } from "@/components/world/WorldScene3D.jsx";
 import {
   NPC_INTERACTION_PROFILES,
   buildQuestOffer,
@@ -35,8 +39,24 @@ import {
   applyQuestEvent,
 } from "@/components/world/questSystem";
 
+function isArchivedCharacter(character) {
+  if (!character) return true;
+  if (character.is_deleted === true) return true;
+  return String(character.status || "").toLowerCase() === "archived";
+}
+
+function VoiceStreamAudio({ stream }) {
+  const audioRef = useRef(null);
+  useEffect(() => {
+    if (!audioRef.current) return;
+    audioRef.current.srcObject = stream || null;
+  }, [stream]);
+  return <audio ref={audioRef} autoPlay />;
+}
+
 export default function World() {
   const [user, setUser] = useState(null);
+  const userRef = useRef(null);
   const [myCharacter, setMyCharacter] = useState(null);
   const [allCharacters, setAllCharacters] = useState([]);
   const [monsters, setMonsters] = useState([]);
@@ -45,14 +65,18 @@ export default function World() {
   const [activeEvents, setActiveEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   // Encounters are now initiated by clicking 3D monsters directly (no random encounters)
-  const [viewPos, setViewPos] = useState(null);
   const [showInventory, setShowInventory] = useState(false);
   const [fastTravelTarget, setFastTravelTarget] = useState(null);
   const [fastTravelProgress, setFastTravelProgress] = useState(0);
   const fastTravelRef = useRef(null);
   const moveWriteTimerRef = useRef(null);
   const [viewMode, setViewMode] = useState("3d"); // "map" | "3d"
-  const [sceneSettings, setSceneSettings] = useState({ showNameplates: true, showHealthBars: true, cameraDistance: 1.0 });
+  const [sceneSettings, setSceneSettings] = useState({
+    showNameplates: true,
+    showHealthBars: true,
+    showCollisionDebug: false,
+    cameraDistance: 1.0,
+  });
   const [questOffer, setQuestOffer] = useState(null);
   const [characterQuests, setCharacterQuests] = useState([]);
   const [conversationState, setConversationState] = useState({});
@@ -63,19 +87,65 @@ export default function World() {
   // â”€â”€â”€ ZOOM CONTROLLER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const { getCurrentZoomConfig, zoomLevel } = useZoomController();
 
+  const partyMembers = allCharacters.filter(
+    (c) => c.party_id && myCharacter?.party_id && c.party_id === myCharacter.party_id && c.id !== myCharacter.id
+  );
+
+  useEffect(() => {
+    const rows = [];
+
+    allCharacters.forEach((c) => {
+      if (!c?.id) return;
+      if (myCharacter?.id && c.id === myCharacter.id) return;
+      rows.push({ x: c.x, y: c.y, occupantId: `character:${c.id}` });
+    });
+
+    monsters.forEach((m) => {
+      if (!m?.is_alive) return;
+      rows.push({ x: m.x, y: m.y, occupantId: `monster:${m.id}` });
+    });
+
+    setMovementDynamicBlockers(rows);
+  }, [allCharacters, monsters, myCharacter?.id]);
+
+  const voice = usePartyVoiceChat({
+    enabled: !!myCharacter,
+    myCharacter,
+    allCharacters,
+  });
+  const combatAudio = useCombatAudioBus({ enabled: true });
+
   // â”€â”€â”€ AUTHORITATIVE TARGET STATE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  // Single source of truth. No parallel lockedTarget / combatMonster / selectedTarget concepts.
+  // Single source of truth. No parallel target concepts.
   // { entity, type: "monster"|"player"|"ai_agent"|"npc" }
   const [activeTarget, setActiveTarget] = useState(null);
-  // Combat is open when the combat overlay is visible (entity engaged)
-  const [combatMonster, setCombatMonster] = useState(null);
+  // In-world combat session state (modal removed)
+  const [combatSession, setCombatSession] = useState(null);
+  const [combatStatus, setCombatStatus] = useState("idle");
+  const [combatError, setCombatError] = useState("");
+  const [aimVec, setAimVec] = useState({ x: 1, y: 0 });
+  const [authoritativeCooldowns, setAuthoritativeCooldowns] = useState({});
+  const combatStartRef = useRef(false);
+  const engineReplayRef = useRef([]);
+  const seenCombatEventIdsRef = useRef([]);
+  const setDebugGlobal = useCallback((key, value) => {
+    if (typeof window === "undefined") return;
+    Reflect.set(window, key, value);
+  }, []);
+
+  useEffect(() => {
+    userRef.current = user;
+  }, [user]);
 
   useEffect(() => {
     loadWorld();
-    const interval = setInterval(loadCharacters, 15000);
-    const worldInterval = setInterval(() => { gameService.worldTick().catch(() => {}); }, 60000);
+    const interval = setInterval(loadCharacters, 3000);
+    const worldInterval = setInterval(async () => {
+      const res = await gameService.worldTick().catch(() => null);
+      if (res) setDebugGlobal("__monsterAITelemetry", res.monster_ai || null);
+    }, 4000);
     return () => { clearInterval(interval); clearInterval(worldInterval); };
-  }, []);
+  }, [setDebugGlobal]);
 
   useEffect(() => {
     questsRef.current = characterQuests;
@@ -103,14 +173,16 @@ export default function World() {
     setLoading(true);
     const u = await base44.auth.me().catch(() => null);
     setUser(u);
+    userRef.current = u;
 
-    const [chars, mons, objs, msgs, events] = await Promise.all([
+    const [charsRaw, mons, objs, msgs, events] = await Promise.all([
       base44.entities.Character.list("-updated_date", 100),
       base44.entities.Monster.filter({ is_alive: true }),
       base44.entities.WorldObject.list(),
       base44.entities.ChatMessage.list("-created_date", 40),
       base44.entities.WorldEvent.filter({ status: "active" }),
     ]);
+    const chars = (charsRaw || []).filter((c) => !isArchivedCharacter(c));
 
     setAllCharacters(chars);
     setMonsters(mons);
@@ -138,22 +210,120 @@ export default function World() {
   };
 
   const loadCharacters = async () => {
-    const chars = await base44.entities.Character.list("-updated_date", 100);
+    const [charsRaw, mons] = await Promise.all([
+      base44.entities.Character.list("-updated_date", 100),
+      base44.entities.Monster.filter({ is_alive: true }).catch(() => []),
+    ]);
+    const chars = (charsRaw || []).filter((c) => !isArchivedCharacter(c));
     setAllCharacters(chars);
-    if (user) {
+    if (Array.isArray(mons)) setMonsters(mons);
+    const currentUser = userRef.current;
+    if (currentUser) {
       let mine = null;
-      if (user.active_character_id) {
-        mine = chars.find(c => c.id === user.active_character_id && c.type === "human");
+      if (currentUser.active_character_id) {
+        mine = chars.find(c => c.id === currentUser.active_character_id && c.type === "human");
       }
       if (!mine) {
-        mine = chars.find(c => c.created_by === user.email && c.type === "human");
+        mine = chars.find(c => c.created_by === currentUser.email && c.type === "human");
       }
       if (mine) {
         setMyCharacter(mine);
         if (Array.isArray(mine.active_quests)) setCharacterQuests(mine.active_quests);
       }
     }
+
+    setActiveTarget((prev) => {
+      if (!prev || prev.type !== "monster") return prev;
+      const fresh = (Array.isArray(mons) ? mons : []).find((m) => m.id === prev.entity?.id);
+      if (!fresh) return prev;
+      return { ...prev, entity: fresh };
+    });
   };
+
+  const recordReplayFrame = useCallback((intent = {}) => {
+    const state = createEngineAdapterState({
+      myCharacter,
+      allCharacters,
+      monsters,
+      activeTarget,
+      combatSession,
+    });
+    engineReplayRef.current = pushReplayFrame(engineReplayRef.current, {
+      ts: Date.now(),
+      intent,
+      state,
+    });
+    setDebugGlobal("__aetheriaReplay", engineReplayRef.current);
+  }, [activeTarget, allCharacters, combatSession, monsters, myCharacter, setDebugGlobal]);
+
+  const applyCombatEvents = useCallback((events = []) => {
+    if (!Array.isArray(events) || events.length === 0) return;
+
+    const seen = seenCombatEventIdsRef.current;
+    const deduped = events.filter((ev) => {
+      const id = String(ev?.id || "");
+      if (!id) return true;
+      if (seen.includes(id)) return false;
+      seen.push(id);
+      if (seen.length > 240) seen.splice(0, seen.length - 240);
+      return true;
+    });
+    if (deduped.length === 0) return;
+
+    combatAudio.handleCombatEvents(deduped);
+    setDebugGlobal("__combatAudioTelemetry", combatAudio.telemetryRef.current);
+
+    deduped.forEach((ev) => {
+      const type = String(ev?.type || "");
+      const actorId = ev?.actorId ? String(ev.actorId) : null;
+      const targetId = ev?.targetId ? String(ev.targetId) : null;
+
+      if (type === "cast_start" && actorId) {
+        triggerEntityState(actorId, "cast", 820);
+      } else if (type === "hit") {
+        if (actorId) triggerEntityState(actorId, "attack", 420);
+        if (targetId) triggerEntityState(targetId, "hurt", 360);
+      } else if (type === "hurt") {
+        if (targetId) triggerEntityState(targetId, "hurt", 360);
+      } else if (type === "death") {
+        if (targetId) triggerEntityState(targetId, "death", 1300);
+      } else if (type === "range_fail") {
+        const reason = String(ev?.payload?.reason || "out_of_range");
+        setCombatError(reason === "cooldown" ? "Ability cooling down." : "Target out of range.");
+      } else if (type === "miss" && String(ev?.payload?.reason || "") === "cooldown") {
+        setCombatError("Ability cooling down.");
+      }
+    });
+
+    recordReplayFrame({
+      combatEvents: deduped.map((ev) => String(ev?.id || "")).filter(Boolean),
+    });
+  }, [combatAudio, recordReplayFrame, setDebugGlobal]);
+
+  useEffect(() => {
+    if (!myCharacter?.id) return;
+    const timer = setInterval(async () => {
+      if (combatStatus === "active" || combatStatus === "starting") return;
+      const sessions = await base44.entities.CombatSession
+        .filter({ actor_character_id: myCharacter.id, active: true }, "-updated_date", 1)
+        .catch(() => []);
+      const session = sessions?.[0];
+      if (!session?.id) return;
+
+      setCombatSession(session);
+      setCombatStatus("active");
+      if (session.actor_ability_cooldowns) setAuthoritativeCooldowns(session.actor_ability_cooldowns);
+
+      const monster =
+        monsters.find((m) => m.id === session.monster_id) ||
+        (await base44.entities.Monster.get(session.monster_id).catch(() => null));
+      if (monster) setActiveTarget({ entity: monster, type: "monster" });
+      if (Array.isArray(session.pending_events) && session.pending_events.length > 0) {
+        applyCombatEvents(session.pending_events);
+      }
+    }, 2000);
+    return () => clearInterval(timer);
+  }, [applyCombatEvents, combatStatus, monsters, myCharacter?.id]);
 
   const postNpcChat = useCallback(async (npc, text, channel = "npc_local") => {
     if (!text?.trim()) return;
@@ -265,7 +435,7 @@ export default function World() {
   }, []);
 
   const requestFastTravel = useCallback((tx, ty) => {
-    if (combatMonster || fastTravelTarget) return;
+    if (combatStatus === "active" || combatStatus === "starting" || fastTravelTarget) return;
     if (!isPassable(tx, ty)) return;
 
     setFastTravelTarget({ x: tx, y: ty });
@@ -291,33 +461,166 @@ export default function World() {
     }, 100);
 
     fastTravelRef.current = interval;
-  }, [combatMonster, fastTravelTarget]);
+  }, [combatStatus, fastTravelTarget]);
 
-  // â”€â”€â”€ Authoritative combat start â€” ALL paths route through here â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  // Sources: walk-onto-monster, click-monster â†’ engage button, Tab+Enter, ability hotbar.
-  const startCombat = useCallback((monster) => {
-    if (!monster || !myCharacter || !monster.species) return;
-    const zone = getZoneAt(myCharacter.x, myCharacter.y);
-    const validation = initiateCombat(myCharacter, monster, zone);
-    if (!validation.success) {
-      console.warn("[CombatAuthority] Blocked:", validation.reason);
-      return;
+  const syncCharacterLocals = useCallback((updates) => {
+    if (!myCharacter?.id) return;
+    setMyCharacter((prev) => prev ? { ...prev, ...updates } : prev);
+    setAllCharacters((prev) => prev.map((c) => (c.id === myCharacter.id ? { ...c, ...updates } : c)));
+  }, [myCharacter?.id]);
+
+  const clearCombatState = useCallback(() => {
+    setCombatSession(null);
+    setCombatStatus("idle");
+    setCombatError("");
+    setAuthoritativeCooldowns({});
+    combatStartRef.current = false;
+  }, []);
+
+  const processCombatResult = useCallback(async (res, sourceMonster = null) => {
+    if (!res) return;
+    setCombatError("");
+    if (res.session) setCombatSession(res.session);
+    if (res.status) setCombatStatus(res.status === "active" ? "active" : res.status);
+    if (res?.session?.actor_ability_cooldowns) {
+      setAuthoritativeCooldowns(res.session.actor_ability_cooldowns);
     }
-    setActiveTarget({ entity: monster, type: "monster" });
-    setCombatMonster(monster);
-  }, [myCharacter]);
+    if (Array.isArray(res?.events) && res.events.length > 0) {
+      applyCombatEvents(res.events);
+    }
+    if (res?.telemetry) setDebugGlobal("__combatTelemetry", res.telemetry);
+
+    if (res.session?.actor_hp !== undefined || res.session?.actor_energy !== undefined) {
+      syncCharacterLocals({
+        hp: Number(res.session.actor_hp ?? myCharacter?.hp ?? 0),
+        energy: Number(res.session.actor_energy ?? myCharacter?.energy ?? 0),
+      });
+    }
+
+    if (res.status === "victory") {
+      const killed = sourceMonster || activeTarget?.entity;
+      if (killed?.species) {
+        applyQuestProgress({ type: "kill_monster", species: killed.species, amount: 1 });
+      }
+      await gameService.creatorEventHook({
+        marker_type: "combat_victory",
+        title: `Victory vs ${killed?.name || "enemy"}`,
+        summary: `${myCharacter?.name || "Player"} won an in-world directional combat exchange.`,
+        context: { monster_id: killed?.id, zone_x: myCharacter?.x, zone_y: myCharacter?.y },
+      }).catch(() => {});
+      await loadWorld();
+      const refreshed = await base44.entities.Character.get(myCharacter.id).catch(() => null);
+      if (refreshed) {
+        const achievementUpdates = checkAchievements(refreshed, myCharacter);
+        if (Object.keys(achievementUpdates).length > 0) {
+          await base44.entities.Character.update(myCharacter.id, achievementUpdates).catch(() => {});
+        }
+      }
+      clearCombatState();
+      setActiveTarget(null);
+    } else if (res.status === "defeat" || res.status === "retreated") {
+      await loadWorld();
+      clearCombatState();
+      setActiveTarget(null);
+    }
+  }, [activeTarget?.entity, applyCombatEvents, applyQuestProgress, clearCombatState, myCharacter, setDebugGlobal, syncCharacterLocals]);
+
+  const startCombat = useCallback(async (monster) => {
+    if (!monster || !myCharacter || !monster.species) return null;
+    if (combatStartRef.current) return combatSession;
+    if (combatSession?.status === "active" && combatSession?.monster_id === monster.id) return combatSession;
+
+    const validation = initiateCombat(myCharacter, monster, true);
+    if (!validation.success) {
+      setCombatError(`Cannot engage: ${validation.reason}`);
+      return null;
+    }
+
+    combatStartRef.current = true;
+    setCombatStatus("starting");
+    setCombatError("");
+    try {
+      const res = await gameService.combatAction({
+        action: "start",
+        character_id: myCharacter.id,
+        monster_id: monster.id,
+      });
+      setActiveTarget({ entity: monster, type: "monster" });
+      setCombatSession(res.session || null);
+      setCombatStatus(res.phase || "active");
+      if (res?.session?.actor_ability_cooldowns) {
+        setAuthoritativeCooldowns(res.session.actor_ability_cooldowns);
+      }
+      if (Array.isArray(res?.events) && res.events.length > 0) {
+        applyCombatEvents(res.events);
+      }
+      return res.session || null;
+    } catch (e) {
+      setCombatError(String(e?.message || e));
+      setCombatStatus("idle");
+      return null;
+    } finally {
+      combatStartRef.current = false;
+    }
+  }, [applyCombatEvents, combatSession, myCharacter]);
+
+  const sendCombatIntent = useCallback(async ({ hand = "left", intentType = "swing", mouseVector = { x: 1, y: 0 }, abilityId = undefined } = {}) => {
+    const monster = activeTarget?.type === "monster" ? activeTarget.entity : null;
+    if (!monster || !myCharacter) return;
+    const currentSession = combatSession || await startCombat(monster);
+    if (!currentSession?.id) return;
+
+    const leftHasShield = !!myCharacter?.equipment?.shield;
+    const intent = intentType === "ability_cast"
+      ? "ability_cast"
+      : hand === "left"
+        ? "swing_left"
+        : "swing_right";
+    const realIntentType = hand === "left" && leftHasShield && intentType !== "ability_cast" ? "shield_bash" : intentType;
+    recordReplayFrame({
+      combatIntent: {
+        hand,
+        intentType: realIntentType,
+        mouseVector,
+        abilityId,
+      },
+      target: { id: monster.id, type: "monster" },
+    });
+
+    try {
+      const res = await gameService.combatAction({
+        action: "intent",
+        session_id: currentSession.id,
+        intent,
+        hand,
+        intent_type: realIntentType,
+        ability_id: abilityId,
+        mouse_vector: mouseVector,
+        guard_vector: mouseVector,
+        timestamp: Date.now(),
+      });
+      await processCombatResult(res, monster);
+    } catch (e) {
+      setCombatError(String(e?.message || e));
+      combatAudio.playUiCue("error");
+    }
+  }, [activeTarget, combatAudio, combatSession, myCharacter, processCombatResult, recordReplayFrame, startCombat]);
 
   const handleMove = useCallback(async (newX, newY) => {
     if (!myCharacter) return;
     cancelFastTravel();
 
-    if (!isPassable(newX, newY)) return;
+    const step = validateStep(myCharacter.x, myCharacter.y, newX, newY, {
+      ignoreOccupantId: `character:${myCharacter.id}`,
+    });
+    if (!step.valid) return "blocked";
+
+    if (!isPassable(newX, newY, { ignoreOccupantId: `character:${myCharacter.id}` })) return "blocked";
     const blockingMonster = monsters.find(m => m.is_alive && m.x === newX && m.y === newY);
     if (blockingMonster) return "blocked";
 
     const zone = getZoneAt(newX, newY);
     const poi  = getPOIAt(newX, newY);
-    setViewPos({ x: newX, y: newY });
 
     // Gather resource from POI resource nodes
     let inventoryUpdates = null;
@@ -371,14 +674,22 @@ export default function World() {
     if (poi?.type === "resource_node" && poi.resource) {
       applyQuestProgress({ type: "gather_resource", resource: poi.resource, amount: 1 });
     }
+    recordReplayFrame({
+      move: { from: { x: myCharacter.x, y: myCharacter.y }, to: { x: newX, y: newY } },
+      sprint: { active: isSprinting, runEnergy },
+    });
 
     return "moved";
-  }, [myCharacter, monsters, cancelFastTravel, activeEvents, applyQuestProgress]);
+  }, [myCharacter, monsters, cancelFastTravel, activeEvents, applyQuestProgress, recordReplayFrame, isSprinting, runEnergy]);
 
   // â”€â”€â”€ Input controller (WASD, hotkeys, Tab-target, auto-attack) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const handleMovementBlocked = useCallback((reason, payload) => {
     if (reason === "monster" && payload?.monster) {
       setActiveTarget({ entity: payload.monster, type: "monster" });
+      return;
+    }
+    if (reason === "collision" && payload?.reason) {
+      setCombatError(payload.reason);
     }
   }, []);
 
@@ -391,25 +702,92 @@ export default function World() {
     cooldowns,
     runEnergy: runEnergyState,
     isSprinting: sprintingState,
-    setInteractIntent,
   } =
     useInputController({
       myCharacter,
       monsters,
       onMove: handleMove,
       onStartCombat: startCombat,
+      onAbilityInput: (ability) => {
+        if (!ability) return;
+        sendCombatIntent({
+          hand: "right",
+          intentType: "ability_cast",
+          abilityId: ability.id,
+          mouseVector: aimVec,
+        });
+      },
       onInteractIntent: () => {
         if (activeTarget?.type === "npc") interactWithNpc(activeTarget.entity);
       },
       onMovementBlocked: handleMovementBlocked,
       abilities: characterAbilities,
-      enabled: !combatMonster && !showInventory && !questOffer,
+      externalCooldowns: authoritativeCooldowns,
+      enabled: !showInventory && !questOffer,
     });
 
   useEffect(() => {
     setRunEnergy(runEnergyState);
     setIsSprinting(sprintingState);
   }, [runEnergyState, sprintingState]);
+
+  const voiceCommands = useVoiceAbilityCommands({
+    enabled: !showInventory && !!myCharacter,
+    onVoiceAction: ({ action, slot }) => {
+      if (action !== "use_hotbar") return;
+      const idx = Math.max(0, Math.min(8, Number(slot) - 1));
+      const ability = characterAbilities[idx];
+      if (!ability) {
+        setCombatError(`No ability in slot ${slot}`);
+        combatAudio.playUiCue("error");
+        return;
+      }
+      sendCombatIntent({
+        hand: "right",
+        intentType: "ability_cast",
+        abilityId: ability.id,
+        mouseVector: aimVec,
+      });
+    },
+  });
+
+  useEffect(() => {
+    if (!combatSession?.id || combatStatus !== "active") return;
+    const tick = setInterval(async () => {
+      try {
+        const res = await gameService.combatAction({
+          action: "tick",
+          session_id: combatSession.id,
+          timestamp: Date.now(),
+        });
+        await processCombatResult(res);
+      } catch (e) {
+        setCombatError(String(e?.message || e));
+      }
+    }, 900);
+
+    const sync = setInterval(async () => {
+      try {
+        const res = await gameService.combatAction({
+          action: "sync",
+          session_id: combatSession.id,
+          timestamp: Date.now(),
+        });
+        if (res?.session) {
+          setCombatSession(res.session);
+          if (res.session.actor_ability_cooldowns) setAuthoritativeCooldowns(res.session.actor_ability_cooldowns);
+        }
+        if (Array.isArray(res?.events) && res.events.length > 0) applyCombatEvents(res.events);
+      } catch {
+        // keep fail-open behavior for sync
+      }
+    }, 450);
+
+    return () => {
+      clearInterval(tick);
+      clearInterval(sync);
+    };
+  }, [applyCombatEvents, combatSession?.id, combatStatus, processCombatResult]);
 
   // â”€â”€â”€ Authoritative target selection (click-path) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   // Tab-cycling â†’ lockTarget (in useInputController) â†’ lockedTarget state â†’ effect below.
@@ -432,7 +810,7 @@ export default function World() {
   }, [lockedTarget]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // â”€â”€â”€ Combat mode (derived from authoritative state) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  const combatMode = !!combatMonster ? COMBAT_MODE.ACTIVE : COMBAT_MODE.PEACEFUL;
+  const combatMode = combatStatus === "active" || combatStatus === "starting" ? COMBAT_MODE.ACTIVE : COMBAT_MODE.PEACEFUL;
 
   const handleSendMessage = async (text, channel = "global") => {
     if (!myCharacter || !text.trim()) return;
@@ -470,17 +848,8 @@ export default function World() {
   }
 
   return (
-    <div className="h-screen bg-gray-950 flex flex-col overflow-hidden">
-      <CharacterHUD
-        character={myCharacter}
-        onInventory={() => setShowInventory(true)}
-        onUpdateCharacter={(updated) => {
-          setMyCharacter(updated);
-          setAllCharacters(prev => prev.map(c => c.id === updated.id ? updated : c));
-        }}
-      />
-      <div className="flex flex-1 overflow-hidden">
-      <div className="flex-1 relative">
+    <div className="h-screen bg-[#050609] overflow-hidden relative">
+      <div className="absolute inset-0">
         {/* View toggle overlay */}
         <ViewToggle
           mode={viewMode}
@@ -512,15 +881,16 @@ export default function World() {
              activeEvents={activeEvents}
              onMove={handleMove}
              onMonsterClick={(monster) => selectTarget(monster, "monster")}
-             onNpcInteract={(npcRef) => selectTarget({
-               ...npcRef,
-               name: npcRef.poiName || NPC_INTERACTION_PROFILES[npcRef.npcType]?.name || "NPC",
-             }, "npc")}
-             onInteractKey={() => setInteractIntent()}
-             sceneSettings={sceneSettings}
-             getCurrentZoomConfig={getCurrentZoomConfig}
-           />
-         )}
+            onNpcInteract={(npcRef) => selectTarget({
+              ...npcRef,
+              name: npcRef.poiName || NPC_INTERACTION_PROFILES[npcRef.npcType]?.name || "NPC",
+            }, "npc")}
+            onCombatIntent={(intent) => sendCombatIntent(intent)}
+            onAimVector={(vec) => setAimVec(vec)}
+            sceneSettings={sceneSettings}
+            getCurrentZoomConfig={getCurrentZoomConfig}
+          />
+        )}
 
         <Minimap
           myCharacter={myCharacter}
@@ -552,13 +922,20 @@ export default function World() {
             cooldowns={cooldowns}
             onUseAbility={(slot) => {
               const ab = characterAbilities[slot];
-              if (ab && activeTarget?.type === "monster" && activeTarget?.entity) startCombat(activeTarget.entity);
+              if (ab && activeTarget?.type === "monster" && activeTarget?.entity) {
+                sendCombatIntent({
+                  hand: "right",
+                  intentType: "ability_cast",
+                  abilityId: ab.id,
+                  mouseVector: aimVec,
+                });
+              }
             }}
             autoAttacking={autoAttacking}
           />
         </div>
 
-        {/* Group window â€” top-left */}
+        {/* Group window */}
         <GroupWindow
           myCharacter={myCharacter}
           allCharacters={allCharacters}
@@ -583,80 +960,65 @@ export default function World() {
           </div>
         )}
 
-        {/* Zone info â€” bottom-left */}
-        {viewPos && (
-          <div className="absolute bottom-8 left-2 w-56">
-            <ZoneInfoPanel x={viewPos.x} y={viewPos.y} />
+        <div className="absolute bottom-3 right-3 z-30 pointer-events-none">
+          <div className="rounded-lg border border-[#4a4130] bg-[#101013]/90 px-3 py-2 text-[10px] text-[#c2b58e] shadow-xl">
+            <div className="font-semibold tracking-wide uppercase">Party + Controls</div>
+            <div className="text-[#8f866d] mt-1">Shift+WASD run · Ctrl+LMB/RMB swing</div>
+            <div className="text-[#8f866d]">Tab cycle · E interact · V voice · Alt cast</div>
+            <div className="text-[#9fa4ba] mt-1">Party: {partyMembers.length + 1}</div>
+            {viewMode === "3d" && (
+              <div className="text-[#a7a16b]">Zoom: {ZOOM_LEVELS[Math.round(zoomLevel)]?.label || "Normal"}</div>
+            )}
           </div>
-        )}
-
-        {/* Combat mode indicator â€” bottom-right, single instance */}
-        {myCharacter && (
-          <div className="absolute bottom-24 right-2 z-20 pointer-events-none">
-            <CombatModeIndicator
-              combatMode={combatMode}
-              characterX={myCharacter.x}
-              characterY={myCharacter.y}
-            />
-          </div>
-        )}
-      {/* Controls hint + Zoom level */}
-      <div className="absolute bottom-2 left-2 text-[10px] text-gray-600 bg-gray-900/70 px-2 py-1 rounded pointer-events-none">
-        Shift+WASD sprint · E interact · Scroll to zoom
-        {viewMode === "3d" && <div className="text-xs text-amber-500 mt-1">Zoom: {ZOOM_LEVELS[Math.round(zoomLevel)]?.label || "Normal"}</div>}
-      </div>
-
-      <div className="absolute bottom-14 left-2 z-20 bg-gray-900/85 border border-gray-800 rounded px-2 py-1 text-[10px]">
-        <div className="flex items-center gap-2 text-gray-300">
-          <span className={isSprinting ? "text-emerald-300 font-bold" : "text-gray-400"}>Run</span>
-          <div className="w-24 h-1.5 bg-gray-800 rounded-full overflow-hidden border border-gray-700">
-            <div
-              className={isSprinting ? "h-full bg-emerald-400" : "h-full bg-emerald-600"}
-              style={{ width: `${Math.max(0, Math.min(100, runEnergy))}%` }}
-            />
-          </div>
-          <span className="text-gray-400">{Math.round(runEnergy)}</span>
         </div>
       </div>
-      </div>
-      <ChatDock messages={messages} onSend={handleSendMessage} myCharacter={myCharacter} />
-      </div>
 
-    {combatMonster && myCharacter && (
-      <CombatOverlay
+      <ShadowbaneHUD
         character={myCharacter}
-        monster={combatMonster}
-        onClose={() => { setCombatMonster(null); clearActiveTarget(); clearTarget(); }}
-        onVictory={async () => {
-          if (combatMonster?.species) {
-            applyQuestProgress({ type: "kill_monster", species: combatMonster.species, amount: 1 });
-          }
-          await gameService.creatorEventHook({
-            marker_type: "combat_victory",
-            title: `Victory vs ${combatMonster?.name || "enemy"}`,
-            summary: `${myCharacter?.name || "Player"} won a directional combat exchange.`,
-            context: { monster_id: combatMonster?.id, zone_x: myCharacter?.x, zone_y: myCharacter?.y },
-          }).catch(() => {});
-          await loadWorld();
-          const refreshed = await base44.entities.Character.get(myCharacter.id).catch(() => null);
-          if (refreshed) {
-            const achievementUpdates = checkAchievements(refreshed, myCharacter);
-            if (Object.keys(achievementUpdates).length > 0) {
-              await base44.entities.Character.update(myCharacter.id, achievementUpdates);
-            }
-          }
-          setCombatMonster(null);
-          clearActiveTarget();
-          clearTarget();
-        }}
-        onDefeat={async () => {
-          await loadWorld();
-          setCombatMonster(null);
-          clearActiveTarget();
-          clearTarget();
-        }}
+        runEnergy={runEnergy}
+        isSprinting={isSprinting}
+        combatStatus={combatStatus}
+        targetName={activeTarget?.entity?.name || ""}
+        voiceStatus={voice.status}
+        pushToTalk={voice.pushToTalk}
+        speaking={voice.speaking}
+        onInventory={() => setShowInventory(true)}
       />
-    )}
+
+      <InWorldCombatPanel
+        session={combatSession}
+        status={combatStatus}
+        combatError={combatError}
+        aimVec={aimVec}
+      />
+
+      <ChatDock
+        compactWorld
+        messages={messages}
+        onSend={handleSendMessage}
+        myCharacter={myCharacter}
+      />
+
+      <VoiceOverlayPanel
+        listening={voiceCommands.listening}
+        supported={voiceCommands.supported}
+        transcript={voiceCommands.lastTranscript}
+        error={voiceCommands.lastError || voice.error}
+        manualPrompt={voiceCommands.manualPrompt}
+        manualInput={voiceCommands.manualInput}
+        setManualInput={voiceCommands.setManualInput}
+        submitManual={voiceCommands.submitManual}
+        closeManual={() => voiceCommands.setManualPrompt(false)}
+        pushToTalk={voice.pushToTalk}
+        togglePushToTalk={voice.togglePushToTalk}
+        remoteCount={voice.remotePeers.length || partyMembers.length}
+      />
+
+      <div className="hidden">
+        {voice.remoteStreams.map((row) => (
+          <VoiceStreamAudio key={row.peerId} stream={row.stream} />
+        ))}
+      </div>
 
     {showInventory && myCharacter && (
       <InventoryPanel

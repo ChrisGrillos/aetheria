@@ -47,7 +47,7 @@ export default function Crafting() {
 
   const craftingSkill = character?.skills?.crafting || 1;
   const inventory     = character?.inventory || [];
-  const specId        = character?.specialization;
+  const specId        = character?.prestige_class || character?.specialization;
 
   const stationRecipes = getRecipesByStation(selectedStation).filter(r =>
     selectedCategory === "all" || r.category === selectedCategory

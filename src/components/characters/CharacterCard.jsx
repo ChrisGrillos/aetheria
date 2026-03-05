@@ -93,9 +93,9 @@ export default function CharacterCard({ character, isMe, onRefresh }) {
       )}
 
       {/* Specialization badge */}
-      {character.specialization && (
+      {(character.prestige_class || character.specialization) && (
         <div className="mt-2 text-xs text-purple-300 font-medium">
-          ✦ {character.specialization.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase())}
+          ✦ {(character.prestige_class || character.specialization).replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase())}
         </div>
       )}
 

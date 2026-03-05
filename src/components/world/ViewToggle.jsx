@@ -68,6 +68,16 @@ export default function ViewToggle({ mode, onChange, settings, onSettingsChange 
             />
           </label>
 
+          <label className="flex items-center justify-between mb-2 cursor-pointer">
+            <span className="text-gray-400 flex items-center gap-1.5"><EyeOff className="w-3 h-3" />Collision Debug</span>
+            <input
+              type="checkbox"
+              checked={settings.showCollisionDebug ?? false}
+              onChange={e => onSettingsChange({ ...settings, showCollisionDebug: e.target.checked })}
+              className="accent-amber-500"
+            />
+          </label>
+
           <div className="mb-2">
             <div className="text-gray-400 mb-1">Camera Distance</div>
             <input

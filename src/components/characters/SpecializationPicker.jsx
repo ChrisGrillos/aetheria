@@ -13,7 +13,7 @@ export default function SpecializationPicker({ character, onUpdated }) {
   const classId = character.base_class || character.class;
   const level   = character.level || 1;
   const specs   = getSpecializations(classId);
-  const current = character.specialization;
+  const current = character.prestige_class || character.specialization;
   const canSpecialize = level >= 5 && !current;
 
   const handlePick = async (specId) => {
@@ -32,6 +32,7 @@ export default function SpecializationPicker({ character, onUpdated }) {
 
     await base44.entities.Character.update(character.id, {
       specialization: specId,
+      prestige_class: specId,
       stats: newStats,
       abilities: newAbilities,
     });

@@ -6,8 +6,8 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import * as THREE from "three";
-import { getTile, getZoneAt, MAP_W, MAP_H, ZONES, POINTS_OF_INTEREST } from "@/components/shared/worldZones";
-import { buildPath, isPassable } from "@/components/shared/movementAuthority";
+import { getZoneAt } from "@/components/shared/worldZones";
+import { buildPath, getMovementCollisionSnapshot, isPassable } from "@/components/shared/movementAuthority";
 import { useAmbientWorld, AmbientHUDWidget } from "./AmbientWorld";
 import { createTownWalkers } from "./TownWalkers";
 import { createNPCEntities } from "./NPCEntities";
@@ -46,9 +46,28 @@ const MONSTER_VISUALS = {
 // ─── VISUAL STATE SYSTEM ─────────────────────────────────────────────────────
 // Tracks per-entity timed visual reactions. entityStates[id] = { state, expiresAt, phase }
 const entityStates = {};
+const STATE_PRIORITY = { attack: 1, hurt: 2, cast: 2, death: 9 };
+const STATE_DURATION = { attack: 420, hurt: 360, cast: 820, death: 1300 };
 
 export function triggerEntityState(entityId, state, durationMs = 400) {
-  entityStates[entityId] = { state, expiresAt: Date.now() + durationMs, phase: 0 };
+  if (!entityId || !state) return;
+  const now = Date.now();
+  const nextPriority = STATE_PRIORITY[state] ?? 0;
+  const nextDuration = Number(durationMs || STATE_DURATION[state] || 400);
+  const prev = entityStates[entityId];
+
+  if (prev && prev.expiresAt > now) {
+    const prevPriority = Number(prev.priority || STATE_PRIORITY[prev.state] || 0);
+    if (prev.state === "death") return;
+    if (prevPriority > nextPriority && state !== "death") return;
+  }
+
+  entityStates[entityId] = {
+    state,
+    expiresAt: now + nextDuration,
+    phase: 0,
+    priority: nextPriority,
+  };
 }
 
 // Called from outside (e.g. CombatOverlay) to drive visual reactions
@@ -58,15 +77,8 @@ function applyEntityStateVisuals(mesh, entityId, now) {
   const es = entityStates[entityId];
   if (!es) return;
 
-  const elapsed = now - (es.expiresAt - (
-    es.state === "death" ? 1200 :
-    es.state === "cast"  ? 800  : 400
-  ));
-  const total = es.expiresAt - (es.expiresAt - (
-    es.state === "death" ? 1200 :
-    es.state === "cast"  ? 800  : 400
-  ));
-  const t = Math.min(1, elapsed / Math.max(1, es.expiresAt - (now - 999999))); // will compute below
+  const dur = es.state === "death" ? 1200 : es.state === "cast" ? 800 : 400;
+  const elapsed = now - (es.expiresAt - dur);
 
   if (now > es.expiresAt) {
     // Reset
@@ -78,12 +90,10 @@ function applyEntityStateVisuals(mesh, entityId, now) {
         child.material.emissiveIntensity = mesh.userData.baseEmissiveIntensity ?? 0;
       }
     });
-    if (es.state === "death") delete entityStates[entityId];
-    else delete entityStates[entityId];
+    delete entityStates[entityId];
     return;
   }
 
-  const dur = es.state === "death" ? 1200 : es.state === "cast" ? 800 : 400;
   const p   = Math.min(1, elapsed / dur);
 
   if (es.state === "attack") {
@@ -144,13 +154,59 @@ function lerp3(v, target, t) {
   v.lerp(target, t);
 }
 
+function buildCollisionDebugGroup() {
+  const snapshot = getMovementCollisionSnapshot();
+  const group = new THREE.Group();
+  group.name = "collisionDebug";
+
+  snapshot.cellsBlocked.forEach((cell) => {
+    const color =
+      cell.reason === "wall"
+        ? 0xff8a00
+        : cell.reason === "building"
+          ? 0xef4444
+          : cell.reason === "poi"
+            ? 0xfacc15
+            : 0x38bdf8;
+
+    const tile = new THREE.Mesh(
+      new THREE.PlaneGeometry(TILE_SIZE * 0.86, TILE_SIZE * 0.86),
+      new THREE.MeshBasicMaterial({
+        color,
+        transparent: true,
+        opacity: 0.34,
+        side: THREE.DoubleSide,
+        depthWrite: false,
+      })
+    );
+    tile.rotation.x = -Math.PI / 2;
+    tile.position.set(cell.x * TILE_SIZE, getTerrainHeight(cell.x, cell.y) + 0.06, cell.y * TILE_SIZE);
+    tile.userData.reason = cell.reason;
+    group.add(tile);
+  });
+
+  return group;
+}
+
 // ─── MESH BUILDERS (delegating to new modules) ──────────────────────────────
 
-function buildCharacterMesh(raceId, isAI = false, isMonster = false, monsterSpecies = null, baseClass = null) {
+function buildCharacterAppearance(character) {
+  const appearance = (character?.appearance && typeof character.appearance === "object") ? character.appearance : {};
+  return {
+    facePreset: String(appearance.facePreset || character?.face_preset || "classic"),
+    hairPreset: String(appearance.hairPreset || character?.hair_preset || "short"),
+    facialHair: String(appearance.facialHair || character?.facial_hair || "none"),
+    skinTone: String(appearance.skinTone || character?.skin_tone || "light"),
+    hairColor: String(appearance.hairColor || character?.hair_color || "black"),
+    marking: String(appearance.marking || character?.marking || "none"),
+  };
+}
+
+function buildCharacterMesh(raceId, isAI = false, isMonster = false, monsterSpecies = null, baseClass = null, appearance = null) {
   if (isMonster && monsterSpecies) {
     return buildNewMonsterMesh(monsterSpecies);
   }
-  return buildNewCharMesh(raceId, isAI, baseClass);
+  return buildNewCharMesh(raceId, isAI, baseClass, appearance);
 }
 
 // ─── TERRAIN BUILDER (procedural) ───────────────────────────────────────────
@@ -206,7 +262,8 @@ export default function WorldScene3D({
   onMove,
   onMonsterClick,
   onNpcInteract,
-  onInteractKey,
+  onCombatIntent,
+  onAimVector,
   sceneSettings = {},
   getCurrentZoomConfig = () => ({ distance: 24, height: 28, angle: 0.62, fov: 42 }),
 }) {
@@ -219,6 +276,7 @@ export default function WorldScene3D({
   const ambLightRef  = useRef(null);
   const fogRef       = useRef(null);
   const terrainRef   = useRef(null);
+  const collisionDebugRef = useRef(null);
 
   const playerPosRef    = useRef(null);
   const playerTargetRef = useRef(null);
@@ -236,12 +294,19 @@ export default function WorldScene3D({
   const onMoveRef          = useRef(onMove);        onMoveRef.current = onMove;
   const onMonsterClickRef  = useRef(onMonsterClick); onMonsterClickRef.current = onMonsterClick;
   const onNpcInteractRef   = useRef(onNpcInteract); onNpcInteractRef.current = onNpcInteract;
-  const onInteractKeyRef   = useRef(onInteractKey); onInteractKeyRef.current = onInteractKey;
+  const onCombatIntentRef  = useRef(onCombatIntent); onCombatIntentRef.current = onCombatIntent;
+  const onAimVectorRef     = useRef(onAimVector); onAimVectorRef.current = onAimVector;
 
   const movingRef      = useRef(false);
   const pendingPathRef = useRef([]);
 
-  const settings = { showNameplates: true, showHealthBars: true, cameraDistance: 1.0, ...sceneSettings };
+  const settings = {
+    showNameplates: true,
+    showHealthBars: true,
+    showCollisionDebug: false,
+    cameraDistance: 1.0,
+    ...sceneSettings,
+  };
 
   // ─── INIT ──────────────────────────────────────────────────────────────────
 
@@ -294,6 +359,11 @@ export default function WorldScene3D({
     const cx = myCharacter?.x ?? 30;
     const cy = myCharacter?.y ?? 25;
     terrainRef.current = buildTerrain(scene, cx, cy);
+
+    const collisionOverlay = buildCollisionDebugGroup();
+    collisionOverlay.visible = !!settings.showCollisionDebug;
+    scene.add(collisionOverlay);
+    collisionDebugRef.current = collisionOverlay;
 
     // Spawn visual-only town walker NPCs
     townWalkersRef.current = createTownWalkers(scene);
@@ -420,6 +490,10 @@ export default function WorldScene3D({
       cancelAnimationFrame(rafRef.current);
       if (townWalkersRef.current) townWalkersRef.current.dispose();
       if (npcEntitiesRef.current) npcEntitiesRef.current.dispose();
+      if (collisionDebugRef.current) {
+        scene.remove(collisionDebugRef.current);
+        collisionDebugRef.current = null;
+      }
       renderer.dispose();
       if (mount.contains(renderer.domElement)) mount.removeChild(renderer.domElement);
     };
@@ -431,7 +505,14 @@ export default function WorldScene3D({
     const scene = sceneRef.current;
     if (!scene || !myCharacter) return;
     if (!charMeshesRef.current[myCharacter.id]) {
-      const mesh = buildCharacterMesh(myCharacter.race || "human", false, false, null, myCharacter.base_class || myCharacter.class);
+      const mesh = buildCharacterMesh(
+        myCharacter.race || "human",
+        false,
+        false,
+        null,
+        myCharacter.base_class || myCharacter.class,
+        buildCharacterAppearance(myCharacter)
+      );
       const wp   = tileToWorld(myCharacter.x, myCharacter.y);
       mesh.position.copy(wp);
       mesh.userData = { charId: myCharacter.id, isMe: true };
@@ -451,6 +532,21 @@ export default function WorldScene3D({
     playerTargetRef.current.set(wp.x, wp.y, wp.z);
   }, [myCharacter?.x, myCharacter?.y]); // eslint-disable-line
 
+  useEffect(() => {
+    if (!collisionDebugRef.current) return;
+    collisionDebugRef.current.visible = !!sceneSettings?.showCollisionDebug;
+  }, [sceneSettings?.showCollisionDebug]);
+
+  useEffect(() => {
+    const scene = sceneRef.current;
+    if (!scene || !collisionDebugRef.current || !sceneSettings?.showCollisionDebug) return;
+    scene.remove(collisionDebugRef.current);
+    const rebuilt = buildCollisionDebugGroup();
+    rebuilt.visible = true;
+    scene.add(rebuilt);
+    collisionDebugRef.current = rebuilt;
+  }, [sceneSettings?.showCollisionDebug, monsters, allCharacters]);
+
   // ─── SYNC OTHER CHARS ──────────────────────────────────────────────────────
 
   useEffect(() => {
@@ -462,7 +558,14 @@ export default function WorldScene3D({
       if (myCharacter && c.id === myCharacter.id) return;
       if (!charMeshesRef.current[c.id]) {
         const isAI = c.type === "ai_agent";
-        const mesh = buildCharacterMesh(c.race || "human", isAI, false, null, c.base_class || c.class);
+        const mesh = buildCharacterMesh(
+          c.race || "human",
+          isAI,
+          false,
+          null,
+          c.base_class || c.class,
+          buildCharacterAppearance(c)
+        );
         const wp   = tileToWorld(c.x, c.y);
         mesh.position.copy(wp);
         mesh.userData = { charId: c.id, isAI };
@@ -580,6 +683,7 @@ export default function WorldScene3D({
   // ─── CLICK HANDLING ───────────────────────────────────────────────────────
 
   const handleCanvasClick = useCallback((e) => {
+    if (e.ctrlKey) return;
     const renderer = rendererRef.current;
     const camera   = cameraRef.current;
     const scene    = sceneRef.current;
@@ -680,6 +784,39 @@ export default function WorldScene3D({
     pendingPathRef.current = [];
   }, []); // eslint-disable-line
 
+  const handleCanvasMouseMove = useCallback((e) => {
+    const el = e.currentTarget;
+    const rect = el.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    const dx = e.clientX - cx;
+    const dy = e.clientY - cy;
+    const mag = Math.sqrt((dx * dx) + (dy * dy)) || 1;
+    onAimVectorRef.current?.({ x: dx / mag, y: dy / mag });
+  }, []);
+
+  const handleCanvasMouseDown = useCallback((e) => {
+    e.currentTarget.focus();
+    if (!e.ctrlKey) return;
+    e.preventDefault();
+    e.stopPropagation();
+    const hand = e.button === 2 ? "right" : e.button === 0 ? "left" : null;
+    if (!hand) return;
+
+    const rect = e.currentTarget.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    const dx = e.clientX - cx;
+    const dy = e.clientY - cy;
+    const mag = Math.sqrt((dx * dx) + (dy * dy)) || 1;
+    onCombatIntentRef.current?.({
+      hand,
+      intentType: "swing",
+      mouseVector: { x: dx / mag, y: dy / mag },
+      timestamp: Date.now(),
+    });
+  }, []);
+
   // ─── RENDER ───────────────────────────────────────────────────────────────
 
   const nameplateStyle = {
@@ -696,14 +833,9 @@ export default function WorldScene3D({
         ref={mountRef}
         className="w-full h-full"
         onClick={handleCanvasClick}
-        onMouseDown={(e) => e.currentTarget.focus()}
-        onKeyDown={(e) => {
-          if (e.key.toLowerCase() === "e") {
-            e.preventDefault();
-            e.stopPropagation();
-            onInteractKeyRef.current?.();
-          }
-        }}
+        onMouseMove={handleCanvasMouseMove}
+        onMouseDown={handleCanvasMouseDown}
+        onContextMenu={(e) => e.preventDefault()}
         tabIndex={0}
         style={{ cursor: "crosshair" }}
       />
@@ -716,10 +848,10 @@ export default function WorldScene3D({
           style={{ left: plate.x, top: plate.y, transform: "translate(-50%, -100%)" }}
         >
           <div className={`text-[11px] font-bold px-2 py-0.5 rounded border leading-tight whitespace-nowrap ${nameplateStyle[plate.type] || "text-gray-300 border-gray-700 bg-black/90"}`}>
-            {plate.type === "me" && <span className="mr-1 text-[9px]">▶</span>}
+            {plate.type === "me" && <span className="mr-1 text-[9px]">{">"}</span>}
             <span>{plate.name}</span>
             {plate.level && <span className="ml-1.5 opacity-55 text-[9px] font-normal">Lv.{plate.level}</span>}
-            {plate.sub && <span className="ml-1 opacity-35 text-[9px] capitalize font-normal">· {plate.sub}</span>}
+            {plate.sub && <span className="ml-1 opacity-35 text-[9px] capitalize font-normal">. {plate.sub}</span>}
           </div>
           {/* Mini HP bar under nameplate for monsters */}
           {plate.type === "monster" && plate.maxHp && (
@@ -739,14 +871,14 @@ export default function WorldScene3D({
       {/* Zone identity banner — shows when in a named zone */}
       <ZoneBanner myCharacter={myCharacter} />
 
-      {/* Controls hint */}
-      <div className="absolute bottom-2 left-2 text-[10px] text-gray-600 bg-gray-900/70 px-2 py-1 rounded pointer-events-none">
-        Click terrain to move · Click entities to target · Press E to interact
-      </div>
-
       {/* Day/night widget */}
-      <div className="absolute top-2 right-2 pointer-events-none">
+      <div className="absolute top-2 right-2 pointer-events-none flex flex-col items-end gap-1.5">
         <AmbientHUDWidget gameHour={gameHour} timeLabel={timeLabel} weatherLabel={weatherLabel} />
+        {settings.showCollisionDebug && (
+          <div className="rounded border border-orange-500/70 bg-black/70 px-2 py-1 text-[10px] text-orange-200">
+            Collision Debug On
+          </div>
+        )}
       </div>
     </div>
   );
@@ -778,16 +910,12 @@ function ZoneBanner({ myCharacter }) {
 
   return (
     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none
-      flex flex-col items-center gap-1 animate-pulse"
-      style={{ animationDuration: "3s" }}>
-      <div className="text-4xl">{banner.emoji}</div>
-      <div className="text-white font-black text-lg tracking-widest uppercase drop-shadow-lg"
+      flex flex-col items-center gap-1"
+      style={{ animationDuration: "2.5s" }}>
+      <div className="text-3xl">{banner.emoji}</div>
+      <div className="text-white font-black text-base tracking-[0.25em] uppercase drop-shadow-lg"
         style={{ textShadow: "0 2px 12px rgba(0,0,0,0.9)" }}>
         {banner.name}
-      </div>
-      <div className="text-gray-400 text-xs tracking-wide max-w-xs text-center"
-        style={{ textShadow: "0 1px 6px rgba(0,0,0,0.8)" }}>
-        {banner.description?.slice(0, 80)}…
       </div>
     </div>
   );

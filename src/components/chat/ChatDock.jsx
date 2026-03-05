@@ -9,9 +9,8 @@ import ChatWindow from "./ChatWindow";
 import ChatInput from "./ChatInput";
 import SpeakerContextMenu from "./SpeakerContextMenu";
 import { enrichMessage } from "./agentChatFilters";
-import { DEFAULT_TABS, CHANNEL_META } from "./chatConstants";
+import { DEFAULT_TABS } from "./chatConstants";
 import { executeCommand } from "./chatCommands";
-import { base44 } from "@/api/base44Client";
 import { Minimize2, Maximize2, MessageSquare } from "lucide-react";
 
 const PREFS_KEY = "aetheria_chat_prefs";
@@ -23,7 +22,7 @@ function savePrefs(prefs) {
   try { localStorage.setItem(PREFS_KEY, JSON.stringify(prefs)); } catch {}
 }
 
-export default function ChatDock({ messages: rawMessages = [], onSend, myCharacter }) {
+export default function ChatDock({ messages: rawMessages = [], onSend, myCharacter, compactWorld = false, className = "" }) {
   const prefs = useMemo(() => loadPrefs(), []);
 
   const [tabs, setTabs] = useState(() => prefs.tabs || DEFAULT_TABS);
@@ -169,8 +168,12 @@ export default function ChatDock({ messages: rawMessages = [], onSend, myCharact
 
   return (
     <div
-      className={`flex flex-col bg-gray-950/95 border-l border-gray-800 shrink-0 transition-all duration-200
-        ${minimized ? "w-10" : "w-80"}`}
+      className={`flex flex-col bg-gray-950/95 transition-all duration-200
+        ${compactWorld
+          ? `absolute bottom-2 left-2 z-30 border border-[#4a4130] rounded-md shadow-2xl ${minimized ? "w-10 h-10" : "w-[320px] h-[188px]"}`
+          : `border-l border-gray-800 shrink-0 ${minimized ? "w-10" : "w-80"}`
+        }
+        ${className}`}
     >
       {/* Header */}
       <div className="flex items-center justify-between px-2 py-1.5 border-b border-gray-800 shrink-0">

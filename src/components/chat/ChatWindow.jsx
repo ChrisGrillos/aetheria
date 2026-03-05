@@ -6,6 +6,43 @@ import { useEffect, useRef, useMemo } from "react";
 import MessageRow from "./MessageRow";
 import { applyAgentFilter } from "./agentChatFilters";
 
+function collapseConsecutiveRepeats(messages) {
+  if (!Array.isArray(messages) || messages.length < 2) return messages || [];
+  const out = [];
+  let run = null;
+
+  const flush = () => {
+    if (!run) return;
+    if (run.count > 1) {
+      out.push({
+        ...run.msg,
+        id: `${run.msg.id || run.msg.timestamp}_repeat`,
+        message: `${run.msg.message} (x${run.count})`,
+      });
+    } else {
+      out.push(run.msg);
+    }
+    run = null;
+  };
+
+  messages.forEach((msg) => {
+    const key = `${msg.speaker_name}|${msg.channel_type}|${msg.message}`;
+    if (!run) {
+      run = { key, msg, count: 1 };
+      return;
+    }
+    if (run.key === key) {
+      run.count += 1;
+    } else {
+      flush();
+      run = { key, msg, count: 1 };
+    }
+  });
+  flush();
+
+  return out;
+}
+
 export default function ChatWindow({
   messages,
   tab,
@@ -42,7 +79,7 @@ export default function ChatWindow({
     // 3. Apply agent filter
     msgs = applyAgentFilter(msgs, tab.agentFilter || "show_all", myId, myGuildId, myPartyId);
 
-    return msgs;
+    return collapseConsecutiveRepeats(msgs);
   }, [messages, tab, myId, myGuildId, myPartyId, muted, ignored]);
 
   return (

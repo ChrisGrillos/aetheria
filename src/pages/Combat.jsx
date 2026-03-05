@@ -129,7 +129,9 @@ export default function Combat() {
                 <div className="flex items-center gap-2 text-amber-400">💰 {myCharacter.gold}g</div>
                 <div className="flex items-center gap-2 text-purple-400">⭐ {myCharacter.xp}/{xpNeeded} XP</div>
                 <div className="flex items-center gap-2 text-blue-400">Lv.{myCharacter.level} {myCharacter.base_class || myCharacter.class}</div>
-                {myCharacter.specialization && <div className="text-purple-300 text-sm">✦ {myCharacter.specialization.replace(/_/g," ")}</div>}
+                {(myCharacter.prestige_class || myCharacter.specialization) && (
+                  <div className="text-purple-300 text-sm">✦ {(myCharacter.prestige_class || myCharacter.specialization).replace(/_/g," ")}</div>
+                )}
               </div>
               {/* XP bar */}
               <div className="h-1.5 bg-gray-800 rounded-full mb-3 overflow-hidden">

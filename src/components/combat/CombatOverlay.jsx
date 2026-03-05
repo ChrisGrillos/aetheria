@@ -14,7 +14,8 @@ export default function CombatOverlay({ character, monster, onClose, onVictory, 
   const [guardSide, setGuardSide] = useState(null);
 
   const abilities = useMemo(() => {
-    const list = getCharacterAbilities(character.base_class || character.class, character.specialization, character.level || 1) || [];
+    const specId = character.prestige_class || character.specialization;
+    const list = getCharacterAbilities(character.base_class || character.class, specId, character.level || 1) || [];
     const actives = list.filter((a) => a.type !== "passive");
     return actives.length ? actives : [{ id: "basic_attack", name: "Basic Attack", effect_type: "damage", energy_cost: 0 }];
   }, [character]);

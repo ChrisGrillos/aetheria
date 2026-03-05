@@ -1212,3 +1212,15 @@ function buildTownWalls(group, zone) {
     group.add(flag);
   });
 }
+
+// Collision footprints mirrored by movement authority for tile blocking.
+export const POI_COLLISION_FOOTPRINTS = {
+  crafting_station: { halfW: 1.0, halfH: 1.0, reason: "building" },
+  shop: { halfW: 1.0, halfH: 1.0, reason: "building" },
+  rest: { halfW: 1.1, halfH: 1.1, reason: "building" },
+  heal_station: { halfW: 0.9, halfH: 0.9, reason: "poi" },
+  dungeon: { halfW: 0.9, halfH: 0.9, reason: "poi" },
+  mystery: { halfW: 0.8, halfH: 0.8, reason: "poi" },
+  boss_encounter: { halfW: 0.9, halfH: 0.9, reason: "poi" },
+  resource_node: { halfW: 0.8, halfH: 0.8, reason: "poi" },
+};
