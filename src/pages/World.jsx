@@ -674,7 +674,7 @@ export default function World() {
       moveWriteTimerRef.current = setTimeout(() => {
         base44.entities.Character.update(myCharacter.id, updates).catch(() => {});
         moveWriteTimerRef.current = null;
-      }, 300);
+      }, 800);
     }
 
     applyQuestProgress({ type: "travel_step", amount: 1 });
