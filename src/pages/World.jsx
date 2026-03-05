@@ -662,12 +662,20 @@ export default function World() {
     const updated = { ...myCharacter, ...updates };
     setMyCharacter(updated);
     setAllCharacters(prev => prev.map(c => c.id === myCharacter.id ? updated : c));
-    // Throttle DB writes — skip if another move fires within 300ms
-    if (moveWriteTimerRef.current) clearTimeout(moveWriteTimerRef.current);
-    moveWriteTimerRef.current = setTimeout(() => {
+    // Keep server position tightly synced during active combat; otherwise throttle writes.
+    if (combatStatus === "active" || combatStatus === "starting") {
+      if (moveWriteTimerRef.current) {
+        clearTimeout(moveWriteTimerRef.current);
+        moveWriteTimerRef.current = null;
+      }
       base44.entities.Character.update(myCharacter.id, updates).catch(() => {});
-      moveWriteTimerRef.current = null;
-    }, 300);
+    } else {
+      if (moveWriteTimerRef.current) clearTimeout(moveWriteTimerRef.current);
+      moveWriteTimerRef.current = setTimeout(() => {
+        base44.entities.Character.update(myCharacter.id, updates).catch(() => {});
+        moveWriteTimerRef.current = null;
+      }, 300);
+    }
 
     applyQuestProgress({ type: "travel_step", amount: 1 });
     if (zone?.id) applyQuestProgress({ type: "visit_zone", zoneId: zone.id, amount: 1 });
@@ -680,7 +688,7 @@ export default function World() {
     });
 
     return "moved";
-  }, [myCharacter, monsters, cancelFastTravel, activeEvents, applyQuestProgress, recordReplayFrame, isSprinting, runEnergy]);
+  }, [myCharacter, monsters, cancelFastTravel, activeEvents, applyQuestProgress, recordReplayFrame, isSprinting, runEnergy, combatStatus]);
 
   // â”€â”€â”€ Input controller (WASD, hotkeys, Tab-target, auto-attack) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const handleMovementBlocked = useCallback((reason, payload) => {

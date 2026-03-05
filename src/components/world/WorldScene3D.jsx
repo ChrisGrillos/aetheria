@@ -299,6 +299,8 @@ export default function WorldScene3D({
 
   const movingRef      = useRef(false);
   const pendingPathRef = useRef([]);
+  const heldCombatRef  = useRef({ timer: null, hand: null });
+  const lastAimRef     = useRef({ x: 1, y: 0 });
 
   const settings = {
     showNameplates: true,
@@ -792,7 +794,17 @@ export default function WorldScene3D({
     const dx = e.clientX - cx;
     const dy = e.clientY - cy;
     const mag = Math.sqrt((dx * dx) + (dy * dy)) || 1;
-    onAimVectorRef.current?.({ x: dx / mag, y: dy / mag });
+    const nextAim = { x: dx / mag, y: dy / mag };
+    lastAimRef.current = nextAim;
+    onAimVectorRef.current?.(nextAim);
+  }, []);
+
+  const stopHeldCombat = useCallback(() => {
+    if (heldCombatRef.current.timer) {
+      clearInterval(heldCombatRef.current.timer);
+      heldCombatRef.current.timer = null;
+    }
+    heldCombatRef.current.hand = null;
   }, []);
 
   const handleCanvasMouseDown = useCallback((e) => {
@@ -809,13 +821,36 @@ export default function WorldScene3D({
     const dx = e.clientX - cx;
     const dy = e.clientY - cy;
     const mag = Math.sqrt((dx * dx) + (dy * dy)) || 1;
-    onCombatIntentRef.current?.({
-      hand,
-      intentType: "swing",
-      mouseVector: { x: dx / mag, y: dy / mag },
-      timestamp: Date.now(),
-    });
-  }, []);
+    const mouseVector = { x: dx / mag, y: dy / mag };
+    lastAimRef.current = mouseVector;
+
+    stopHeldCombat();
+
+    const fireIntent = () => {
+      onCombatIntentRef.current?.({
+        hand,
+        intentType: "swing",
+        mouseVector: lastAimRef.current,
+        timestamp: Date.now(),
+      });
+    };
+
+    fireIntent();
+    heldCombatRef.current.hand = hand;
+    heldCombatRef.current.timer = setInterval(fireIntent, 250);
+  }, [stopHeldCombat]);
+
+  useEffect(() => {
+    const onWindowMouseUp = () => stopHeldCombat();
+    const onWindowBlur = () => stopHeldCombat();
+    window.addEventListener("mouseup", onWindowMouseUp);
+    window.addEventListener("blur", onWindowBlur);
+    return () => {
+      window.removeEventListener("mouseup", onWindowMouseUp);
+      window.removeEventListener("blur", onWindowBlur);
+      stopHeldCombat();
+    };
+  }, [stopHeldCombat]);
 
   // ─── RENDER ───────────────────────────────────────────────────────────────
 
@@ -835,6 +870,8 @@ export default function WorldScene3D({
         onClick={handleCanvasClick}
         onMouseMove={handleCanvasMouseMove}
         onMouseDown={handleCanvasMouseDown}
+        onMouseUp={stopHeldCombat}
+        onMouseLeave={stopHeldCombat}
         onContextMenu={(e) => e.preventDefault()}
         tabIndex={0}
         style={{ cursor: "crosshair" }}
@@ -889,22 +926,40 @@ export default function WorldScene3D({
 function ZoneBanner({ myCharacter }) {
   const [banner, setBanner] = useState(null);
   const lastZoneRef = useRef(null);
+  const hideTimerRef = useRef(null);
+
+  const clearHideTimer = useCallback(() => {
+    if (!hideTimerRef.current) return;
+    clearTimeout(hideTimerRef.current);
+    hideTimerRef.current = null;
+  }, []);
 
   useEffect(() => {
-    if (!myCharacter) return;
+    if (!myCharacter) {
+      clearHideTimer();
+      setBanner(null);
+      return;
+    }
+
     const zone = getZoneAt(myCharacter.x, myCharacter.y);
     const zoneId = zone?.id ?? null;
     if (zoneId !== lastZoneRef.current) {
       lastZoneRef.current = zoneId;
       if (zone) {
+        clearHideTimer();
         setBanner(zone);
-        const t = setTimeout(() => setBanner(null), 4000);
-        return () => clearTimeout(t);
+        hideTimerRef.current = setTimeout(() => {
+          setBanner(null);
+          hideTimerRef.current = null;
+        }, 2600);
       } else {
+        clearHideTimer();
         setBanner(null);
       }
     }
-  }, [myCharacter?.x, myCharacter?.y]); // eslint-disable-line
+  }, [myCharacter?.x, myCharacter?.y, clearHideTimer]); // eslint-disable-line
+
+  useEffect(() => () => clearHideTimer(), [clearHideTimer]);
 
   if (!banner) return null;
 

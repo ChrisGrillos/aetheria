@@ -69,8 +69,8 @@ function angleBonus(side: string, vec: { x: number; y: number }) {
 function distanceInfo(character: any, monster: any) {
   const dx = Math.abs(Number(character?.x || 0) - Number(monster?.x || 0));
   const dy = Math.abs(Number(character?.y || 0) - Number(monster?.y || 0));
-  const distance = dx + dy;
-  return { inRange: distance <= 1, distance };
+  const distance = Math.sqrt((dx * dx) + (dy * dy));
+  return { inRange: distance <= 1.45, distance: Number(distance.toFixed(3)) };
 }
 
 function makeEvent(
