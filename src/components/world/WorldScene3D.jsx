@@ -352,7 +352,7 @@ export default function WorldScene3D({
         if (myMesh) {
           myMesh.position.x = playerPosRef.current.x;
           myMesh.position.z = playerPosRef.current.z;
-          myMesh.position.y = Math.sin(now * 0.0018) * 0.04; // idle bob
+          myMesh.position.y = playerPosRef.current.y + Math.sin(now * 0.0018) * 0.04; // terrain height + idle bob
 
           // Face direction of movement
           const dx = playerTargetRef.current.x - myMesh.position.x;
