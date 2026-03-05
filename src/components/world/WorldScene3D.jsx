@@ -136,7 +136,8 @@ function applyEntityStateVisuals(mesh, entityId, now) {
 // ─── HELPERS ─────────────────────────────────────────────────────────────────
 
 function tileToWorld(tx, ty) {
-  return new THREE.Vector3(tx * TILE_SIZE, 0, ty * TILE_SIZE);
+  const h = getTerrainHeight(tx, ty);
+  return new THREE.Vector3(tx * TILE_SIZE, h, ty * TILE_SIZE);
 }
 
 function lerp3(v, target, t) {
