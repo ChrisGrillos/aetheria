@@ -464,7 +464,7 @@ export default function WorldScene3D({
       if (myCharacter && c.id === myCharacter.id) return;
       if (!charMeshesRef.current[c.id]) {
         const isAI = c.type === "ai_agent";
-        const mesh = buildCharacterMesh(c.race || "human", isAI, false);
+        const mesh = buildCharacterMesh(c.race || "human", isAI, false, null, c.base_class || c.class);
         const wp   = tileToWorld(c.x, c.y);
         mesh.position.copy(wp);
         mesh.userData = { charId: c.id, isAI };
