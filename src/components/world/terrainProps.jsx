@@ -528,11 +528,23 @@ export function buildTerrainProps(cx, cy, range = 32) {
           group.add(lamp);
         }
       } else if (tileName === "grass" && !zone) {
-        // Wilderness
-        if (h1 < 0.05) addGrass(group, wx, baseY, wz);
-        else if (h1 < 0.07) addTree(group, wx, baseY, wz, "pine");
-        else if (h1 < 0.08) addRock(group, wx, baseY, wz, 0.08 + h2 * 0.06, 0x6a6a6a);
-        else if (h1 < 0.09) addFlower(group, wx, baseY, wz);
+        // Wilderness — more variety
+        if (h1 < 0.04) addGrass(group, wx, baseY, wz);
+        else if (h1 < 0.06) addTree(group, wx, baseY, wz, h3 > 0.6 ? "oak" : "pine");
+        else if (h1 < 0.07) addRock(group, wx, baseY, wz, 0.08 + h2 * 0.06, 0x6a6a6a);
+        else if (h1 < 0.08) addFlower(group, wx, baseY, wz);
+        else if (h1 < 0.085) addFallenLog(group, wx, baseY, wz);
+      } else if (tileName === "forest" && !zone) {
+        if (h1 < 0.18) addTree(group, wx, baseY, wz, h3 > 0.4 ? "oak" : "pine");
+        else if (h1 < 0.22) addGrass(group, wx, baseY, wz, 0x1a3a18);
+        else if (h1 < 0.25) addMushroom(group, wx, baseY, wz);
+        else if (h1 < 0.27) addFallenLog(group, wx, baseY, wz);
+      } else if (tileName === "stone" && !zone) {
+        if (h1 < 0.12) addRock(group, wx, baseY, wz, 0.12 + h2 * 0.14, 0x666666);
+        else if (h1 < 0.15) addCrystal(group, wx, baseY, wz, 0x8888cc);
+      } else if (tileName === "sand" && !zone) {
+        if (h1 < 0.05) addRock(group, wx, baseY, wz, 0.06 + h2 * 0.06, 0x9a8a6a);
+        else if (h1 < 0.07) addGrass(group, wx, baseY, wz, 0x6a7a40);
       }
     }
   }
