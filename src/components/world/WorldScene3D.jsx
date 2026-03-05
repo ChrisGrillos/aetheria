@@ -632,13 +632,14 @@ export default function WorldScene3D({
       return;
     }
 
-    // Terrain → move
+    // Terrain → move (raycast against procedural terrain mesh + props)
     const terrain = terrainRef.current;
     if (!terrain) return;
-    const tHits = ray.intersectObjects(terrain.children, false);
+    const tHits = ray.intersectObjects(terrain.children, true);
     if (tHits.length > 0) {
-      const { tx, ty } = tHits[0].object.userData;
-      if (tx === undefined || !isPassable(tx, ty)) return;
+      const hitPoint = tHits[0].point;
+      const { tx, ty } = worldPosToTile(hitPoint.x, hitPoint.z);
+      if (!isPassable(tx, ty)) return;
       const myChar = myCharRef.current;
       if (!myChar) return;
       if (movingRef.current) { movingRef.current = false; pendingPathRef.current = []; }
