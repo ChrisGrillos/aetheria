@@ -255,7 +255,12 @@ export default function World() {
     const updated = { ...myCharacter, ...updates };
     setMyCharacter(updated);
     setAllCharacters(prev => prev.map(c => c.id === myCharacter.id ? updated : c));
-    await base44.entities.Character.update(myCharacter.id, updates);
+    // Throttle DB writes — skip if another move fires within 300ms
+    if (moveWriteTimerRef.current) clearTimeout(moveWriteTimerRef.current);
+    moveWriteTimerRef.current = setTimeout(() => {
+      base44.entities.Character.update(myCharacter.id, updates).catch(() => {});
+      moveWriteTimerRef.current = null;
+    }, 300);
 
     // Walk-onto-monster â†’ authoritative combat via ref (avoids stale closure)
     const monsterOnTile = monsters.find(m => m.is_alive && m.x === newX && m.y === newY);
