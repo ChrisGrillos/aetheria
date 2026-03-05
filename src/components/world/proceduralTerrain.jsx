@@ -204,7 +204,24 @@ export function buildProceduralTerrain(cx, cy, range = 32) {
   // Store tile lookup data for raycasting
   mesh.userData = { x0, y0, x1, y1, segW, segH };
 
-  return mesh;
+  // ── WATER PLANE ──
+  const waterGeo = new THREE.PlaneGeometry(segW * TILE_SIZE, segH * TILE_SIZE);
+  waterGeo.rotateX(-Math.PI / 2);
+  const waterMat = new THREE.MeshLambertMaterial({
+    color: 0x1a4070,
+    transparent: true,
+    opacity: 0.55,
+  });
+  waterMat.emissive = new THREE.Color(0x0a2040);
+  waterMat.emissiveIntensity = 0.15;
+  const water = new THREE.Mesh(waterGeo, waterMat);
+  water.position.set((x0 + segW / 2) * TILE_SIZE, -0.22, (y0 + segH / 2) * TILE_SIZE);
+  water.name = "waterPlane";
+
+  const group = new THREE.Group();
+  group.add(mesh);
+  group.add(water);
+  return group;
 }
 
 // ─── RAYCAST HELPER: world position → tile coords ───────────────────────────
