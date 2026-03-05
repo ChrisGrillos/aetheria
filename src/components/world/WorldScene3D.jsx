@@ -1268,7 +1268,8 @@ export default function WorldScene3D({
         const result = await onMoveRef.current(nx, ny);
         if (result === "combat") { movingRef.current = false; pendingPathRef.current = []; return; }
       }
-      await new Promise(r => setTimeout(r, 175));
+      // Slower step delay to avoid API rate limits on Character.update per tile
+      await new Promise(r => setTimeout(r, 350));
     }
     movingRef.current = false;
     pendingPathRef.current = [];
