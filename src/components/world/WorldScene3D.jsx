@@ -171,13 +171,6 @@ function buildTerrain(scene, cx, cy) {
   return group;
 }
 
-// ─── LEGACY STUBS (removed — now in proceduralTerrain.js, terrainProps.js, characterModels.js)
-// buildCharacterMesh body, buildTerrain old body, buildTownWalls, addPropMesh, addTree — all removed.
-// The following code is the leftover that we need to skip over: nothing.
-// (The old mesh builder code has been replaced above.)
-
-/* eslint-disable no-unused-vars */
-
 // ─── HP BAR BILLBOARD ────────────────────────────────────────────────────────
 
 function billboardHpBar(mesh, entity, camera, showBars) {
