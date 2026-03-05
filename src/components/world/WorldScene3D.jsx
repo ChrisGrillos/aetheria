@@ -144,22 +144,40 @@ function lerp3(v, target, t) {
   v.lerp(target, t);
 }
 
-// ─── MESH BUILDERS ────────────────────────────────────────────────────────────
+// ─── MESH BUILDERS (delegating to new modules) ──────────────────────────────
 
-function buildCharacterMesh(raceId, isAI = false, isMonster = false, monsterSpecies = null) {
-  const group = new THREE.Group();
-
-  let vis;
+function buildCharacterMesh(raceId, isAI = false, isMonster = false, monsterSpecies = null, baseClass = null) {
   if (isMonster && monsterSpecies) {
-    vis = MONSTER_VISUALS[monsterSpecies] || MONSTER_VISUALS.goblin;
-  } else {
-    vis = RACE_VISUALS[raceId] || RACE_VISUALS.human;
+    return buildNewMonsterMesh(monsterSpecies);
   }
+  return buildNewCharMesh(raceId, isAI, baseClass);
+}
 
-  const h  = vis.height;
-  const bw = vis.bodyW;
-  const bodyColor   = vis.color;
-  const accentColor = isMonster ? 0xdd3333 : (isAI ? 0x22ccdd : (vis.accent || 0xfbbf24));
+// ─── TERRAIN BUILDER (procedural) ───────────────────────────────────────────
+
+function buildTerrain(scene, cx, cy) {
+  const group = new THREE.Group();
+  group.name = "terrain";
+
+  // Procedural heightmap mesh
+  const terrainMesh = buildProceduralTerrain(cx, cy, 32);
+  group.add(terrainMesh);
+
+  // Scatter props (trees, rocks, buildings, walls)
+  const props = buildTerrainProps(cx, cy, 32);
+  group.add(props);
+
+  scene.add(group);
+  return group;
+}
+
+// ─── LEGACY STUBS (removed — now in proceduralTerrain.js, terrainProps.js, characterModels.js)
+// buildCharacterMesh body, buildTerrain old body, buildTownWalls, addPropMesh, addTree — all removed.
+// The following code is the leftover that we need to skip over: nothing.
+// (The old mesh builder code has been replaced above.)
+
+/* eslint-disable no-unused-vars */
+const _LEGACY_REMOVED = true; // marker
 
   // ── Legs ──
   const legH = h * 0.35;
