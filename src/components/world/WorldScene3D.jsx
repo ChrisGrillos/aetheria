@@ -655,7 +655,7 @@ export default function WorldScene3D({
       pendingPathRef.current = path.slice(i + 1);
       if (playerTargetRef.current) {
         const wp = tileToWorld(nx, ny);
-        playerTargetRef.current.set(wp.x, 0, wp.z);
+        playerTargetRef.current.set(wp.x, wp.y, wp.z);
       }
       if (onMoveRef.current) {
         const result = await onMoveRef.current(nx, ny);
