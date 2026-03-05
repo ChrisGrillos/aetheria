@@ -366,7 +366,7 @@ export default function WorldScene3D({
           if (ring && ring.material) ring.material.opacity = 0.55 + Math.sin(now * 0.004) * 0.28;
 
           // Player state reactions
-          if (!entityStates[myChar.id]) myMesh.position.y = Math.sin(now * 0.0018) * 0.04;
+          if (!entityStates[myChar.id]) myMesh.position.y = playerPosRef.current.y + Math.sin(now * 0.0018) * 0.04;
           applyEntityStateVisuals(myMesh, myChar.id, now);
 
           billboardHpBar(myMesh, myChar, camera, settings.showHealthBars);
