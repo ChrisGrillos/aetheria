@@ -4,7 +4,9 @@
  */
 
 import * as THREE from "three";
-import { POINTS_OF_INTEREST, getZoneAt, TILE_SIZE } from "@/components/shared/worldZones";
+import { POINTS_OF_INTEREST, getZoneAt } from "@/components/shared/worldZones";
+
+const TILE_SIZE = 2;
 
 // ─── NPC VISUAL DEFINITIONS ───────────────────────────────────────────────────
 
@@ -132,6 +134,8 @@ export function createNPCEntities(scene) {
     mesh.position.set(wx, 0, wz);
     mesh.userData.poiId = poi.id;
     mesh.userData.poiName = poi.name;
+    mesh.userData.tileX = poi.x;
+    mesh.userData.tileY = poi.y;
 
     scene.add(mesh);
     npcMeshes[poi.id] = mesh;

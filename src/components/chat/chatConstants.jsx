@@ -5,6 +5,7 @@
 export const CHANNEL_META = {
   say:     { label: "Say",     color: "text-green-300",  bg: "bg-green-900/20",  prefix: "/say",    short: "S"  },
   local:   { label: "Local",   color: "text-green-400",  bg: "bg-green-900/20",  prefix: "/local",  short: "L"  },
+  npc_local: { label: "NPC",   color: "text-emerald-300", bg: "bg-emerald-900/20", prefix: "/npc", short: "N"  },
   party:   { label: "Party",   color: "text-blue-400",   bg: "bg-blue-900/20",   prefix: "/p",      short: "P"  },
   raid:    { label: "Raid",    color: "text-orange-400", bg: "bg-orange-900/20", prefix: "/raid",   short: "R"  },
   guild:   { label: "Guild",   color: "text-yellow-400", bg: "bg-yellow-900/20", prefix: "/g",      short: "G"  },
@@ -26,14 +27,14 @@ export const DEFAULT_TABS = [
   {
     id: "main",
     label: "Main",
-    channels: ["say", "local", "party", "guild", "tell", "system", "global"],
+    channels: ["say", "local", "npc_local", "party", "guild", "tell", "system", "global"],
     defaultChannel: "say",
     agentFilter: "humans_direct",
   },
   {
     id: "world",
     label: "World",
-    channels: ["global", "trade", "help", "say", "local"],
+    channels: ["global", "trade", "help", "say", "local", "npc_local"],
     defaultChannel: "global",
     agentFilter: "show_all",
   },

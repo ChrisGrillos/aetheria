@@ -205,6 +205,8 @@ export default function WorldScene3D({
   activeEvents,
   onMove,
   onMonsterClick,
+  onNpcInteract,
+  onInteractKey,
   sceneSettings = {},
   getCurrentZoomConfig = () => ({ distance: 24, height: 28, angle: 0.62, fov: 42 }),
 }) {
@@ -233,6 +235,8 @@ export default function WorldScene3D({
   const monstersRef        = useRef(monsters);      monstersRef.current = monsters;
   const onMoveRef          = useRef(onMove);        onMoveRef.current = onMove;
   const onMonsterClickRef  = useRef(onMonsterClick); onMonsterClickRef.current = onMonsterClick;
+  const onNpcInteractRef   = useRef(onNpcInteract); onNpcInteractRef.current = onNpcInteract;
+  const onInteractKeyRef   = useRef(onInteractKey); onInteractKeyRef.current = onInteractKey;
 
   const movingRef      = useRef(false);
   const pendingPathRef = useRef([]);
@@ -597,9 +601,17 @@ export default function WorldScene3D({
         let obj = npcHits[0].object;
         while (obj.parent && !obj.userData.isNPC) obj = obj.parent;
         if (obj.userData.poiId && obj.userData.npcType) {
-          // Trigger NPC interaction in World.jsx
-          // This would call a handler passed from World
-          console.log("[WorldScene3D] NPC clicked:", obj.userData.poiName, obj.userData.npcType);
+          const posTile = worldPosToTile(obj.position.x, obj.position.z);
+          onNpcInteractRef.current?.({
+            id: `npc_${obj.userData.poiId}`,
+            type: "npc",
+            poiId: obj.userData.poiId,
+            poiName: obj.userData.poiName,
+            npcType: obj.userData.npcType,
+            x: obj.userData.tileX ?? posTile.tx,
+            y: obj.userData.tileY ?? posTile.ty,
+          });
+          return;
         }
       }
     }
@@ -655,7 +667,11 @@ export default function WorldScene3D({
       }
       if (onMoveRef.current) {
         const result = await onMoveRef.current(nx, ny);
-        if (result === "combat") { movingRef.current = false; pendingPathRef.current = []; return; }
+        if (result === "combat" || result === "blocked") {
+          movingRef.current = false;
+          pendingPathRef.current = [];
+          return;
+        }
       }
       // Slower step delay to avoid API rate limits on Character.update per tile
       await new Promise(r => setTimeout(r, 350));
@@ -680,6 +696,15 @@ export default function WorldScene3D({
         ref={mountRef}
         className="w-full h-full"
         onClick={handleCanvasClick}
+        onMouseDown={(e) => e.currentTarget.focus()}
+        onKeyDown={(e) => {
+          if (e.key.toLowerCase() === "e") {
+            e.preventDefault();
+            e.stopPropagation();
+            onInteractKeyRef.current?.();
+          }
+        }}
+        tabIndex={0}
         style={{ cursor: "crosshair" }}
       />
 
@@ -716,7 +741,7 @@ export default function WorldScene3D({
 
       {/* Controls hint */}
       <div className="absolute bottom-2 left-2 text-[10px] text-gray-600 bg-gray-900/70 px-2 py-1 rounded pointer-events-none">
-        Click terrain to move · Click entities to target
+        Click terrain to move · Click entities to target · Press E to interact
       </div>
 
       {/* Day/night widget */}

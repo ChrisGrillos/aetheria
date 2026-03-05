@@ -300,7 +300,7 @@ export default function WorldMap({ myCharacter, allCharacters, monsters, worldOb
 
       if (onMove) {
         const result = await onMove(nx, ny);
-        if (result === "combat") {
+        if (result === "combat" || result === "blocked") {
           movingRef.current = false;
           setIsMoving(false);
           pendingPath.current = [];

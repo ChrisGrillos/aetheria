@@ -8,7 +8,6 @@ import WorldScene3D from "@/components/world/WorldScene3D.jsx";
 import ViewToggle from "@/components/world/ViewToggle.jsx";
 import ChatDock from "@/components/chat/ChatDock.jsx";
 import CharacterHUD from "@/components/world/CharacterHUD.jsx";
-import NPCPanel from "@/components/world/NPCPanel.jsx";
 import GroupWindow from "@/components/world/GroupWindow.jsx";
 // TravelEncounterModal removed â€” monsters are 3D entities on the map (MMO-style)
 import ZoneInfoPanel from "@/components/world/ZoneInfoPanel.jsx";
@@ -27,8 +26,14 @@ import useInputController from "@/components/world/useInputController.jsx";
 import { useZoomController, ZOOM_LEVELS } from "@/components/world/useZoomController";
 import AbilityHotbar from "@/components/world/AbilityHotbar.jsx";
 import { COMBAT_MODE } from "@/components/shared/combatMode";
-import { isSafeZone } from "@/components/shared/worldRules";
 import { getTileEffects } from "@/components/shared/worldEventEffects";
+import QuestOfferModal from "@/components/world/QuestOfferModal.jsx";
+import {
+  NPC_INTERACTION_PROFILES,
+  buildQuestOffer,
+  acceptQuestFromOffer,
+  applyQuestEvent,
+} from "@/components/world/questSystem";
 
 export default function World() {
   const [user, setUser] = useState(null);
@@ -48,7 +53,12 @@ export default function World() {
   const moveWriteTimerRef = useRef(null);
   const [viewMode, setViewMode] = useState("3d"); // "map" | "3d"
   const [sceneSettings, setSceneSettings] = useState({ showNameplates: true, showHealthBars: true, cameraDistance: 1.0 });
-  const [npcDialogue, setNpcDialogue] = useState(null); // { npcType, zoneName }
+  const [questOffer, setQuestOffer] = useState(null);
+  const [characterQuests, setCharacterQuests] = useState([]);
+  const [conversationState, setConversationState] = useState({});
+  const [runEnergy, setRunEnergy] = useState(100);
+  const [isSprinting, setIsSprinting] = useState(false);
+  const questsRef = useRef([]);
   
   // â”€â”€â”€ ZOOM CONTROLLER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const { getCurrentZoomConfig, zoomLevel } = useZoomController();
@@ -66,6 +76,10 @@ export default function World() {
     const worldInterval = setInterval(() => { gameService.worldTick().catch(() => {}); }, 60000);
     return () => { clearInterval(interval); clearInterval(worldInterval); };
   }, []);
+
+  useEffect(() => {
+    questsRef.current = characterQuests;
+  }, [characterQuests]);
 
   useEffect(() => {
     const handler = (e) => {
@@ -115,6 +129,8 @@ export default function World() {
       }
       if (mine) {
         setMyCharacter(mine);
+        const existingQuests = Array.isArray(mine.active_quests) ? mine.active_quests : [];
+        setCharacterQuests(existingQuests);
         base44.entities.Character.update(mine.id, { is_online: true });
       }
     }
@@ -132,9 +148,113 @@ export default function World() {
       if (!mine) {
         mine = chars.find(c => c.created_by === user.email && c.type === "human");
       }
-      if (mine) setMyCharacter(mine);
+      if (mine) {
+        setMyCharacter(mine);
+        if (Array.isArray(mine.active_quests)) setCharacterQuests(mine.active_quests);
+      }
     }
   };
+
+  const postNpcChat = useCallback(async (npc, text, channel = "npc_local") => {
+    if (!text?.trim()) return;
+    const payload = {
+      character_id: npc.id || npc.poiId || `npc_${npc.npcType || "merchant"}`,
+      character_name: npc.name || npc.poiName || "NPC",
+      character_type: "npc",
+      character_class: npc.npcType || "npc",
+      message: text,
+      channel,
+      x: npc.x ?? myCharacter?.x ?? 0,
+      y: npc.y ?? myCharacter?.y ?? 0,
+      is_ambient: false,
+      is_direct_reply_to_player: true,
+    };
+    try {
+      await base44.entities.ChatMessage.create(payload);
+    } catch {
+      setMessages(prev => [...prev.slice(-49), { ...payload, id: `local_${Date.now()}`, created_date: new Date().toISOString() }]);
+    }
+  }, [myCharacter?.x, myCharacter?.y]);
+
+  const postSystemChat = useCallback((text) => {
+    setMessages(prev => [...prev.slice(-49), {
+      id: `sys_${Date.now()}`,
+      character_name: "System",
+      character_type: "system",
+      channel: "system",
+      message: text,
+      created_date: new Date().toISOString(),
+      x: myCharacter?.x ?? 0,
+      y: myCharacter?.y ?? 0,
+    }]);
+  }, [myCharacter?.x, myCharacter?.y]);
+
+  const persistQuestState = useCallback((nextQuests) => {
+    if (!myCharacter?.id) return;
+    base44.entities.Character.update(myCharacter.id, { active_quests: nextQuests }).catch(() => {});
+  }, [myCharacter?.id]);
+
+  const applyQuestProgress = useCallback((event) => {
+    const { changed, quests, completedNow } = applyQuestEvent(questsRef.current, event);
+    if (!changed) return;
+
+    questsRef.current = quests;
+    setCharacterQuests(quests);
+    persistQuestState(quests);
+
+    completedNow.forEach((quest) => {
+      postSystemChat(`Quest complete: ${quest.title}`);
+      const rewardUpdates = { xp: myCharacter?.xp || 0, gold: myCharacter?.gold || 0 };
+      (quest.rewards || []).forEach((reward) => {
+        if (reward.type === "xp") rewardUpdates.xp += reward.amount;
+        if (reward.type === "gold") rewardUpdates.gold += reward.amount;
+      });
+      if (myCharacter?.id) {
+        setMyCharacter(prev => prev ? { ...prev, ...rewardUpdates } : prev);
+        setAllCharacters(prev => prev.map(c => c.id === myCharacter.id ? { ...c, ...rewardUpdates } : c));
+        base44.entities.Character.update(myCharacter.id, rewardUpdates).catch(() => {});
+      }
+    });
+  }, [myCharacter?.gold, myCharacter?.id, myCharacter?.xp, persistQuestState, postSystemChat]);
+
+  const npcInRange = useCallback((npc) => {
+    if (!myCharacter || !npc) return false;
+    const dist = Math.abs((npc.x ?? 0) - myCharacter.x) + Math.abs((npc.y ?? 0) - myCharacter.y);
+    return dist <= 2;
+  }, [myCharacter]);
+
+  const interactWithNpc = useCallback(async (npc) => {
+    if (!npc || npc.type !== "npc") return;
+    if (!npcInRange(npc)) {
+      postSystemChat("Move closer to interact.");
+      return;
+    }
+
+    const key = npc.id || npc.poiId || `${npc.x},${npc.y}`;
+    const now = Date.now();
+    const cooldown = conversationState[key]?.lastAt || 0;
+    if (now - cooldown < 800) return;
+    setConversationState(prev => ({ ...prev, [key]: { lastAt: now } }));
+
+    const profile = NPC_INTERACTION_PROFILES[npc.npcType] || NPC_INTERACTION_PROFILES.merchant;
+    await postNpcChat({ ...npc, name: profile.name }, profile.greeting);
+    await postNpcChat({ ...npc, name: profile.name }, profile.followUp);
+    applyQuestProgress({ type: "talk_npc", npcType: npc.npcType, amount: 1 });
+
+    if (npc.npcType === "quest_giver" || npc.npcType === "miner" || npc.npcType === "farmer") {
+      const zone = getZoneAt(npc.x ?? myCharacter?.x ?? 0, npc.y ?? myCharacter?.y ?? 0);
+      const completedQuestIds = (questsRef.current || []).filter(q => q.status === "completed").map(q => q.questId);
+      const offer = await buildQuestOffer({
+        npc,
+        zoneId: zone?.id || null,
+        zoneName: zone?.name || "Unknown",
+        completedQuestIds,
+        characterName: myCharacter?.name || "Player",
+        invokeLLM: base44.integrations?.Core?.InvokeLLM,
+      });
+      setQuestOffer(offer);
+    }
+  }, [applyQuestProgress, conversationState, myCharacter?.name, myCharacter?.x, myCharacter?.y, npcInRange, postNpcChat, postSystemChat]);
 
 
 
@@ -173,13 +293,10 @@ export default function World() {
     fastTravelRef.current = interval;
   }, [combatMonster, fastTravelTarget]);
 
-  // â”€â”€â”€ Combat start ref â€” breaks the handleMove â†” startCombat circular dep â”€â”€
-  const startCombatRef = useRef(null);
-
   // â”€â”€â”€ Authoritative combat start â€” ALL paths route through here â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   // Sources: walk-onto-monster, click-monster â†’ engage button, Tab+Enter, ability hotbar.
   const startCombat = useCallback((monster) => {
-    if (!monster || !myCharacter) return;
+    if (!monster || !myCharacter || !monster.species) return;
     const zone = getZoneAt(myCharacter.x, myCharacter.y);
     const validation = initiateCombat(myCharacter, monster, zone);
     if (!validation.success) {
@@ -190,14 +307,13 @@ export default function World() {
     setCombatMonster(monster);
   }, [myCharacter]);
 
-  // Keep ref in sync so handleMove's closure (captured at definition time) can call latest startCombat
-  useEffect(() => { startCombatRef.current = startCombat; }, [startCombat]);
-
   const handleMove = useCallback(async (newX, newY) => {
     if (!myCharacter) return;
     cancelFastTravel();
 
     if (!isPassable(newX, newY)) return;
+    const blockingMonster = monsters.find(m => m.is_alive && m.x === newX && m.y === newY);
+    if (blockingMonster) return "blocked";
 
     const zone = getZoneAt(newX, newY);
     const poi  = getPOIAt(newX, newY);
@@ -215,19 +331,6 @@ export default function World() {
         else inv.push({ id: poi.resource, name: res.name, emoji: res.emoji, qty });
         inventoryUpdates = inv;
       }
-    }
-
-    // NPC dialogue on POI visit
-    try {
-      if (poi && (poi.type === "npc" || ["rest","shop","mystery","heal_station","crafting_station"].includes(poi.type))) {
-        const npcTypeMap = { rest: "merchant", shop: "trader", mystery: "witch", heal_station: "herbalist", crafting_station: "miner" };
-        const npcType = poi?.npcType || npcTypeMap[poi?.type] || "merchant";
-        if (npcType) {
-          setNpcDialogue({ npcType, zoneName: zone?.name || "Unknown" });
-        }
-      }
-    } catch (error) {
-      console.error("[World] NPC dialogue error:", error, { poi, zone });
     }
 
     // POI rest/heal
@@ -263,27 +366,50 @@ export default function World() {
       moveWriteTimerRef.current = null;
     }, 300);
 
-    // Walk-onto-monster â†’ authoritative combat via ref (avoids stale closure)
-    const monsterOnTile = monsters.find(m => m.is_alive && m.x === newX && m.y === newY);
-    if (monsterOnTile) {
-      startCombatRef.current?.(monsterOnTile);
-      return "combat";
+    applyQuestProgress({ type: "travel_step", amount: 1 });
+    if (zone?.id) applyQuestProgress({ type: "visit_zone", zoneId: zone.id, amount: 1 });
+    if (poi?.type === "resource_node" && poi.resource) {
+      applyQuestProgress({ type: "gather_resource", resource: poi.resource, amount: 1 });
     }
 
-    // No random encounters â€” monsters are 3D entities on the map
-  }, [myCharacter, monsters, cancelFastTravel, activeEvents]);
+    return "moved";
+  }, [myCharacter, monsters, cancelFastTravel, activeEvents, applyQuestProgress]);
 
   // â”€â”€â”€ Input controller (WASD, hotkeys, Tab-target, auto-attack) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  const handleMovementBlocked = useCallback((reason, payload) => {
+    if (reason === "monster" && payload?.monster) {
+      setActiveTarget({ entity: payload.monster, type: "monster" });
+    }
+  }, []);
+
   const characterAbilities = myCharacter?.abilities || [];
-  const { lockedTarget, lockTarget, clearTarget, autoAttacking, cooldowns } =
+  const {
+    lockedTarget,
+    lockTarget,
+    clearTarget,
+    autoAttacking,
+    cooldowns,
+    runEnergy: runEnergyState,
+    isSprinting: sprintingState,
+    setInteractIntent,
+  } =
     useInputController({
       myCharacter,
       monsters,
       onMove: handleMove,
       onStartCombat: startCombat,
+      onInteractIntent: () => {
+        if (activeTarget?.type === "npc") interactWithNpc(activeTarget.entity);
+      },
+      onMovementBlocked: handleMovementBlocked,
       abilities: characterAbilities,
-      enabled: !combatMonster && !showInventory && !npcDialogue,
+      enabled: !combatMonster && !showInventory && !questOffer,
     });
+
+  useEffect(() => {
+    setRunEnergy(runEnergyState);
+    setIsSprinting(sprintingState);
+  }, [runEnergyState, sprintingState]);
 
   // â”€â”€â”€ Authoritative target selection (click-path) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   // Tab-cycling â†’ lockTarget (in useInputController) â†’ lockedTarget state â†’ effect below.
@@ -386,6 +512,11 @@ export default function World() {
              activeEvents={activeEvents}
              onMove={handleMove}
              onMonsterClick={(monster) => selectTarget(monster, "monster")}
+             onNpcInteract={(npcRef) => selectTarget({
+               ...npcRef,
+               name: npcRef.poiName || NPC_INTERACTION_PROFILES[npcRef.npcType]?.name || "NPC",
+             }, "npc")}
+             onInteractKey={() => setInteractIntent()}
              sceneSettings={sceneSettings}
              getCurrentZoomConfig={getCurrentZoomConfig}
            />
@@ -421,7 +552,7 @@ export default function World() {
             cooldowns={cooldowns}
             onUseAbility={(slot) => {
               const ab = characterAbilities[slot];
-              if (ab && activeTarget?.entity) startCombat(activeTarget.entity);
+              if (ab && activeTarget?.type === "monster" && activeTarget?.entity) startCombat(activeTarget.entity);
             }}
             autoAttacking={autoAttacking}
           />
@@ -444,7 +575,9 @@ export default function World() {
               x={myCharacter.x}
               y={myCharacter.y}
               onEngage={(entity) => startCombat(entity)}
-              onInteract={null}
+              onInteract={(entity) => {
+                if (activeTarget?.type === "npc") interactWithNpc(entity);
+              }}
               onClear={() => { clearTarget(); clearActiveTarget(); }}
             />
           </div>
@@ -469,8 +602,21 @@ export default function World() {
         )}
       {/* Controls hint + Zoom level */}
       <div className="absolute bottom-2 left-2 text-[10px] text-gray-600 bg-gray-900/70 px-2 py-1 rounded pointer-events-none">
-        Click terrain to move Â· Scroll to zoom
+        Shift+WASD sprint · E interact · Scroll to zoom
         {viewMode === "3d" && <div className="text-xs text-amber-500 mt-1">Zoom: {ZOOM_LEVELS[Math.round(zoomLevel)]?.label || "Normal"}</div>}
+      </div>
+
+      <div className="absolute bottom-14 left-2 z-20 bg-gray-900/85 border border-gray-800 rounded px-2 py-1 text-[10px]">
+        <div className="flex items-center gap-2 text-gray-300">
+          <span className={isSprinting ? "text-emerald-300 font-bold" : "text-gray-400"}>Run</span>
+          <div className="w-24 h-1.5 bg-gray-800 rounded-full overflow-hidden border border-gray-700">
+            <div
+              className={isSprinting ? "h-full bg-emerald-400" : "h-full bg-emerald-600"}
+              style={{ width: `${Math.max(0, Math.min(100, runEnergy))}%` }}
+            />
+          </div>
+          <span className="text-gray-400">{Math.round(runEnergy)}</span>
+        </div>
       </div>
       </div>
       <ChatDock messages={messages} onSend={handleSendMessage} myCharacter={myCharacter} />
@@ -482,6 +628,9 @@ export default function World() {
         monster={combatMonster}
         onClose={() => { setCombatMonster(null); clearActiveTarget(); clearTarget(); }}
         onVictory={async () => {
+          if (combatMonster?.species) {
+            applyQuestProgress({ type: "kill_monster", species: combatMonster.species, amount: 1 });
+          }
           await gameService.creatorEventHook({
             marker_type: "combat_victory",
             title: `Victory vs ${combatMonster?.name || "enemy"}`,
@@ -521,21 +670,21 @@ export default function World() {
       />
     )}
 
-    {npcDialogue && myCharacter && (
-      <NPCPanel
-        npcType={npcDialogue.npcType}
-        zoneName={npcDialogue.zoneName}
-        character={myCharacter}
-        onClose={() => setNpcDialogue(null)}
-        onInteract={(updates) => {
-          const updated = { ...myCharacter, ...updates };
-          setMyCharacter(updated);
-          setAllCharacters(prev => prev.map(c => c.id === myCharacter.id ? updated : c));
-          try {
-            handleSendMessage(`ðŸ—£ï¸ Interacted with ${npcDialogue.npcType} in ${npcDialogue.zoneName}.`);
-          } catch(e) {
-            console.error("[World] Chat message error:", e);
-          }
+    {questOffer && (
+      <QuestOfferModal
+        offer={questOffer}
+        onDecline={() => {
+          setQuestOffer(null);
+          postSystemChat("Quest declined.");
+        }}
+        onAccept={() => {
+          const accepted = acceptQuestFromOffer(questOffer);
+          const next = [...questsRef.current, accepted];
+          questsRef.current = next;
+          setCharacterQuests(next);
+          persistQuestState(next);
+          setQuestOffer(null);
+          postSystemChat(`Quest accepted: ${accepted.title}`);
         }}
       />
     )}
