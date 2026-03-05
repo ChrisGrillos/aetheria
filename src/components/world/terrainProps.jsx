@@ -437,7 +437,8 @@ export function buildTerrainProps(cx, cy, range = 32) {
           }
         }
         else if (h1 < 0.18) addFlower(group, wx, baseY, wz);
-        else if (h1 < 0.20) addCampfire(group, wx, baseY, wz);
+        else if (h1 < 0.19) addCampfire(group, wx, baseY, wz);
+        else if (h1 < 0.21) addTree(group, wx, baseY, wz, "oak");
       } else if (zone?.id === "vale_of_cinders") {
         if (h1 < 0.10) addRock(group, wx, baseY, wz, 0.12 + h2 * 0.14, 0x3a1a0a);
         else if (h1 < 0.15) {
