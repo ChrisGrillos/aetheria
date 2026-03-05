@@ -449,7 +449,7 @@ export default function WorldScene3D({
   useEffect(() => {
     if (!myCharacter || !playerTargetRef.current) return;
     const wp = tileToWorld(myCharacter.x, myCharacter.y);
-    playerTargetRef.current.set(wp.x, 0, wp.z);
+    playerTargetRef.current.set(wp.x, wp.y, wp.z);
   }, [myCharacter?.x, myCharacter?.y]); // eslint-disable-line
 
   // ─── SYNC OTHER CHARS ──────────────────────────────────────────────────────
