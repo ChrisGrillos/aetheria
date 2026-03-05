@@ -343,7 +343,8 @@ export default function WorldScene3D({
           height,
           pz + Math.cos(angle) * dist
         );
-        camera.lookAt(px, 0, pz);
+        const lookAtY = getTerrainHeight(Math.round(px / TILE_SIZE), Math.round(pz / TILE_SIZE));
+        camera.lookAt(px, lookAtY, pz);
         camera.fov = zoom.fov;
         camera.updateProjectionMatrix();
 
