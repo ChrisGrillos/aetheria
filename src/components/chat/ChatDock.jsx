@@ -170,7 +170,7 @@ export default function ChatDock({ messages: rawMessages = [], onSend, myCharact
     <div
       className={`flex flex-col bg-gray-950/95 transition-all duration-200
         ${compactWorld
-          ? `absolute bottom-2 left-2 z-30 border border-[#4a4130] rounded-md shadow-2xl ${minimized ? "w-10 h-10" : "w-[320px] h-[188px]"}`
+          ? `absolute bottom-2 left-2 z-30 border border-[#4a4130] rounded-md shadow-2xl ${minimized ? "w-10 h-10" : "w-[292px] h-[156px]"}`
           : `border-l border-gray-800 shrink-0 ${minimized ? "w-10" : "w-80"}`
         }
         ${className}`}

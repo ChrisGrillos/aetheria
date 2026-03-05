@@ -21,7 +21,7 @@ import InventoryPanel from "@/components/inventory/InventoryPanel.jsx";
 import { Button } from "@/components/ui/button";
 import { checkAchievements } from "@/components/shared/achievementData";
 import useInputController from "@/components/world/useInputController.jsx";
-import { useZoomController, ZOOM_LEVELS } from "@/components/world/useZoomController";
+import { useZoomController } from "@/components/world/useZoomController";
 import AbilityHotbar from "@/components/world/AbilityHotbar.jsx";
 import { COMBAT_MODE } from "@/components/shared/combatMode";
 import { getTileEffects } from "@/components/shared/worldEventEffects";
@@ -72,7 +72,7 @@ export default function World() {
   const moveWriteTimerRef = useRef(null);
   const [viewMode, setViewMode] = useState("3d"); // "map" | "3d"
   const [sceneSettings, setSceneSettings] = useState({
-    showNameplates: true,
+    showNameplates: false,
     showHealthBars: true,
     showCollisionDebug: false,
     cameraDistance: 1.0,
@@ -85,7 +85,7 @@ export default function World() {
   const questsRef = useRef([]);
   
   // â”€â”€â”€ ZOOM CONTROLLER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  const { getCurrentZoomConfig, zoomLevel } = useZoomController();
+  const { getCurrentZoomConfig } = useZoomController();
 
   const partyMembers = allCharacters.filter(
     (c) => c.party_id && myCharacter?.party_id && c.party_id === myCharacter.party_id && c.id !== myCharacter.id
@@ -968,17 +968,6 @@ export default function World() {
           </div>
         )}
 
-        <div className="absolute bottom-3 right-3 z-30 pointer-events-none">
-          <div className="rounded-lg border border-[#4a4130] bg-[#101013]/90 px-3 py-2 text-[10px] text-[#c2b58e] shadow-xl">
-            <div className="font-semibold tracking-wide uppercase">Party + Controls</div>
-            <div className="text-[#8f866d] mt-1">Shift+WASD run · Ctrl+LMB/RMB swing</div>
-            <div className="text-[#8f866d]">Tab cycle · E interact · V voice · Alt cast</div>
-            <div className="text-[#9fa4ba] mt-1">Party: {partyMembers.length + 1}</div>
-            {viewMode === "3d" && (
-              <div className="text-[#a7a16b]">Zoom: {ZOOM_LEVELS[Math.round(zoomLevel)]?.label || "Normal"}</div>
-            )}
-          </div>
-        </div>
       </div>
 
       <ShadowbaneHUD

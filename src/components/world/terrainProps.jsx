@@ -1216,6 +1216,7 @@ function buildTownWalls(group, zone) {
 // Collision footprints mirrored by movement authority for tile blocking.
 export const POI_COLLISION_FOOTPRINTS = {
   crafting_station: { halfW: 1.0, halfH: 1.0, reason: "building" },
+  npc: { halfW: 1.0, halfH: 1.0, reason: "building" },
   shop: { halfW: 1.0, halfH: 1.0, reason: "building" },
   rest: { halfW: 1.1, halfH: 1.1, reason: "building" },
   heal_station: { halfW: 0.9, halfH: 0.9, reason: "poi" },

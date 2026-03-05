@@ -2,7 +2,6 @@ export default function InWorldCombatPanel({
   session,
   status = "idle",
   combatError = "",
-  aimVec = { x: 1, y: 0 },
 }) {
   if (!session && status === "idle") return null;
 
@@ -13,10 +12,8 @@ export default function InWorldCombatPanel({
   const inRange = !!session?.in_range;
   const pPct = Math.max(0, Math.min(100, (playerHp / Math.max(1, playerMaxHp)) * 100));
   const mPct = Math.max(0, Math.min(100, (mobHp / Math.max(1, mobMaxHp)) * 100));
-  const log = Array.isArray(session?.combat_log) ? session.combat_log.slice(-2) : [];
-
   return (
-    <div className="absolute top-24 left-1/2 -translate-x-1/2 z-30 w-[420px] max-w-[84vw] pointer-events-none">
+    <div className="absolute top-24 left-1/2 -translate-x-1/2 z-30 w-[340px] max-w-[84vw] pointer-events-none">
       <div className="rounded-md border border-[#5a2e1f]/85 bg-[#0f0b0a]/88 shadow-[0_10px_26px_rgba(0,0,0,0.55)] px-3 py-2">
         <div className="flex items-center justify-between text-[10px]">
           <span className={`uppercase tracking-[0.2em] font-bold ${status === "active" ? "text-red-300" : "text-amber-300"}`}>
@@ -24,9 +21,6 @@ export default function InWorldCombatPanel({
           </span>
           <span className={`font-semibold ${inRange ? "text-emerald-300" : "text-orange-300"}`}>
             {inRange ? "In Range" : "Out of Range"}
-          </span>
-          <span className="text-[#9aa4d7]">
-            {aimVec.x.toFixed(2)}, {aimVec.y.toFixed(2)}
           </span>
         </div>
 
@@ -52,14 +46,6 @@ export default function InWorldCombatPanel({
         )}
 
         {combatError && <div className="mt-1 text-[10px] text-red-400">{combatError}</div>}
-
-        {log.length > 0 && (
-          <div className="mt-1.5 text-[10px] text-[#9fa4b8] space-y-0.5">
-            {log.map((line, idx) => (
-              <div key={idx} className="truncate">{line}</div>
-            ))}
-          </div>
-        )}
       </div>
     </div>
   );

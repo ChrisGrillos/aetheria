@@ -888,7 +888,6 @@ export default function WorldScene3D({
             {plate.type === "me" && <span className="mr-1 text-[9px]">{">"}</span>}
             <span>{plate.name}</span>
             {plate.level && <span className="ml-1.5 opacity-55 text-[9px] font-normal">Lv.{plate.level}</span>}
-            {plate.sub && <span className="ml-1 opacity-35 text-[9px] capitalize font-normal">. {plate.sub}</span>}
           </div>
           {/* Mini HP bar under nameplate for monsters */}
           {plate.type === "monster" && plate.maxHp && (

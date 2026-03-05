@@ -10,7 +10,7 @@ import { MAP_W, MAP_H, POINTS_OF_INTEREST, ZONES } from "./worldZones";
  * @typedef {{ staticVersion: string, dynamicVersion: number, cellsBlocked: CollisionCell[] }} CollisionSnapshot
  */
 
-const STATIC_VERSION = "2026-03-05-hybrid-v1";
+const STATIC_VERSION = "2026-03-05-hybrid-v2";
 const staticBlocked = new Map();
 let dynamicBlocked = new Map();
 let dynamicVersion = 0;
@@ -42,6 +42,10 @@ function poiFootprint(poi) {
   if (poi.type === "shop") return { halfW: 1.0, halfH: 1.0, reason: "building" };
   if (poi.type === "rest") return { halfW: 1.1, halfH: 1.1, reason: "building" };
   if (poi.type === "crafting_station") return { halfW: 1.0, halfH: 1.0, reason: "building" };
+  if (poi.type === "npc") {
+    if (String(poi.id || "").includes("gate")) return { halfW: 0.45, halfH: 0.45, reason: "poi" };
+    return { halfW: 1.0, halfH: 1.0, reason: "building" };
+  }
   if (poi.type === "heal_station") return { halfW: 0.9, halfH: 0.9, reason: "poi" };
   if (poi.type === "dungeon") return { halfW: 0.9, halfH: 0.9, reason: "poi" };
   if (poi.type === "mystery") return { halfW: 0.8, halfH: 0.8, reason: "poi" };
@@ -59,17 +63,22 @@ function stampTownWalls(store) {
   const y0 = town.y;
   const y1 = town.y + town.h - 1;
 
+  const wallThickness = 2;
   const gateCenter = Math.floor(town.x + (town.w / 2));
   const gateMin = gateCenter - 1;
-  const gateMax = gateCenter;
+  const gateMax = gateCenter + 1;
 
   for (let x = x0; x <= x1; x += 1) {
-    if (x < gateMin || x > gateMax) stampCell(store, x, y0, "wall");
-    stampCell(store, x, y1, "wall");
+    for (let t = 0; t < wallThickness; t += 1) {
+      if (x < gateMin || x > gateMax) stampCell(store, x, y0 + t, "wall");
+      stampCell(store, x, y1 - t, "wall");
+    }
   }
   for (let y = y0; y <= y1; y += 1) {
-    stampCell(store, x0, y, "wall");
-    stampCell(store, x1, y, "wall");
+    for (let t = 0; t < wallThickness; t += 1) {
+      stampCell(store, x0 + t, y, "wall");
+      stampCell(store, x1 - t, y, "wall");
+    }
   }
 }
 
