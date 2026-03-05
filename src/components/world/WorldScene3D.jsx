@@ -19,52 +19,28 @@ import { buildCharacterMesh as buildNewCharMesh, buildMonsterMesh as buildNewMon
 
 const TILE_SIZE   = 2;
 
-// ─── TERRAIN PALETTE ─────────────────────────────────────────────────────────
-
-const TERRAIN_3D = {
-  grass:  { color: 0x3a6b32, height: 0.14 },
-  forest: { color: 0x1e4020, height: 0.20 },
-  water:  { color: 0x193f6e, height: 0.04 },
-  stone:  { color: 0x555555, height: 0.22 },
-  sand:   { color: 0xa08060, height: 0.10 },
-  lava:   { color: 0x8b2200, height: 0.18 },
-  swamp:  { color: 0x2e4422, height: 0.10 },
-  plains: { color: 0x5a6e28, height: 0.12 },
-};
-
-// Zone-border accent color for visual separation
-const ZONE_BORDER_COLORS = {
-  high_bastion:      0xd4a017,
-  the_thornwild:     0x163a16,
-  kharum_deep:       0x444444,
-  greyfen_reach:     0x1a3010,
-  the_ashen_march:   0x6d8420,
-  vale_of_cinders:   0x7a1800,
-  the_sunken_crown:  0x3a5a6e,
-};
-
-// ─── RACE VISUALS ─────────────────────────────────────────────────────────────
+// ─── RACE VISUALS (kept for nameplate height lookups) ─────────────────────────
 
 const RACE_VISUALS = {
-  human:      { height: 1.00, bodyW: 0.32, color: 0xd4a77a, accent: 0xfbbf24, headScale: 1.0,  beard: false, ears: false, shoulders: false },
-  elf:        { height: 1.08, bodyW: 0.26, color: 0xb8d99a, accent: 0x67e8f9, headScale: 0.95, beard: false, ears: true,  shoulders: false },
-  dwarf:      { height: 0.70, bodyW: 0.42, color: 0xb07030, accent: 0xfb923c, headScale: 1.18, beard: true,  ears: false, shoulders: false },
-  halfling:   { height: 0.58, bodyW: 0.28, color: 0xd8b870, accent: 0x86efac, headScale: 1.12, beard: false, ears: true,  shoulders: false },
-  orc:        { height: 1.10, bodyW: 0.46, color: 0x5a7a4e, accent: 0xef4444, headScale: 1.06, beard: false, ears: false, shoulders: false },
-  half_giant: { height: 1.40, bodyW: 0.58, color: 0x8090a0, accent: 0xa855f7, headScale: 0.88, beard: false, ears: false, shoulders: true  },
+  human:      { height: 1.00, bodyW: 0.32 },
+  elf:        { height: 1.10, bodyW: 0.26 },
+  dwarf:      { height: 0.72, bodyW: 0.44 },
+  halfling:   { height: 0.58, bodyW: 0.28 },
+  orc:        { height: 1.12, bodyW: 0.48 },
+  half_giant: { height: 1.45, bodyW: 0.60 },
 };
 
 const MONSTER_VISUALS = {
-  goblin:   { color: 0x44bb60, height: 0.55, bodyW: 0.30 },
-  orc:      { color: 0x5a7a4e, height: 1.05, bodyW: 0.46 },
-  dragon:   { color: 0xcc2200, height: 1.50, bodyW: 0.65 },
-  skeleton: { color: 0xdde8ee, height: 0.90, bodyW: 0.26 },
-  troll:    { color: 0x706050, height: 1.25, bodyW: 0.52 },
-  vampire:  { color: 0x8822cc, height: 1.00, bodyW: 0.30 },
-  werewolf: { color: 0x7a3d10, height: 1.12, bodyW: 0.44 },
-  wraith:   { color: 0x5055cc, height: 0.95, bodyW: 0.28 },
-  basilisk: { color: 0x558800, height: 0.72, bodyW: 0.52 },
-  kraken:   { color: 0x1040b8, height: 1.35, bodyW: 0.68 },
+  goblin:   { height: 0.55, bodyW: 0.30 },
+  orc:      { height: 1.08, bodyW: 0.48 },
+  dragon:   { height: 1.60, bodyW: 0.70 },
+  skeleton: { height: 0.92, bodyW: 0.24 },
+  troll:    { height: 1.30, bodyW: 0.54 },
+  vampire:  { height: 1.02, bodyW: 0.30 },
+  werewolf: { height: 1.15, bodyW: 0.46 },
+  wraith:   { height: 0.98, bodyW: 0.28 },
+  basilisk: { height: 0.75, bodyW: 0.54 },
+  kraken:   { height: 1.40, bodyW: 0.70 },
 };
 
 // ─── VISUAL STATE SYSTEM ─────────────────────────────────────────────────────
