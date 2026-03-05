@@ -463,88 +463,508 @@ function addPOIProp(group, poi) {
   const wz = poi.y * TILE_SIZE;
   const baseY = getTerrainHeight(poi.x, poi.y);
 
-  if (poi.type === "crafting_station" || poi.type === "npc") {
-    const bGeo = new THREE.BoxGeometry(1.4, 1.6, 1.4);
-    const bMat = new THREE.MeshLambertMaterial({ color: 0x706050 });
-    const bldg = new THREE.Mesh(bGeo, bMat);
-    bldg.position.set(wx, baseY + 0.80, wz);
-    bldg.castShadow = true;
-    group.add(bldg);
-    const rGeo = new THREE.ConeGeometry(1.1, 0.7, 4);
-    const rMat = new THREE.MeshLambertMaterial({ color: 0x8b3a2a });
-    const roof = new THREE.Mesh(rGeo, rMat);
-    roof.position.set(wx, baseY + 1.95, wz);
+  if (poi.station === "forge" || (poi.type === "crafting_station" && poi.station === "forge")) {
+    // ── FORGE / BLACKSMITH ──
+    // Stone building with chimney and anvil
+    const wallGeo = new THREE.BoxGeometry(1.6, 1.4, 1.6);
+    const wallMat = new THREE.MeshLambertMaterial({ color: 0x5a5050 });
+    const walls = new THREE.Mesh(wallGeo, wallMat);
+    walls.position.set(wx, baseY + 0.70, wz);
+    walls.castShadow = true;
+    group.add(walls);
+
+    // Dark stone trim at base
+    const trimGeo = new THREE.BoxGeometry(1.7, 0.15, 1.7);
+    const trimMat = new THREE.MeshLambertMaterial({ color: 0x3a3a3a });
+    const trim = new THREE.Mesh(trimGeo, trimMat);
+    trim.position.set(wx, baseY + 0.075, wz);
+    group.add(trim);
+
+    // Roof
+    const roofGeo = new THREE.ConeGeometry(1.2, 0.65, 4);
+    const roofMat = new THREE.MeshLambertMaterial({ color: 0x5a3a2a });
+    const roof = new THREE.Mesh(roofGeo, roofMat);
+    roof.position.set(wx, baseY + 1.72, wz);
     roof.rotation.y = Math.PI / 4;
     group.add(roof);
-  } else if (poi.type === "shop") {
-    const sGeo = new THREE.BoxGeometry(1.8, 1.2, 1.8);
-    const sMat = new THREE.MeshLambertMaterial({ color: 0x8b6030 });
-    const shop = new THREE.Mesh(sGeo, sMat);
-    shop.position.set(wx, baseY + 0.60, wz);
-    shop.castShadow = true;
-    group.add(shop);
-    const postGeo = new THREE.BoxGeometry(0.06, 0.8, 0.06);
-    const post = new THREE.Mesh(postGeo, new THREE.MeshLambertMaterial({ color: 0x5a3a10 }));
-    post.position.set(wx + 0.95, baseY + 1.25, wz);
-    group.add(post);
-    const signGeo = new THREE.BoxGeometry(0.40, 0.22, 0.05);
-    const sign = new THREE.Mesh(signGeo, new THREE.MeshLambertMaterial({ color: 0xd4a017 }));
-    sign.position.set(wx + 0.95, baseY + 1.68, wz);
-    group.add(sign);
-  } else if (poi.type === "rest") {
-    const iGeo = new THREE.BoxGeometry(2.0, 1.4, 2.0);
-    const iMat = new THREE.MeshLambertMaterial({ color: 0x9a7050 });
-    const inn = new THREE.Mesh(iGeo, iMat);
-    inn.position.set(wx, baseY + 0.70, wz);
-    inn.castShadow = true;
-    group.add(inn);
-    const rGeo = new THREE.ConeGeometry(1.5, 0.8, 4);
-    const rMat = new THREE.MeshLambertMaterial({ color: 0xaa4422 });
-    const roof = new THREE.Mesh(rGeo, rMat);
-    roof.position.set(wx, baseY + 1.70, wz);
+
+    // Chimney
+    const chimGeo = new THREE.BoxGeometry(0.25, 0.9, 0.25);
+    const chimMat = new THREE.MeshLambertMaterial({ color: 0x4a4040 });
+    const chim = new THREE.Mesh(chimGeo, chimMat);
+    chim.position.set(wx - 0.55, baseY + 1.85, wz - 0.55);
+    group.add(chim);
+    // Smoke glow
+    const smokeGeo = new THREE.SphereGeometry(0.12, 5, 4);
+    const smokeMat = new THREE.MeshBasicMaterial({ color: 0x888888, transparent: true, opacity: 0.3 });
+    const smoke = new THREE.Mesh(smokeGeo, smokeMat);
+    smoke.position.set(wx - 0.55, baseY + 2.35, wz - 0.55);
+    group.add(smoke);
+
+    // Anvil outside
+    const anvilBase = new THREE.BoxGeometry(0.20, 0.14, 0.12);
+    const anvilMat = new THREE.MeshLambertMaterial({ color: 0x555555 });
+    const anvil = new THREE.Mesh(anvilBase, anvilMat);
+    anvil.position.set(wx + 1.0, baseY + 0.07, wz + 0.3);
+    group.add(anvil);
+    const anvilTop = new THREE.BoxGeometry(0.28, 0.06, 0.16);
+    const anvTop = new THREE.Mesh(anvilTop, anvilMat);
+    anvTop.position.set(wx + 1.0, baseY + 0.17, wz + 0.3);
+    group.add(anvTop);
+
+    // Door
+    const doorGeo = new THREE.BoxGeometry(0.35, 0.65, 0.04);
+    const doorMat = new THREE.MeshLambertMaterial({ color: 0x3a2a10 });
+    const door = new THREE.Mesh(doorGeo, doorMat);
+    door.position.set(wx, baseY + 0.35, wz + 0.82);
+    group.add(door);
+
+  } else if (poi.station === "alchemy" || (poi.type === "crafting_station" && poi.station === "alchemy")) {
+    // ── APOTHECARY / ALCHEMY ──
+    // Taller, narrower building with shelving and glowing bottles
+    const wallGeo = new THREE.BoxGeometry(1.3, 1.8, 1.3);
+    const wallMat = new THREE.MeshLambertMaterial({ color: 0x6a5a70 });
+    const walls = new THREE.Mesh(wallGeo, wallMat);
+    walls.position.set(wx, baseY + 0.90, wz);
+    walls.castShadow = true;
+    group.add(walls);
+
+    const roofGeo = new THREE.ConeGeometry(1.0, 0.8, 4);
+    const roofMat = new THREE.MeshLambertMaterial({ color: 0x4a2a5a });
+    const roof = new THREE.Mesh(roofGeo, roofMat);
+    roof.position.set(wx, baseY + 2.20, wz);
     roof.rotation.y = Math.PI / 4;
     group.add(roof);
-  } else if (poi.type === "heal_station") {
-    const pGeo = new THREE.CylinderGeometry(0.30, 0.34, 2.0, 8);
-    const pMat = new THREE.MeshLambertMaterial({ color: 0xe8e0d0 });
-    [-0.7, 0.7].forEach(ox => {
-      const pillar = new THREE.Mesh(pGeo, pMat);
-      pillar.position.set(wx + ox, baseY + 1.0, wz);
-      group.add(pillar);
+
+    // Glowing bottle window
+    const bottleColors = [0x44ff88, 0xff44aa, 0x4488ff];
+    bottleColors.forEach((c, i) => {
+      const bGeo = new THREE.CylinderGeometry(0.04, 0.05, 0.12, 5);
+      const bMat = new THREE.MeshBasicMaterial({ color: c });
+      const bottle = new THREE.Mesh(bGeo, bMat);
+      bottle.position.set(wx + 0.68, baseY + 1.1 + i * 0.16, wz + (i - 1) * 0.15);
+      group.add(bottle);
     });
-    const capGeo = new THREE.BoxGeometry(2.2, 0.18, 1.2);
-    const cap = new THREE.Mesh(capGeo, new THREE.MeshLambertMaterial({ color: 0xd8d0c0 }));
-    cap.position.set(wx, baseY + 2.10, wz);
-    group.add(cap);
+
+    // Herb bundles on wall
+    for (let i = 0; i < 2; i++) {
+      const herbGeo = new THREE.ConeGeometry(0.08, 0.18, 4);
+      const herbMat = new THREE.MeshLambertMaterial({ color: 0x2a6a20 });
+      const herb = new THREE.Mesh(herbGeo, herbMat);
+      herb.position.set(wx - 0.68, baseY + 1.4 + i * 0.22, wz + (i - 0.5) * 0.25);
+      herb.rotation.z = Math.PI;
+      group.add(herb);
+    }
+
+    const doorGeo = new THREE.BoxGeometry(0.30, 0.60, 0.04);
+    const doorMat = new THREE.MeshLambertMaterial({ color: 0x3a2040 });
+    const door = new THREE.Mesh(doorGeo, doorMat);
+    door.position.set(wx, baseY + 0.32, wz + 0.67);
+    group.add(door);
+
+  } else if (poi.station === "workbench" || (poi.type === "crafting_station" && poi.station === "workbench")) {
+    // ── CARPENTER'S WORKSHOP ──
+    const wallGeo = new THREE.BoxGeometry(1.5, 1.3, 1.5);
+    const wallMat = new THREE.MeshLambertMaterial({ color: 0x7a5a30 });
+    const walls = new THREE.Mesh(wallGeo, wallMat);
+    walls.position.set(wx, baseY + 0.65, wz);
+    walls.castShadow = true;
+    group.add(walls);
+
+    // Timber frame accents
+    [-0.76, 0.76].forEach(side => {
+      const beamGeo = new THREE.BoxGeometry(0.06, 1.3, 0.06);
+      const beamMat = new THREE.MeshLambertMaterial({ color: 0x4a2a10 });
+      const beam = new THREE.Mesh(beamGeo, beamMat);
+      beam.position.set(wx + side, baseY + 0.65, wz + 0.76);
+      group.add(beam);
+    });
+
+    const roofGeo = new THREE.BoxGeometry(1.8, 0.12, 1.8);
+    const roofMat = new THREE.MeshLambertMaterial({ color: 0x5a3a18 });
+    const roof = new THREE.Mesh(roofGeo, roofMat);
+    roof.position.set(wx, baseY + 1.36, wz);
+    group.add(roof);
+
+    // Lumber stack outside
+    for (let l = 0; l < 3; l++) {
+      const logGeo = new THREE.CylinderGeometry(0.05, 0.05, 0.6, 5);
+      const logMat = new THREE.MeshLambertMaterial({ color: 0x6a4a20 });
+      const log = new THREE.Mesh(logGeo, logMat);
+      log.position.set(wx + 0.95, baseY + 0.06 + l * 0.11, wz - 0.2 + l * 0.08);
+      log.rotation.z = Math.PI / 2;
+      group.add(log);
+    }
+
+    const doorGeo = new THREE.BoxGeometry(0.38, 0.60, 0.04);
+    const doorMat = new THREE.MeshLambertMaterial({ color: 0x4a2a08 });
+    const door = new THREE.Mesh(doorGeo, doorMat);
+    door.position.set(wx, baseY + 0.32, wz + 0.77);
+    group.add(door);
+
+  } else if (poi.type === "crafting_station" || poi.type === "npc") {
+    // ── GENERIC BUILDING (guild hall, barracks, quest giver) ──
+    const wallGeo = new THREE.BoxGeometry(1.5, 1.5, 1.5);
+    const wallMat = new THREE.MeshLambertMaterial({ color: 0x706050 });
+    const walls = new THREE.Mesh(wallGeo, wallMat);
+    walls.position.set(wx, baseY + 0.75, wz);
+    walls.castShadow = true;
+    group.add(walls);
+
+    // Foundation
+    const foundGeo = new THREE.BoxGeometry(1.65, 0.12, 1.65);
+    const foundMat = new THREE.MeshLambertMaterial({ color: 0x555050 });
+    const found = new THREE.Mesh(foundGeo, foundMat);
+    found.position.set(wx, baseY + 0.06, wz);
+    group.add(found);
+
+    const roofGeo = new THREE.ConeGeometry(1.15, 0.7, 4);
+    const roofMat = new THREE.MeshLambertMaterial({ color: 0x8b3a2a });
+    const roof = new THREE.Mesh(roofGeo, roofMat);
+    roof.position.set(wx, baseY + 1.85, wz);
+    roof.rotation.y = Math.PI / 4;
+    group.add(roof);
+
+    // Window
+    const winGeo = new THREE.BoxGeometry(0.18, 0.22, 0.04);
+    const winMat = new THREE.MeshBasicMaterial({ color: 0xffcc66 });
+    const win = new THREE.Mesh(winGeo, winMat);
+    win.position.set(wx + 0.40, baseY + 1.1, wz + 0.77);
+    group.add(win);
+
+    // Door
+    const doorGeo = new THREE.BoxGeometry(0.35, 0.65, 0.04);
+    const doorMat = new THREE.MeshLambertMaterial({ color: 0x3a2a10 });
+    const door = new THREE.Mesh(doorGeo, doorMat);
+    door.position.set(wx - 0.15, baseY + 0.35, wz + 0.77);
+    group.add(door);
+
+  } else if (poi.type === "shop") {
+    // ── MARKET SHOP ──
+    const baseGeo = new THREE.BoxGeometry(1.8, 0.5, 1.8);
+    const baseMat = new THREE.MeshLambertMaterial({ color: 0x8b6030 });
+    const base = new THREE.Mesh(baseGeo, baseMat);
+    base.position.set(wx, baseY + 0.25, wz);
+    base.castShadow = true;
+    group.add(base);
+
+    const topGeo = new THREE.BoxGeometry(1.6, 0.7, 1.6);
+    const topMat = new THREE.MeshLambertMaterial({ color: 0x9a7040 });
+    const top = new THREE.Mesh(topGeo, topMat);
+    top.position.set(wx, baseY + 0.85, wz);
+    group.add(top);
+
+    // Awning
+    const awnGeo = new THREE.BoxGeometry(2.0, 0.06, 0.8);
+    const awnMat = new THREE.MeshLambertMaterial({ color: 0xcc3333 });
+    const awning = new THREE.Mesh(awnGeo, awnMat);
+    awning.position.set(wx, baseY + 1.28, wz + 1.0);
+    awning.rotation.x = 0.15;
+    group.add(awning);
+
+    // Sign post
+    const postGeo = new THREE.CylinderGeometry(0.03, 0.03, 0.9, 5);
+    const postMat = new THREE.MeshLambertMaterial({ color: 0x5a3a10 });
+    const post = new THREE.Mesh(postGeo, postMat);
+    post.position.set(wx + 0.95, baseY + 1.25, wz + 0.5);
+    group.add(post);
+
+    const signGeo = new THREE.BoxGeometry(0.45, 0.25, 0.05);
+    const signMat = new THREE.MeshLambertMaterial({ color: 0xd4a017 });
+    const sign = new THREE.Mesh(signGeo, signMat);
+    sign.position.set(wx + 0.95, baseY + 1.75, wz + 0.5);
+    group.add(sign);
+
+    // Goods display
+    const crateGeo = new THREE.BoxGeometry(0.16, 0.14, 0.16);
+    const crateMat = new THREE.MeshLambertMaterial({ color: 0x6a4a20 });
+    for (let i = 0; i < 3; i++) {
+      const crate = new THREE.Mesh(crateGeo, crateMat);
+      crate.position.set(wx - 0.5 + i * 0.25, baseY + 1.27, wz + 0.5);
+      group.add(crate);
+    }
+
+    const doorGeo = new THREE.BoxGeometry(0.35, 0.55, 0.04);
+    const doorMat = new THREE.MeshLambertMaterial({ color: 0x4a2a08 });
+    const door = new THREE.Mesh(doorGeo, doorMat);
+    door.position.set(wx, baseY + 0.30, wz + 0.92);
+    group.add(door);
+
+  } else if (poi.type === "rest") {
+    // ── TAVERN / INN ──
+    // Larger 2-story building
+    const floor1Geo = new THREE.BoxGeometry(2.2, 1.2, 2.2);
+    const floor1Mat = new THREE.MeshLambertMaterial({ color: 0x8a6840 });
+    const floor1 = new THREE.Mesh(floor1Geo, floor1Mat);
+    floor1.position.set(wx, baseY + 0.60, wz);
+    floor1.castShadow = true;
+    group.add(floor1);
+
+    // Second floor (slightly narrower)
+    const floor2Geo = new THREE.BoxGeometry(2.0, 0.8, 2.0);
+    const floor2Mat = new THREE.MeshLambertMaterial({ color: 0x9a7850 });
+    const floor2 = new THREE.Mesh(floor2Geo, floor2Mat);
+    floor2.position.set(wx, baseY + 1.60, wz);
+    group.add(floor2);
+
+    // Timber frame
+    [-1.12, 1.12].forEach(side => {
+      const beamGeo = new THREE.BoxGeometry(0.06, 2.0, 0.06);
+      const beamMat = new THREE.MeshLambertMaterial({ color: 0x3a2010 });
+      const beam = new THREE.Mesh(beamGeo, beamMat);
+      beam.position.set(wx + side, baseY + 1.0, wz + 1.12);
+      group.add(beam);
+    });
+
+    const roofGeo = new THREE.ConeGeometry(1.6, 0.9, 4);
+    const roofMat = new THREE.MeshLambertMaterial({ color: 0xaa4422 });
+    const roof = new THREE.Mesh(roofGeo, roofMat);
+    roof.position.set(wx, baseY + 2.45, wz);
+    roof.rotation.y = Math.PI / 4;
+    group.add(roof);
+
+    // Windows (lit)
+    [[-0.5, 0.9], [0.5, 0.9], [-0.4, 1.7], [0.4, 1.7]].forEach(([ox, oy]) => {
+      const winGeo = new THREE.BoxGeometry(0.18, 0.20, 0.04);
+      const winMat = new THREE.MeshBasicMaterial({ color: 0xffcc66 });
+      const win = new THREE.Mesh(winGeo, winMat);
+      win.position.set(wx + ox, baseY + oy, wz + 1.12);
+      group.add(win);
+    });
+
+    // Entrance door (wide)
+    const doorGeo = new THREE.BoxGeometry(0.50, 0.70, 0.04);
+    const doorMat = new THREE.MeshLambertMaterial({ color: 0x3a2010 });
+    const door = new THREE.Mesh(doorGeo, doorMat);
+    door.position.set(wx, baseY + 0.37, wz + 1.12);
+    group.add(door);
+
+    // Hanging sign
+    const hangGeo = new THREE.BoxGeometry(0.35, 0.22, 0.04);
+    const hangMat = new THREE.MeshLambertMaterial({ color: 0xd4a017 });
+    const hang = new THREE.Mesh(hangGeo, hangMat);
+    hang.position.set(wx + 1.18, baseY + 1.50, wz + 0.4);
+    hang.rotation.y = Math.PI / 2;
+    group.add(hang);
+
+  } else if (poi.type === "heal_station") {
+    // ── TEMPLE / SHRINE ──
+    // Open-air stone temple with pillars and glowing center
+    const floorGeo = new THREE.CylinderGeometry(1.0, 1.1, 0.12, 8);
+    const floorMat = new THREE.MeshLambertMaterial({ color: 0xd8d0c0 });
+    const floor = new THREE.Mesh(floorGeo, floorMat);
+    floor.position.set(wx, baseY + 0.06, wz);
+    group.add(floor);
+
+    // 4 pillars
+    const pillarPositions = [[0.7, 0.7], [-0.7, 0.7], [0.7, -0.7], [-0.7, -0.7]];
+    pillarPositions.forEach(([px, pz]) => {
+      const pGeo = new THREE.CylinderGeometry(0.12, 0.14, 2.0, 6);
+      const pMat = new THREE.MeshLambertMaterial({ color: 0xe8e0d0 });
+      const pillar = new THREE.Mesh(pGeo, pMat);
+      pillar.position.set(wx + px, baseY + 1.0, wz + pz);
+      pillar.castShadow = true;
+      group.add(pillar);
+      // Capital
+      const capGeo = new THREE.BoxGeometry(0.30, 0.10, 0.30);
+      const cap = new THREE.Mesh(capGeo, new THREE.MeshLambertMaterial({ color: 0xd0c8b0 }));
+      cap.position.set(wx + px, baseY + 2.05, wz + pz);
+      group.add(cap);
+    });
+
+    // Lintel
+    const lintelGeo = new THREE.BoxGeometry(1.8, 0.14, 1.8);
+    const lintelMat = new THREE.MeshLambertMaterial({ color: 0xd0c8b0 });
+    const lintel = new THREE.Mesh(lintelGeo, lintelMat);
+    lintel.position.set(wx, baseY + 2.17, wz);
+    group.add(lintel);
+
+    // Mini dome
+    const domeGeo = new THREE.SphereGeometry(0.45, 8, 5, 0, Math.PI * 2, 0, Math.PI * 0.5);
+    const domeMat = new THREE.MeshLambertMaterial({ color: 0xc0b8a0 });
+    const dome = new THREE.Mesh(domeGeo, domeMat);
+    dome.position.set(wx, baseY + 2.30, wz);
+    group.add(dome);
+
+    // Glowing healing orb
+    const orbGeo = new THREE.SphereGeometry(0.15, 6, 5);
+    const orbMat = new THREE.MeshBasicMaterial({ color: 0x44ff88 });
+    const orb = new THREE.Mesh(orbGeo, orbMat);
+    orb.position.set(wx, baseY + 0.50, wz);
+    group.add(orb);
+
   } else if (poi.type === "resource_node") {
     const zone = getZoneAt(poi.x, poi.y);
     if (poi.resource === "wheat" || zone?.id === "the_ashen_march") {
-      for (let i = 0; i < 5; i++) {
-        const angle = (i / 5) * Math.PI * 2;
-        const wGeo = new THREE.CylinderGeometry(0.03, 0.06, 0.85, 4);
+      // Wheat field with fence
+      for (let i = 0; i < 8; i++) {
+        const angle = (i / 8) * Math.PI * 2;
+        const r = 0.25 + (i % 3) * 0.12;
+        const sh = 0.5 + hash2(poi.x + i, poi.y) * 0.35;
+        const wGeo = new THREE.CylinderGeometry(0.015, 0.035, sh, 4);
         const wMat = new THREE.MeshLambertMaterial({ color: 0xd4aa30 });
         const stalk = new THREE.Mesh(wGeo, wMat);
-        stalk.position.set(wx + Math.cos(angle) * 0.35, baseY + 0.42, wz + Math.sin(angle) * 0.35);
+        stalk.position.set(wx + Math.cos(angle) * r, baseY + sh * 0.5, wz + Math.sin(angle) * r);
+        stalk.rotation.z = (hash2b(poi.x + i, poi.y) - 0.5) * 0.15;
         group.add(stalk);
+        const headGeo = new THREE.SphereGeometry(0.025, 4, 3);
+        const headMat = new THREE.MeshLambertMaterial({ color: 0xeebb40 });
+        const head = new THREE.Mesh(headGeo, headMat);
+        head.scale.set(0.8, 1.5, 0.8);
+        head.position.set(wx + Math.cos(angle) * r, baseY + sh + 0.01, wz + Math.sin(angle) * r);
+        group.add(head);
       }
+    } else if (poi.resource === "iron_ore") {
+      // Mining node with ore veins
+      for (let i = 0; i < 4; i++) {
+        const angle = (i / 4) * Math.PI * 2 + 0.3;
+        const r = 0.25 + i * 0.08;
+        addRock(group, wx + Math.cos(angle) * r, baseY, wz + Math.sin(angle) * r, 0.18 + i * 0.04, 0x666666);
+      }
+      // Ore veins
+      for (let i = 0; i < 2; i++) {
+        const oreGeo = new THREE.DodecahedronGeometry(0.08, 0);
+        const oreMat = new THREE.MeshLambertMaterial({ color: 0xbb7733 });
+        oreMat.emissive = new THREE.Color(0x553311);
+        oreMat.emissiveIntensity = 0.2;
+        const ore = new THREE.Mesh(oreGeo, oreMat);
+        ore.position.set(wx + (i - 0.5) * 0.3, baseY + 0.20, wz + 0.15);
+        group.add(ore);
+      }
+      // Pickaxe
+      const handleGeo = new THREE.CylinderGeometry(0.015, 0.015, 0.4, 4);
+      const handleMat = new THREE.MeshLambertMaterial({ color: 0x5a3a1a });
+      const handle = new THREE.Mesh(handleGeo, handleMat);
+      handle.position.set(wx + 0.45, baseY + 0.25, wz);
+      handle.rotation.z = 0.8;
+      group.add(handle);
     } else {
-      for (let i = 0; i < 3; i++) {
-        const angle = (i / 3) * Math.PI * 2;
-        addRock(group, wx + Math.cos(angle) * 0.42, baseY, wz + Math.sin(angle) * 0.42, 0.22 + i * 0.05, 0x887060);
+      for (let i = 0; i < 4; i++) {
+        const angle = (i / 4) * Math.PI * 2;
+        addRock(group, wx + Math.cos(angle) * 0.38, baseY, wz + Math.sin(angle) * 0.38, 0.18 + i * 0.04, 0x887060);
       }
     }
-  } else if (poi.type === "mystery" || poi.type === "dungeon") {
-    const sGeo = new THREE.BoxGeometry(0.5, 2.4, 0.5);
-    const sMat = new THREE.MeshLambertMaterial({ color: 0x333344 });
-    const stone = new THREE.Mesh(sGeo, sMat);
-    stone.position.set(wx, baseY + 1.2, wz);
-    stone.rotation.y = 0.3;
-    stone.castShadow = true;
-    group.add(stone);
-    const cGeo = new THREE.BoxGeometry(0.75, 0.25, 0.75);
-    const cap = new THREE.Mesh(cGeo, new THREE.MeshLambertMaterial({ color: 0x222233 }));
-    cap.position.set(wx, baseY + 2.52, wz);
+  } else if (poi.type === "mystery") {
+    // ── MYSTERY ALTAR ──
+    // Stone obelisk with rune glow
+    const baseGeo = new THREE.CylinderGeometry(0.5, 0.6, 0.2, 6);
+    const baseMat = new THREE.MeshLambertMaterial({ color: 0x333344 });
+    const mBase = new THREE.Mesh(baseGeo, baseMat);
+    mBase.position.set(wx, baseY + 0.10, wz);
+    group.add(mBase);
+
+    const obelGeo = new THREE.BoxGeometry(0.35, 2.2, 0.35);
+    const obelMat = new THREE.MeshLambertMaterial({ color: 0x2a2a3a });
+    const obelisk = new THREE.Mesh(obelGeo, obelMat);
+    obelisk.position.set(wx, baseY + 1.30, wz);
+    obelisk.castShadow = true;
+    group.add(obelisk);
+
+    // Capstone
+    const capGeo = new THREE.ConeGeometry(0.28, 0.35, 4);
+    const capMat = new THREE.MeshLambertMaterial({ color: 0x333344 });
+    const cap = new THREE.Mesh(capGeo, capMat);
+    cap.position.set(wx, baseY + 2.57, wz);
+    cap.rotation.y = Math.PI / 4;
     group.add(cap);
+
+    // Glowing rune lines
+    const runeGeo = new THREE.BoxGeometry(0.04, 0.80, 0.02);
+    const runeMat = new THREE.MeshBasicMaterial({ color: 0x8866ff });
+    const rune = new THREE.Mesh(runeGeo, runeMat);
+    rune.position.set(wx, baseY + 1.30, wz + 0.19);
+    group.add(rune);
+    const rune2Geo = new THREE.BoxGeometry(0.30, 0.04, 0.02);
+    const rune2 = new THREE.Mesh(rune2Geo, runeMat);
+    rune2.position.set(wx, baseY + 1.50, wz + 0.19);
+    group.add(rune2);
+
+    // Floating particles (static orbs)
+    for (let i = 0; i < 3; i++) {
+      const angle = (i / 3) * Math.PI * 2;
+      const pGeo = new THREE.SphereGeometry(0.04, 4, 3);
+      const pMat = new THREE.MeshBasicMaterial({ color: 0xaa88ff, transparent: true, opacity: 0.6 });
+      const particle = new THREE.Mesh(pGeo, pMat);
+      particle.position.set(wx + Math.cos(angle) * 0.4, baseY + 1.8 + i * 0.15, wz + Math.sin(angle) * 0.4);
+      group.add(particle);
+    }
+
+  } else if (poi.type === "dungeon") {
+    // ── DUNGEON ENTRANCE ──
+    // Archway leading into darkness
+    const archPillarGeo = new THREE.BoxGeometry(0.4, 2.0, 0.4);
+    const archMat = new THREE.MeshLambertMaterial({ color: 0x3a3a4a });
+    [-0.6, 0.6].forEach(side => {
+      const pillar = new THREE.Mesh(archPillarGeo, archMat);
+      pillar.position.set(wx + side, baseY + 1.0, wz);
+      pillar.castShadow = true;
+      group.add(pillar);
+    });
+
+    const archTopGeo = new THREE.BoxGeometry(1.6, 0.30, 0.45);
+    const archTop = new THREE.Mesh(archTopGeo, archMat);
+    archTop.position.set(wx, baseY + 2.15, wz);
+    group.add(archTop);
+
+    // Skull decoration
+    const skullGeo = new THREE.SphereGeometry(0.10, 5, 4);
+    const skullMat = new THREE.MeshLambertMaterial({ color: 0xdde0e4 });
+    const skull = new THREE.Mesh(skullGeo, skullMat);
+    skull.position.set(wx, baseY + 2.35, wz + 0.22);
+    group.add(skull);
+
+    // Dark void behind arch
+    const voidGeo = new THREE.BoxGeometry(0.8, 1.6, 0.08);
+    const voidMat = new THREE.MeshBasicMaterial({ color: 0x050510 });
+    const dVoid = new THREE.Mesh(voidGeo, voidMat);
+    dVoid.position.set(wx, baseY + 0.80, wz - 0.15);
+    group.add(dVoid);
+
+    // Steps leading down
+    for (let i = 0; i < 3; i++) {
+      const stepGeo = new THREE.BoxGeometry(1.0, 0.10, 0.25);
+      const stepMat = new THREE.MeshLambertMaterial({ color: 0x4a4a5a });
+      const step = new THREE.Mesh(stepGeo, stepMat);
+      step.position.set(wx, baseY + 0.05 - i * 0.08, wz + 0.3 + i * 0.25);
+      group.add(step);
+    }
+
+    // Torches
+    [-0.6, 0.6].forEach(side => {
+      const tGeo = new THREE.CylinderGeometry(0.02, 0.025, 0.25, 4);
+      const tMat = new THREE.MeshLambertMaterial({ color: 0x5a3a1a });
+      const torch = new THREE.Mesh(tGeo, tMat);
+      torch.position.set(wx + side, baseY + 1.65, wz + 0.22);
+      group.add(torch);
+      const flameGeo = new THREE.ConeGeometry(0.04, 0.10, 4);
+      const flameMat = new THREE.MeshBasicMaterial({ color: 0xff8844 });
+      const flame = new THREE.Mesh(flameGeo, flameMat);
+      flame.position.set(wx + side, baseY + 1.82, wz + 0.22);
+      group.add(flame);
+    });
+
+  } else if (poi.type === "boss_encounter") {
+    // ── BOSS LAIR ──
+    // Dramatic rocky formation with glow
+    for (let i = 0; i < 5; i++) {
+      const angle = (i / 5) * Math.PI * 2;
+      const r = 0.5 + i * 0.1;
+      const rh = 0.6 + hash2(poi.x + i, poi.y) * 1.0;
+      addRock(group, wx + Math.cos(angle) * r, baseY, wz + Math.sin(angle) * r, 0.25 + i * 0.05, 0x3a1a0a);
+    }
+    // Central glow
+    const glowGeo = new THREE.SphereGeometry(0.2, 6, 5);
+    const glowMat = new THREE.MeshBasicMaterial({ color: 0xff2200, transparent: true, opacity: 0.5 });
+    const glow = new THREE.Mesh(glowGeo, glowMat);
+    glow.position.set(wx, baseY + 0.3, wz);
+    group.add(glow);
+    // Scorched ground
+    const scorch = new THREE.CircleGeometry(0.8, 10);
+    const scorchMat = new THREE.MeshLambertMaterial({ color: 0x1a0800 });
+    const scorchMesh = new THREE.Mesh(scorch, scorchMat);
+    scorchMesh.rotation.x = -Math.PI / 2;
+    scorchMesh.position.set(wx, baseY + 0.02, wz);
+    group.add(scorchMesh);
   }
 
   // Forest POI trees
