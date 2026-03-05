@@ -19,55 +19,127 @@ function hash2c(x, y) { return ((x * 3571 + y * 6257) % 10000) / 10000; }
 // ─── TREE BUILDER (improved) ─────────────────────────────────────────────────
 
 function addTree(group, wx, baseY, wz, treeType = "pine") {
+  const hv = hash2(Math.round(wx), Math.round(wz));
+  const hv2 = hash2b(Math.round(wx), Math.round(wz));
+  const hv3 = hash2c(Math.round(wx), Math.round(wz));
+
   if (treeType === "dead") {
-    // Bare trunk
-    const trunkH = 0.8 + hash2(Math.round(wx), Math.round(wz)) * 0.5;
-    const tGeo = new THREE.CylinderGeometry(0.04, 0.09, trunkH, 5);
+    // Bare trunk with multiple branches
+    const trunkH = 0.7 + hv * 0.6;
+    const tGeo = new THREE.CylinderGeometry(0.035, 0.10, trunkH, 5);
     const tMat = new THREE.MeshLambertMaterial({ color: 0x2a1e10 });
     const trunk = new THREE.Mesh(tGeo, tMat);
     trunk.position.set(wx, baseY + trunkH * 0.5, wz);
-    trunk.rotation.z = (hash2b(Math.round(wx), Math.round(wz)) - 0.5) * 0.25;
+    trunk.rotation.z = (hv2 - 0.5) * 0.20;
     trunk.castShadow = true;
     group.add(trunk);
 
-    // A few bare branches
-    for (let i = 0; i < 2; i++) {
-      const brH = 0.25 + hash2c(Math.round(wx) + i, Math.round(wz)) * 0.2;
-      const brGeo = new THREE.CylinderGeometry(0.015, 0.03, brH, 3);
+    // Bare branches (more detailed)
+    const branchCount = 2 + Math.floor(hv3 * 3);
+    for (let i = 0; i < branchCount; i++) {
+      const brH = 0.18 + hash2c(Math.round(wx) + i, Math.round(wz)) * 0.22;
+      const brGeo = new THREE.CylinderGeometry(0.01, 0.025, brH, 3);
       const brMat = new THREE.MeshLambertMaterial({ color: 0x2a1e10 });
       const br = new THREE.Mesh(brGeo, brMat);
-      const side = i === 0 ? 1 : -1;
-      br.position.set(wx + side * 0.12, baseY + trunkH * (0.5 + i * 0.2), wz);
-      br.rotation.z = side * 0.8;
+      const side = (i % 2 === 0) ? 1 : -1;
+      const heightPct = 0.45 + (i / branchCount) * 0.45;
+      br.position.set(wx + side * 0.10, baseY + trunkH * heightPct, wz + (hash2(i, Math.round(wx)) - 0.5) * 0.08);
+      br.rotation.z = side * (0.6 + hash2b(i, Math.round(wz)) * 0.5);
+      br.rotation.y = hash2c(i, Math.round(wz)) * 1.2;
       group.add(br);
+    }
+
+    // Exposed roots at base
+    for (let r = 0; r < 2; r++) {
+      const rootAngle = (r / 2) * Math.PI + hv2;
+      const rootGeo = new THREE.CylinderGeometry(0.01, 0.035, 0.18, 3);
+      const rootMat = new THREE.MeshLambertMaterial({ color: 0x2a1e10 });
+      const root = new THREE.Mesh(rootGeo, rootMat);
+      root.position.set(wx + Math.cos(rootAngle) * 0.10, baseY + 0.04, wz + Math.sin(rootAngle) * 0.10);
+      root.rotation.z = Math.cos(rootAngle) * 1.2;
+      root.rotation.x = Math.sin(rootAngle) * 0.4;
+      group.add(root);
+    }
+    return;
+  }
+
+  if (treeType === "oak" || treeType === "broadleaf") {
+    // Deciduous / oak tree with round canopy
+    const trunkH = 0.5 + hv * 0.4;
+    const tGeo = new THREE.CylinderGeometry(0.06, 0.12, trunkH, 5);
+    const tMat = new THREE.MeshLambertMaterial({ color: 0x4a3018 });
+    const trunk = new THREE.Mesh(tGeo, tMat);
+    trunk.position.set(wx, baseY + trunkH * 0.5, wz);
+    trunk.castShadow = true;
+    group.add(trunk);
+
+    // Main canopy sphere
+    const canopyR = 0.35 + hv2 * 0.20;
+    const canopyGeo = new THREE.SphereGeometry(canopyR, 6, 5);
+    const canopyColor = treeType === "oak" ? 0x2a5a18 : 0x3a6a28;
+    const canopyMat = new THREE.MeshLambertMaterial({ color: canopyColor });
+    const canopy = new THREE.Mesh(canopyGeo, canopyMat);
+    canopy.position.set(wx, baseY + trunkH + canopyR * 0.6, wz);
+    canopy.scale.set(1.0, 0.8, 1.0);
+    canopy.castShadow = true;
+    group.add(canopy);
+
+    // Secondary smaller canopy blobs for fullness
+    for (let i = 0; i < 2; i++) {
+      const angle = hv3 + i * Math.PI * 0.8;
+      const subR = canopyR * 0.55;
+      const subGeo = new THREE.SphereGeometry(subR, 5, 4);
+      const subMat = new THREE.MeshLambertMaterial({ color: new THREE.Color(canopyColor).multiplyScalar(0.85 + hv * 0.15).getHex() });
+      const sub = new THREE.Mesh(subGeo, subMat);
+      sub.position.set(
+        wx + Math.cos(angle) * canopyR * 0.55,
+        baseY + trunkH + canopyR * 0.4,
+        wz + Math.sin(angle) * canopyR * 0.55
+      );
+      sub.castShadow = true;
+      group.add(sub);
     }
     return;
   }
 
   // Pine tree (default)
-  const trunkH = 0.6 + hash2(Math.round(wx * 10), Math.round(wz * 10)) * 0.5;
-  const tGeo = new THREE.CylinderGeometry(0.05, 0.10, trunkH, 5);
+  const trunkH = 0.5 + hash2(Math.round(wx * 10), Math.round(wz * 10)) * 0.55;
+  const tGeo = new THREE.CylinderGeometry(0.04, 0.10, trunkH, 5);
   const tMat = new THREE.MeshLambertMaterial({ color: 0x4a3020 });
   const trunk = new THREE.Mesh(tGeo, tMat);
   trunk.position.set(wx, baseY + trunkH * 0.5, wz);
   trunk.castShadow = true;
   group.add(trunk);
 
-  // Layered foliage cones
+  // Layered foliage cones (more layers for taller trees)
   const foliageColor = treeType === "autumn" ? 0x8a5020 : 0x1a4018;
-  const layers = [
-    { yOff: trunkH + 0.05, r: 0.45, h: 0.50 },
-    { yOff: trunkH + 0.30, r: 0.35, h: 0.40 },
-    { yOff: trunkH + 0.50, r: 0.22, h: 0.30 },
-  ];
-  layers.forEach(l => {
-    const fGeo = new THREE.ConeGeometry(l.r, l.h, 6);
-    const fMat = new THREE.MeshLambertMaterial({ color: foliageColor });
+  const layerCount = 3 + (trunkH > 0.8 ? 1 : 0);
+  for (let i = 0; i < layerCount; i++) {
+    const frac = i / layerCount;
+    const yOff = trunkH + 0.05 + frac * 0.55;
+    const r = 0.45 - frac * 0.20;
+    const h = 0.48 - frac * 0.12;
+    const layerColor = new THREE.Color(foliageColor).multiplyScalar(0.9 + frac * 0.15).getHex();
+    const fGeo = new THREE.ConeGeometry(r, h, 6);
+    const fMat = new THREE.MeshLambertMaterial({ color: layerColor });
     const foliage = new THREE.Mesh(fGeo, fMat);
-    foliage.position.set(wx, baseY + l.yOff, wz);
+    foliage.position.set(wx, baseY + yOff, wz);
     foliage.castShadow = true;
     group.add(foliage);
-  });
+  }
+
+  // Exposed roots for larger pines
+  if (trunkH > 0.7) {
+    for (let r = 0; r < 2; r++) {
+      const rootAngle = r * Math.PI + hv3 * 2;
+      const rootGeo = new THREE.CylinderGeometry(0.01, 0.03, 0.14, 3);
+      const rootMat = new THREE.MeshLambertMaterial({ color: 0x3a2818 });
+      const root = new THREE.Mesh(rootGeo, rootMat);
+      root.position.set(wx + Math.cos(rootAngle) * 0.10, baseY + 0.03, wz + Math.sin(rootAngle) * 0.10);
+      root.rotation.z = Math.cos(rootAngle) * 1.0;
+      group.add(root);
+    }
+  }
 }
 
 // ─── ROCK BUILDER ────────────────────────────────────────────────────────────
