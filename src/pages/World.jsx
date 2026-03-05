@@ -61,8 +61,8 @@ export default function World() {
 
   useEffect(() => {
     loadWorld();
-    const interval = setInterval(loadCharacters, 5000);
-    const worldInterval = setInterval(() => { gameService.worldTick().catch(() => {}); }, 30000);
+    const interval = setInterval(loadCharacters, 15000);
+    const worldInterval = setInterval(() => { gameService.worldTick().catch(() => {}); }, 60000);
     return () => { clearInterval(interval); clearInterval(worldInterval); };
   }, []);
 
@@ -538,11 +538,3 @@ export default function World() {
   </div>
   );
 }
-
-
-
-
-
-
-
-
