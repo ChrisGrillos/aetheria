@@ -11,9 +11,10 @@ export default function VoiceOverlayPanel({
   pushToTalk = true,
   togglePushToTalk,
   remoteCount = 0,
+  inline = false,
 }) {
   return (
-    <div className="absolute bottom-2 right-2 z-30 w-[320px] max-w-[92vw] pointer-events-auto">
+    <div className={`${inline ? "relative w-full h-full" : "absolute bottom-2 right-2 z-30 w-[320px] max-w-[92vw]"} pointer-events-auto`}>
       <div className="rounded-lg border border-cyan-800/70 bg-black/85 px-3 py-2 text-[11px]">
         <div className="flex items-center justify-between text-cyan-300">
           <span>Voice</span>

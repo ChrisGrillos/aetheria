@@ -30,6 +30,7 @@ export default function ShadowbaneHUD({
   pushToTalk = true,
   speaking = false,
   onInventory,
+  inline = false,
 }) {
   if (!character) return null;
 
@@ -40,9 +41,8 @@ export default function ShadowbaneHUD({
   const combatLabel = combatStatus === "active" ? "COMBAT" : combatStatus === "starting" ? "ENGAGING" : "PEACE";
   const combatTone = combatStatus === "active" ? "text-red-300 border-red-800 bg-red-950/50" : "text-emerald-300 border-emerald-800 bg-emerald-950/45";
 
-  return (
-    <div className="absolute inset-0 pointer-events-none z-30">
-      <div className="absolute top-2 left-2 w-[278px] pointer-events-auto rounded-md border border-[#4e4532] bg-[#100f0f]/94 shadow-[0_10px_28px_rgba(0,0,0,0.65)]">
+  const panel = (
+    <div className="w-full h-full pointer-events-auto rounded-md border border-[#4e4532] bg-[#100f0f]/94 shadow-[0_10px_28px_rgba(0,0,0,0.65)]">
         <div className="px-3 py-1.5 border-b border-[#3b3428] flex items-center justify-between">
           <div className="min-w-0">
             <div className="text-[#e4d3aa] font-semibold text-sm truncate">{character.name}</div>
@@ -94,6 +94,15 @@ export default function ShadowbaneHUD({
 
           <div className="text-[9px] text-[#8e815f]">{isSprinting ? "Sprinting" : "Walking"}</div>
         </div>
+      </div>
+  );
+
+  if (inline) return panel;
+
+  return (
+    <div className="absolute inset-0 pointer-events-none z-30">
+      <div className="absolute top-2 left-2 w-[278px]">
+        {panel}
       </div>
     </div>
   );

@@ -2,6 +2,7 @@ export default function InWorldCombatPanel({
   session,
   status = "idle",
   combatError = "",
+  inline = false,
 }) {
   if (!session && status === "idle") return null;
 
@@ -12,9 +13,8 @@ export default function InWorldCombatPanel({
   const inRange = !!session?.in_range;
   const pPct = Math.max(0, Math.min(100, (playerHp / Math.max(1, playerMaxHp)) * 100));
   const mPct = Math.max(0, Math.min(100, (mobHp / Math.max(1, mobMaxHp)) * 100));
-  return (
-    <div className="absolute top-24 left-1/2 -translate-x-1/2 z-30 w-[340px] max-w-[84vw] pointer-events-none">
-      <div className="rounded-md border border-[#5a2e1f]/85 bg-[#0f0b0a]/88 shadow-[0_10px_26px_rgba(0,0,0,0.55)] px-3 py-2">
+  const panel = (
+    <div className="rounded-md border border-[#5a2e1f]/85 bg-[#0f0b0a]/88 shadow-[0_10px_26px_rgba(0,0,0,0.55)] px-3 py-2 h-full">
         <div className="flex items-center justify-between text-[10px]">
           <span className={`uppercase tracking-[0.2em] font-bold ${status === "active" ? "text-red-300" : "text-amber-300"}`}>
             {status === "active" ? "Combat" : status}
@@ -46,7 +46,16 @@ export default function InWorldCombatPanel({
         )}
 
         {combatError && <div className="mt-1 text-[10px] text-red-400">{combatError}</div>}
-      </div>
+    </div>
+  );
+
+  if (inline) {
+    return <div className="w-full h-full pointer-events-none">{panel}</div>;
+  }
+
+  return (
+    <div className="absolute top-24 left-1/2 -translate-x-1/2 z-30 w-[340px] max-w-[84vw] pointer-events-none">
+      {panel}
     </div>
   );
 }

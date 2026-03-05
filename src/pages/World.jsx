@@ -10,6 +10,7 @@ import ChatDock from "@/components/chat/ChatDock.jsx";
 import GroupWindow from "@/components/world/GroupWindow.jsx";
 // TravelEncounterModal removed â€” monsters are 3D entities on the map (MMO-style)
 import Minimap from "@/components/world/Minimap.jsx";
+import MovableHudPanel from "@/components/world/MovableHudPanel.jsx";
 import TargetFrame from "@/components/world/TargetFrame.jsx";
 import ShadowbaneHUD from "@/components/world/ShadowbaneHUD.jsx";
 import InWorldCombatPanel from "@/components/world/InWorldCombatPanel.jsx";
@@ -38,6 +39,13 @@ import {
   acceptQuestFromOffer,
   applyQuestEvent,
 } from "@/components/world/questSystem";
+
+const CHARACTER_SYNC_INTERVAL_MS = 8000;
+const WORLD_TICK_INTERVAL_MS = 12000;
+const COMBAT_DISCOVERY_INTERVAL_MS = 3000;
+const COMBAT_TICK_INTERVAL_MS = 1500;
+const COMBAT_SYNC_INTERVAL_MS = 1200;
+const MOVE_WRITE_THROTTLE_MS = 800;
 
 function isArchivedCharacter(character) {
   if (!character) return true;
@@ -70,6 +78,8 @@ export default function World() {
   const [fastTravelProgress, setFastTravelProgress] = useState(0);
   const fastTravelRef = useRef(null);
   const moveWriteTimerRef = useRef(null);
+  const loadCharactersInFlightRef = useRef(false);
+  const worldTickInFlightRef = useRef(false);
   const [viewMode, setViewMode] = useState("3d"); // "map" | "3d"
   const [sceneSettings, setSceneSettings] = useState({
     showNameplates: false,
@@ -139,11 +149,20 @@ export default function World() {
 
   useEffect(() => {
     loadWorld();
-    const interval = setInterval(loadCharacters, 8000);
+    const interval = setInterval(() => {
+      if (document.hidden) return;
+      loadCharacters();
+    }, CHARACTER_SYNC_INTERVAL_MS);
     const worldInterval = setInterval(async () => {
-      const res = await gameService.worldTick().catch(() => null);
-      if (res) setDebugGlobal("__monsterAITelemetry", res.monster_ai || null);
-    }, 12000);
+      if (document.hidden || worldTickInFlightRef.current) return;
+      worldTickInFlightRef.current = true;
+      try {
+        const res = await gameService.worldTick().catch(() => null);
+        if (res) setDebugGlobal("__monsterAITelemetry", res.monster_ai || null);
+      } finally {
+        worldTickInFlightRef.current = false;
+      }
+    }, WORLD_TICK_INTERVAL_MS);
     return () => { clearInterval(interval); clearInterval(worldInterval); };
   }, [setDebugGlobal]);
 
@@ -210,34 +229,42 @@ export default function World() {
   };
 
   const loadCharacters = async () => {
-    const [charsRaw, mons] = await Promise.all([
-      base44.entities.Character.list("-updated_date", 100),
-      base44.entities.Monster.filter({ is_alive: true }).catch(() => []),
-    ]);
-    const chars = (charsRaw || []).filter((c) => !isArchivedCharacter(c));
-    setAllCharacters(chars);
-    if (Array.isArray(mons)) setMonsters(mons);
-    const currentUser = userRef.current;
-    if (currentUser) {
-      let mine = null;
-      if (currentUser.active_character_id) {
-        mine = chars.find(c => c.id === currentUser.active_character_id && c.type === "human");
+    if (loadCharactersInFlightRef.current) return;
+    loadCharactersInFlightRef.current = true;
+    try {
+      const [charsRaw, mons] = await Promise.all([
+        base44.entities.Character.list("-updated_date", 100),
+        base44.entities.Monster.filter({ is_alive: true }).catch(() => []),
+      ]);
+      const chars = (charsRaw || []).filter((c) => !isArchivedCharacter(c));
+      setAllCharacters(chars);
+      if (Array.isArray(mons)) setMonsters(mons);
+      const currentUser = userRef.current;
+      if (currentUser) {
+        let mine = null;
+        if (currentUser.active_character_id) {
+          mine = chars.find(c => c.id === currentUser.active_character_id && c.type === "human");
+        }
+        if (!mine) {
+          mine = chars.find(c => c.created_by === currentUser.email && c.type === "human");
+        }
+        if (mine) {
+          setMyCharacter(mine);
+          if (Array.isArray(mine.active_quests)) setCharacterQuests(mine.active_quests);
+        }
       }
-      if (!mine) {
-        mine = chars.find(c => c.created_by === currentUser.email && c.type === "human");
-      }
-      if (mine) {
-        setMyCharacter(mine);
-        if (Array.isArray(mine.active_quests)) setCharacterQuests(mine.active_quests);
-      }
-    }
 
-    setActiveTarget((prev) => {
-      if (!prev || prev.type !== "monster") return prev;
-      const fresh = (Array.isArray(mons) ? mons : []).find((m) => m.id === prev.entity?.id);
-      if (!fresh) return prev;
-      return { ...prev, entity: fresh };
-    });
+      setActiveTarget((prev) => {
+        if (!prev || prev.type !== "monster") return prev;
+        const fresh = (Array.isArray(mons) ? mons : []).find((m) => m.id === prev.entity?.id);
+        if (!fresh) return prev;
+        return { ...prev, entity: fresh };
+      });
+    } catch (err) {
+      setDebugGlobal("__worldSyncError", String(err?.message || err));
+    } finally {
+      loadCharactersInFlightRef.current = false;
+    }
   };
 
   const recordReplayFrame = useCallback((intent = {}) => {
@@ -321,7 +348,7 @@ export default function World() {
       if (Array.isArray(session.pending_events) && session.pending_events.length > 0) {
         applyCombatEvents(session.pending_events);
       }
-    }, 2000);
+    }, COMBAT_DISCOVERY_INTERVAL_MS);
     return () => clearInterval(timer);
   }, [applyCombatEvents, combatStatus, monsters, myCharacter?.id]);
 
@@ -674,7 +701,7 @@ export default function World() {
       moveWriteTimerRef.current = setTimeout(() => {
         base44.entities.Character.update(myCharacter.id, updates).catch(() => {});
         moveWriteTimerRef.current = null;
-      }, 800);
+      }, MOVE_WRITE_THROTTLE_MS);
     }
 
     applyQuestProgress({ type: "travel_step", amount: 1 });
@@ -772,7 +799,7 @@ export default function World() {
       } catch (e) {
         setCombatError(String(e?.message || e));
       }
-    }, 1500);
+    }, COMBAT_TICK_INTERVAL_MS);
 
     const sync = setInterval(async () => {
       try {
@@ -789,7 +816,7 @@ export default function World() {
       } catch {
         // keep fail-open behavior for sync
       }
-    }, 1200);
+    }, COMBAT_SYNC_INTERVAL_MS);
 
     return () => {
       clearInterval(tick);
@@ -900,12 +927,6 @@ export default function World() {
           />
         )}
 
-        <Minimap
-          myCharacter={myCharacter}
-          allCharacters={allCharacters}
-          monsters={monsters}
-          onFastTravel={requestFastTravel}
-        />
         {fastTravelTarget && (
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-30
               bg-gray-900/95 border border-amber-600 rounded-xl px-6 py-4 text-center pointer-events-auto"
@@ -923,8 +944,66 @@ export default function World() {
           </div>
         )}
 
-        {/* Ability hotbar â€” bottom-center */}
-        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-20 pointer-events-auto">
+        {/* Group window */}
+        <GroupWindow
+          myCharacter={myCharacter}
+          allCharacters={allCharacters}
+          onMoveFollower={null}
+        />
+      </div>
+
+      <MovableHudPanel
+        panelId="hud_vitals"
+        title="Vitals"
+        minWidth={260}
+        minHeight={158}
+        defaultLayout={{ x: 10, y: 44, width: 280, height: 184, opacity: 0.96, locked: false }}
+        zIndex={44}
+      >
+        <ShadowbaneHUD
+          character={myCharacter}
+          runEnergy={runEnergy}
+          isSprinting={isSprinting}
+          combatStatus={combatStatus}
+          targetName={activeTarget?.entity?.name || ""}
+          voiceStatus={voice.status}
+          pushToTalk={voice.pushToTalk}
+          speaking={voice.speaking}
+          onInventory={() => setShowInventory(true)}
+          inline
+        />
+      </MovableHudPanel>
+
+      <MovableHudPanel
+        panelId="hud_minimap"
+        title="Minimap"
+        minWidth={150}
+        minHeight={120}
+        defaultLayout={{ x: Math.max(20, (typeof window !== "undefined" ? window.innerWidth : 1500) - 190), y: 44, width: 170, height: 144, opacity: 0.95, locked: false }}
+        zIndex={43}
+      >
+        {({ layout }) => (
+          <Minimap
+            myCharacter={myCharacter}
+            allCharacters={allCharacters}
+            monsters={monsters}
+            onFastTravel={requestFastTravel}
+            inline
+            width={Math.max(120, layout.width)}
+            height={Math.max(90, layout.height - 24)}
+          />
+        )}
+      </MovableHudPanel>
+
+      <MovableHudPanel
+        panelId="hud_hotbar"
+        title="Abilities"
+        minWidth={430}
+        minHeight={96}
+        defaultLayout={{ x: Math.max(20, (typeof window !== "undefined" ? window.innerWidth : 1500) / 2 - 250), y: Math.max(20, (typeof window !== "undefined" ? window.innerHeight : 900) - 170), width: 500, height: 116, opacity: 0.96, locked: false }}
+        zIndex={44}
+      >
+        <div className="w-full h-full flex items-center justify-center">
           <AbilityHotbar
             abilities={characterAbilities}
             cooldowns={cooldowns}
@@ -942,17 +1021,18 @@ export default function World() {
             autoAttacking={autoAttacking}
           />
         </div>
+      </MovableHudPanel>
 
-        {/* Group window */}
-        <GroupWindow
-          myCharacter={myCharacter}
-          allCharacters={allCharacters}
-          onMoveFollower={null}
-        />
-
-        {/* Target frame â€” top-center, authoritative, single instance */}
-        {activeTarget && myCharacter && (
-          <div className="absolute top-12 left-1/2 -translate-x-1/2 z-[25] pointer-events-auto">
+      {activeTarget && myCharacter && (
+        <MovableHudPanel
+          panelId="hud_target"
+          title="Target"
+          minWidth={250}
+          minHeight={148}
+          defaultLayout={{ x: Math.max(20, (typeof window !== "undefined" ? window.innerWidth : 1500) / 2 - 150), y: 54, width: 300, height: 190, opacity: 0.97, locked: false }}
+          zIndex={45}
+        >
+          <div className="w-full h-full">
             <TargetFrame
               target={activeTarget}
               myCharacter={myCharacter}
@@ -966,50 +1046,108 @@ export default function World() {
               onClear={() => { clearTarget(); clearActiveTarget(); }}
             />
           </div>
+        </MovableHudPanel>
+      )}
+
+      {(combatSession || combatStatus !== "idle") && (
+        <MovableHudPanel
+          panelId="hud_combat"
+          title="Combat"
+          minWidth={260}
+          minHeight={98}
+          defaultLayout={{ x: Math.max(20, (typeof window !== "undefined" ? window.innerWidth : 1500) / 2 - 170), y: 252, width: 340, height: 132, opacity: 0.95, locked: false }}
+          zIndex={44}
+        >
+          <InWorldCombatPanel
+            session={combatSession}
+            status={combatStatus}
+            combatError={combatError}
+            inline
+          />
+        </MovableHudPanel>
+      )}
+
+      <MovableHudPanel
+        panelId="hud_chat"
+        title="Chat"
+        minWidth={260}
+        minHeight={150}
+        defaultLayout={{
+          x: 10,
+          y: Math.max(20, (typeof window !== "undefined" ? window.innerHeight : 900) - 220),
+          width: 320,
+          height: 180,
+          opacity: 0.96,
+          locked: false,
+          chatTextScale: 1,
+          chatTextColor: "#d1d5db",
+        }}
+        zIndex={46}
+        renderContextControls={({ layout, setLayout }) => (
+          <>
+            <label className="block text-[10px] uppercase tracking-wide text-[#ad9f7a]">Text Size</label>
+            <input
+              type="range"
+              min={75}
+              max={150}
+              value={Math.round((Number(layout.chatTextScale || 1)) * 100)}
+              onChange={(e) => setLayout((prev) => ({ ...prev, chatTextScale: Number(e.target.value || 100) / 100 }))}
+              className="mt-1 w-full"
+            />
+            <label className="mt-2 block text-[10px] uppercase tracking-wide text-[#ad9f7a]">Text Color</label>
+            <input
+              type="color"
+              value={String(layout.chatTextColor || "#d1d5db")}
+              onChange={(e) => setLayout((prev) => ({ ...prev, chatTextColor: String(e.target.value || "#d1d5db") }))}
+              className="mt-1 h-7 w-full rounded border border-[#4f4634] bg-transparent"
+            />
+          </>
         )}
+      >
+        {({ layout }) => (
+          <ChatDock
+            compactWorld
+            inline
+            messages={messages}
+            onSend={handleSendMessage}
+            myCharacter={myCharacter}
+            chatTextScale={Number(layout.chatTextScale || 1)}
+            chatTextColor={String(layout.chatTextColor || "#d1d5db")}
+          />
+        )}
+      </MovableHudPanel>
 
-      </div>
-
-      <ShadowbaneHUD
-        character={myCharacter}
-        runEnergy={runEnergy}
-        isSprinting={isSprinting}
-        combatStatus={combatStatus}
-        targetName={activeTarget?.entity?.name || ""}
-        voiceStatus={voice.status}
-        pushToTalk={voice.pushToTalk}
-        speaking={voice.speaking}
-        onInventory={() => setShowInventory(true)}
-      />
-
-      <InWorldCombatPanel
-        session={combatSession}
-        status={combatStatus}
-        combatError={combatError}
-        aimVec={aimVec}
-      />
-
-      <ChatDock
-        compactWorld
-        messages={messages}
-        onSend={handleSendMessage}
-        myCharacter={myCharacter}
-      />
-
-      <VoiceOverlayPanel
-        listening={voiceCommands.listening}
-        supported={voiceCommands.supported}
-        transcript={voiceCommands.lastTranscript}
-        error={voiceCommands.lastError || voice.error}
-        manualPrompt={voiceCommands.manualPrompt}
-        manualInput={voiceCommands.manualInput}
-        setManualInput={voiceCommands.setManualInput}
-        submitManual={voiceCommands.submitManual}
-        closeManual={() => voiceCommands.setManualPrompt(false)}
-        pushToTalk={voice.pushToTalk}
-        togglePushToTalk={voice.togglePushToTalk}
-        remoteCount={voice.remotePeers.length || partyMembers.length}
-      />
+      <MovableHudPanel
+        panelId="hud_voice"
+        title="Voice"
+        minWidth={260}
+        minHeight={140}
+        defaultLayout={{
+          x: Math.max(20, (typeof window !== "undefined" ? window.innerWidth : 1500) - 360),
+          y: Math.max(20, (typeof window !== "undefined" ? window.innerHeight : 900) - 230),
+          width: 340,
+          height: 190,
+          opacity: 0.94,
+          locked: false,
+        }}
+        zIndex={45}
+      >
+        <VoiceOverlayPanel
+          listening={voiceCommands.listening}
+          supported={voiceCommands.supported}
+          transcript={voiceCommands.lastTranscript}
+          error={voiceCommands.lastError || voice.error}
+          manualPrompt={voiceCommands.manualPrompt}
+          manualInput={voiceCommands.manualInput}
+          setManualInput={voiceCommands.setManualInput}
+          submitManual={voiceCommands.submitManual}
+          closeManual={() => voiceCommands.setManualPrompt(false)}
+          pushToTalk={voice.pushToTalk}
+          togglePushToTalk={voice.togglePushToTalk}
+          remoteCount={voice.remotePeers.length || partyMembers.length}
+          inline
+        />
+      </MovableHudPanel>
 
       <div className="hidden">
         {voice.remoteStreams.map((row) => (

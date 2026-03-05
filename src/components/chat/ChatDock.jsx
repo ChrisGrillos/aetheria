@@ -22,7 +22,16 @@ function savePrefs(prefs) {
   try { localStorage.setItem(PREFS_KEY, JSON.stringify(prefs)); } catch {}
 }
 
-export default function ChatDock({ messages: rawMessages = [], onSend, myCharacter, compactWorld = false, className = "" }) {
+export default function ChatDock({
+  messages: rawMessages = [],
+  onSend,
+  myCharacter,
+  compactWorld = false,
+  inline = false,
+  className = "",
+  chatTextScale = 1,
+  chatTextColor = "#d1d5db",
+}) {
   const prefs = useMemo(() => loadPrefs(), []);
 
   const [tabs, setTabs] = useState(() => prefs.tabs || DEFAULT_TABS);
@@ -166,18 +175,21 @@ export default function ChatDock({ messages: rawMessages = [], onSend, myCharact
 
   const activeTab = tabs.find(t => t.id === activeTabId) || tabs[0];
 
+  const effectiveMinimized = inline ? false : minimized;
+
   return (
     <div
       className={`flex flex-col bg-gray-950/95 transition-all duration-200
         ${compactWorld
-          ? `absolute bottom-2 left-2 z-30 border border-[#4a4130] rounded-md shadow-2xl ${minimized ? "w-10 h-10" : "w-[292px] h-[156px]"}`
-          : `border-l border-gray-800 shrink-0 ${minimized ? "w-10" : "w-80"}`
+          ? `${inline ? "" : "absolute bottom-2 left-2 z-30"} border border-[#4a4130] rounded-md shadow-2xl ${inline ? "w-full h-full" : effectiveMinimized ? "w-10 h-10" : "w-[292px] h-[156px]"}`
+          : `border-l border-gray-800 shrink-0 ${effectiveMinimized ? "w-10" : "w-80"}`
         }
         ${className}`}
+      style={{ color: chatTextColor }}
     >
       {/* Header */}
       <div className="flex items-center justify-between px-2 py-1.5 border-b border-gray-800 shrink-0">
-        {!minimized && (
+        {!effectiveMinimized && (
           <div className="flex items-center gap-1">
             <MessageSquare className="w-3.5 h-3.5 text-amber-500" />
             <span className="text-xs font-bold text-gray-400">Chat</span>
@@ -191,15 +203,17 @@ export default function ChatDock({ messages: rawMessages = [], onSend, myCharact
             </button>
           </div>
         )}
-        <button
-          onClick={() => setMinimized(v => !v)}
-          className="text-gray-600 hover:text-gray-300 ml-auto p-0.5"
-        >
-          {minimized ? <Maximize2 className="w-3.5 h-3.5" /> : <Minimize2 className="w-3.5 h-3.5" />}
-        </button>
+        {!inline && (
+          <button
+            onClick={() => setMinimized(v => !v)}
+            className="text-gray-600 hover:text-gray-300 ml-auto p-0.5"
+          >
+            {effectiveMinimized ? <Maximize2 className="w-3.5 h-3.5" /> : <Minimize2 className="w-3.5 h-3.5" />}
+          </button>
+        )}
       </div>
 
-      {!minimized && (
+      {!effectiveMinimized && (
         <>
           {/* Tabs */}
           <ChatTabs
@@ -222,6 +236,8 @@ export default function ChatDock({ messages: rawMessages = [], onSend, myCharact
               onClickSpeaker={(msg) => handleClickSpeaker(msg)}
               muted={muted}
               ignored={ignored}
+              textScale={chatTextScale}
+              textColor={chatTextColor}
             />
           )}
 

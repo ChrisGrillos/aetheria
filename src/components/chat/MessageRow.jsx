@@ -13,7 +13,7 @@ function formatTime(ts) {
   } catch { return ""; }
 }
 
-function SummaryRow({ msg, showTimestamps }) {
+function SummaryRow({ msg, showTimestamps, textColor }) {
   const [expanded, setExpanded] = useState(false);
   return (
     <div className="my-0.5">
@@ -22,14 +22,14 @@ function SummaryRow({ msg, showTimestamps }) {
         className="w-full text-left flex items-center gap-1 text-gray-500 hover:text-gray-400 text-xs px-1 py-0.5 rounded hover:bg-gray-800/40 transition-all"
       >
         {expanded ? <ChevronDown className="w-3 h-3 shrink-0" /> : <ChevronRight className="w-3 h-3 shrink-0" />}
-        <span className="italic">{msg.message}</span>
+          <span className="italic" style={{ color: textColor }}>{msg.message}</span>
         <span className="ml-auto text-gray-600 text-[10px] shrink-0">×{msg.summaryCount}</span>
         {showTimestamps && <span className="text-[10px] text-gray-700 ml-1">{formatTime(msg.timestamp)}</span>}
       </button>
       {expanded && (
         <div className="pl-4 border-l border-gray-700/40 ml-1 mt-0.5 space-y-0.5">
           {msg.summaryMessages.map(m => (
-            <MessageRow key={m.id} msg={m} showTimestamps={showTimestamps} />
+            <MessageRow key={m.id} msg={m} showTimestamps={showTimestamps} textColor={textColor} />
           ))}
         </div>
       )}
@@ -37,8 +37,8 @@ function SummaryRow({ msg, showTimestamps }) {
   );
 }
 
-export default function MessageRow({ msg, showTimestamps, onClickSpeaker, myCharacterId, highlighted }) {
-  if (msg.isSummary) return <SummaryRow msg={msg} showTimestamps={showTimestamps} />;
+export default function MessageRow({ msg, showTimestamps, onClickSpeaker, myCharacterId, highlighted, textColor = "#d1d5db" }) {
+  if (msg.isSummary) return <SummaryRow msg={msg} showTimestamps={showTimestamps} textColor={textColor} />;
 
   const chMeta    = CHANNEL_META[msg.channel_type] || CHANNEL_META.say;
   const spColor   = SPEAKER_COLORS[msg.speaker_type] || "text-gray-300";
@@ -56,7 +56,7 @@ export default function MessageRow({ msg, showTimestamps, onClickSpeaker, myChar
     return (
       <div className={`flex items-start gap-1 text-xs py-0.5 ${rowBg}`}>
         {showTimestamps && <span className="text-gray-700 shrink-0 text-[10px] mt-0.5">{formatTime(msg.timestamp)}</span>}
-        <span className="text-gray-500 italic">{msg.message}</span>
+        <span className="text-gray-500 italic" style={{ color: textColor }}>{msg.message}</span>
       </div>
     );
   }
@@ -72,7 +72,7 @@ export default function MessageRow({ msg, showTimestamps, onClickSpeaker, myChar
           <>
             <span className={`font-bold ${spColor}`}>{isMe ? `→ ${msg.tell_target}` : msg.speaker_name}</span>
             <span className="text-pink-300/70 ml-1 text-[10px]">[tells you]</span>
-            <span className="text-gray-200 ml-1 break-words">{msg.message}</span>
+             <span className="text-gray-200 ml-1 break-words" style={{ color: textColor }}>{msg.message}</span>
           </>
         ) : (
           <>
@@ -83,9 +83,12 @@ export default function MessageRow({ msg, showTimestamps, onClickSpeaker, myChar
               {msg.speaker_name}
             </button>
             <span className={`ml-1 text-[10px] opacity-60 ${chMeta.color}`}>[{chMeta.label}]</span>
-            <span className={`ml-1 break-words ${isMention ? "text-yellow-200 font-semibold" : "text-gray-300"}`}>
-              {msg.message}
-            </span>
+             <span
+               className={`ml-1 break-words ${isMention ? "text-yellow-200 font-semibold" : "text-gray-300"}`}
+               style={isMention ? undefined : { color: textColor }}
+             >
+               {msg.message}
+             </span>
           </>
         )}
       </div>
