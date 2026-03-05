@@ -11,6 +11,9 @@ import { buildPath, isPassable } from "@/components/shared/movementAuthority";
 import { useAmbientWorld, AmbientHUDWidget } from "./AmbientWorld";
 import { createTownWalkers } from "./TownWalkers";
 import { createNPCEntities } from "./NPCEntities";
+import { buildProceduralTerrain, getTerrainHeight, worldPosToTile } from "./proceduralTerrain";
+import { buildTerrainProps } from "./terrainProps";
+import { buildCharacterMesh as buildNewCharMesh, buildMonsterMesh as buildNewMonsterMesh } from "./characterModels";
 
 // ─── CONSTANTS ────────────────────────────────────────────────────────────────
 
