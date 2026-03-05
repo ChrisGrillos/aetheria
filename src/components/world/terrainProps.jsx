@@ -145,13 +145,34 @@ function addTree(group, wx, baseY, wz, treeType = "pine") {
 // ─── ROCK BUILDER ────────────────────────────────────────────────────────────
 
 function addRock(group, wx, baseY, wz, size, color = 0x6a6a6a) {
+  const h1 = hash2(Math.round(wx), Math.round(wz));
+  const h2 = hash2b(Math.round(wx), Math.round(wz));
+
+  // Main rock body
   const rGeo = new THREE.DodecahedronGeometry(size, 0);
   const rMat = new THREE.MeshLambertMaterial({ color });
   const rock = new THREE.Mesh(rGeo, rMat);
   rock.position.set(wx, baseY + size * 0.55, wz);
-  rock.rotation.set(hash2(Math.round(wx), Math.round(wz)) * 3, hash2b(Math.round(wx), Math.round(wz)) * 3, 0);
+  rock.rotation.set(h1 * 3, h2 * 3, 0);
+  rock.scale.set(1.0, 0.7 + h1 * 0.5, 1.0 + (h2 - 0.5) * 0.4);
   rock.castShadow = true;
   group.add(rock);
+
+  // Smaller accent pebbles for larger rocks
+  if (size > 0.12) {
+    const pebbles = Math.floor(h1 * 2) + 1;
+    for (let i = 0; i < pebbles; i++) {
+      const pa = hash2c(Math.round(wx) + i, Math.round(wz)) * Math.PI * 2;
+      const pd = size * 0.8 + hash2(i, Math.round(wz)) * size * 0.4;
+      const ps = size * 0.25 + hash2b(i, Math.round(wx)) * size * 0.2;
+      const pGeo = new THREE.DodecahedronGeometry(ps, 0);
+      const pMat = new THREE.MeshLambertMaterial({ color: new THREE.Color(color).multiplyScalar(0.85).getHex() });
+      const pebble = new THREE.Mesh(pGeo, pMat);
+      pebble.position.set(wx + Math.cos(pa) * pd, baseY + ps * 0.4, wz + Math.sin(pa) * pd);
+      pebble.rotation.set(hash2c(i, Math.round(wx)) * 3, 0, 0);
+      group.add(pebble);
+    }
+  }
 }
 
 // ─── GRASS TUFT ──────────────────────────────────────────────────────────────
