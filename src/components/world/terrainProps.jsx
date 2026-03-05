@@ -381,7 +381,8 @@ export function buildTerrainProps(cx, cy, range = 32) {
       const wz = ty * TILE_SIZE + (h3 - 0.5) * 1.2;
 
       if (zone?.id === "the_thornwild") {
-        if (h1 < 0.20) addTree(group, wx, baseY, wz, "pine");
+        if (h1 < 0.12) addTree(group, wx, baseY, wz, "pine");
+        else if (h1 < 0.20) addTree(group, wx, baseY, wz, h3 > 0.5 ? "oak" : "pine");
         else if (h1 < 0.24) addRock(group, wx, baseY, wz, 0.10 + h2 * 0.08, 0x3a4030);
         else if (h1 < 0.30) addGrass(group, wx, baseY, wz, 0x1a3018);
         else if (h1 < 0.33) addMushroom(group, wx, baseY, wz);
