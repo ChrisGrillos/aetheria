@@ -772,7 +772,7 @@ export default function World() {
       } catch (e) {
         setCombatError(String(e?.message || e));
       }
-    }, 900);
+    }, 1500);
 
     const sync = setInterval(async () => {
       try {
@@ -789,7 +789,7 @@ export default function World() {
       } catch {
         // keep fail-open behavior for sync
       }
-    }, 450);
+    }, 1200);
 
     return () => {
       clearInterval(tick);
