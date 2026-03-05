@@ -338,9 +338,10 @@ export default function WorldScene3D({
         const angle = zoom.angle;
 
         // Classic 3/4 MMO camera with dynamic angle and height based on zoom
+        const terrainY = playerPosRef.current.y || 0;
         camera.position.set(
           px - Math.sin(angle) * dist,
-          height,
+          terrainY + height,
           pz + Math.cos(angle) * dist
         );
         const lookAtY = getTerrainHeight(Math.round(px / TILE_SIZE), Math.round(pz / TILE_SIZE));
