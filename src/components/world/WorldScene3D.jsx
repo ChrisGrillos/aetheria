@@ -391,7 +391,8 @@ export default function WorldScene3D({
         const mesh = monsterMeshesRef.current[m.id];
         if (!mesh) return;
         if (!entityStates[m.id]) {
-          mesh.position.y = Math.sin(now * 0.0024 + m.id.charCodeAt(0)) * 0.06;
+          const mh = getTerrainHeight(m.x, m.y);
+          mesh.position.y = mh + Math.sin(now * 0.0024 + m.id.charCodeAt(0)) * 0.06;
           mesh.rotation.y = Math.sin(now * 0.0010 + m.id.charCodeAt(0)) * 0.18;
         }
         applyEntityStateVisuals(mesh, m.id, now);
