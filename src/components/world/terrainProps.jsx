@@ -1179,4 +1179,35 @@ function buildTownWalls(group, zone) {
   const sg = new THREE.Mesh(sgGeo, new THREE.MeshLambertMaterial({ color: 0xd4a017 }));
   sg.position.set(gx, baseY + pillarH + 0.46, gz);
   group.add(sg);
+
+  // Gate torches
+  [-1, 1].forEach(side => {
+    const tGeo = new THREE.CylinderGeometry(0.025, 0.03, 0.30, 4);
+    const tMat = new THREE.MeshLambertMaterial({ color: 0x5a3a1a });
+    const torch = new THREE.Mesh(tGeo, tMat);
+    torch.position.set(gx + side * (gateGap / 2 + 0.15), baseY + pillarH * 0.7, gz + 0.22);
+    group.add(torch);
+    const fGeo = new THREE.ConeGeometry(0.05, 0.12, 4);
+    const fMat = new THREE.MeshBasicMaterial({ color: 0xff8844 });
+    const flame = new THREE.Mesh(fGeo, fMat);
+    flame.position.set(gx + side * (gateGap / 2 + 0.15), baseY + pillarH * 0.7 + 0.21, gz + 0.22);
+    group.add(flame);
+  });
+
+  // Banner flags on towers
+  [
+    [x0w, z0w], [x1w, z0w], [x0w, z1w], [x1w, z1w]
+  ].forEach(([bx, bz], i) => {
+    const poleGeo = new THREE.CylinderGeometry(0.02, 0.02, 1.0, 4);
+    const poleMat = new THREE.MeshLambertMaterial({ color: 0x555555 });
+    const pole = new THREE.Mesh(poleGeo, poleMat);
+    pole.position.set(bx, baseY + wallH + 0.5 + 0.5, bz);
+    group.add(pole);
+    const flagColors = [0xcc2222, 0x2244aa, 0xcc8822, 0x22aa44];
+    const flagGeo = new THREE.BoxGeometry(0.35, 0.22, 0.02);
+    const flagMat = new THREE.MeshLambertMaterial({ color: flagColors[i] });
+    const flag = new THREE.Mesh(flagGeo, flagMat);
+    flag.position.set(bx + 0.20, baseY + wallH + 0.5 + 0.85, bz);
+    group.add(flag);
+  });
 }
