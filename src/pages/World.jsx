@@ -139,11 +139,11 @@ export default function World() {
 
   useEffect(() => {
     loadWorld();
-    const interval = setInterval(loadCharacters, 3000);
+    const interval = setInterval(loadCharacters, 8000);
     const worldInterval = setInterval(async () => {
       const res = await gameService.worldTick().catch(() => null);
       if (res) setDebugGlobal("__monsterAITelemetry", res.monster_ai || null);
-    }, 4000);
+    }, 12000);
     return () => { clearInterval(interval); clearInterval(worldInterval); };
   }, [setDebugGlobal]);
 
