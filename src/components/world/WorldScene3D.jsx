@@ -379,8 +379,8 @@ export default function WorldScene3D({
         const mesh = charMeshesRef.current[c.id];
         if (!mesh) return;
         const target = tileToWorld(c.x, c.y);
-        mesh.position.lerp(new THREE.Vector3(target.x, 0, target.z), 0.12);
-        if (!entityStates[c.id]) mesh.position.y = Math.sin(now * 0.0018 + c.id.charCodeAt(0)) * 0.04;
+        mesh.position.lerp(new THREE.Vector3(target.x, target.y, target.z), 0.12);
+        if (!entityStates[c.id]) mesh.position.y = target.y + Math.sin(now * 0.0018 + c.id.charCodeAt(0)) * 0.04;
         applyEntityStateVisuals(mesh, c.id, now);
         billboardHpBar(mesh, c, camera, settings.showHealthBars);
       });
