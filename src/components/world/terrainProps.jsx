@@ -85,18 +85,179 @@ function addRock(group, wx, baseY, wz, size, color = 0x6a6a6a) {
 // ─── GRASS TUFT ──────────────────────────────────────────────────────────────
 
 function addGrass(group, wx, baseY, wz, color = 0x3a5520) {
-  for (let g = 0; g < 3; g++) {
-    const ga = (g / 3) * Math.PI * 2;
-    const bladeGeo = new THREE.ConeGeometry(0.04, 0.22, 3);
+  const count = 4 + Math.floor(hash2(Math.round(wx * 3), Math.round(wz * 3)) * 4);
+  for (let g = 0; g < count; g++) {
+    const ga = (g / count) * Math.PI * 2 + hash2c(g, Math.round(wx)) * 0.6;
+    const dist = 0.06 + hash2b(g, Math.round(wz)) * 0.14;
+    const h = 0.14 + hash2(Math.round(wx) + g, Math.round(wz) + g) * 0.18;
+    const bladeGeo = new THREE.ConeGeometry(0.025, h, 3);
     const bladeMat = new THREE.MeshLambertMaterial({ color });
     const blade = new THREE.Mesh(bladeGeo, bladeMat);
     blade.position.set(
-      wx + Math.cos(ga) * 0.12,
-      baseY + 0.11,
-      wz + Math.sin(ga) * 0.12
+      wx + Math.cos(ga) * dist,
+      baseY + h * 0.5,
+      wz + Math.sin(ga) * dist
     );
-    blade.rotation.z = (hash2(Math.round(wx) + g, Math.round(wz)) - 0.5) * 0.3;
+    blade.rotation.z = (hash2(Math.round(wx) + g, Math.round(wz)) - 0.5) * 0.35;
+    blade.rotation.x = (hash2b(Math.round(wx), Math.round(wz) + g) - 0.5) * 0.2;
     group.add(blade);
+  }
+}
+
+// ─── MUSHROOM CLUSTER ────────────────────────────────────────────────────────
+
+function addMushroom(group, wx, baseY, wz) {
+  const count = 1 + Math.floor(hash2(Math.round(wx * 5), Math.round(wz * 5)) * 3);
+  for (let i = 0; i < count; i++) {
+    const angle = (i / count) * Math.PI * 2 + hash2c(i, Math.round(wx)) * 1.5;
+    const dist = i * 0.08;
+    const mx = wx + Math.cos(angle) * dist;
+    const mz = wz + Math.sin(angle) * dist;
+    const stemH = 0.08 + hash2b(Math.round(mx * 10), Math.round(mz * 10)) * 0.10;
+    const capR = 0.04 + hash2(Math.round(mx * 10), Math.round(mz * 10)) * 0.05;
+
+    const stemGeo = new THREE.CylinderGeometry(0.015, 0.02, stemH, 4);
+    const stemMat = new THREE.MeshLambertMaterial({ color: 0xddd0b8 });
+    const stem = new THREE.Mesh(stemGeo, stemMat);
+    stem.position.set(mx, baseY + stemH * 0.5, mz);
+    group.add(stem);
+
+    const capGeo = new THREE.SphereGeometry(capR, 5, 3, 0, Math.PI * 2, 0, Math.PI * 0.6);
+    const capColor = hash2c(Math.round(mx * 10), Math.round(mz * 10)) > 0.5 ? 0xcc3322 : 0x886644;
+    const capMat = new THREE.MeshLambertMaterial({ color: capColor });
+    const cap = new THREE.Mesh(capGeo, capMat);
+    cap.position.set(mx, baseY + stemH + capR * 0.1, mz);
+    group.add(cap);
+  }
+}
+
+// ─── FLOWER PATCH ────────────────────────────────────────────────────────────
+
+function addFlower(group, wx, baseY, wz) {
+  const colors = [0xff6688, 0xffaa44, 0xaa66ff, 0xffff55, 0x66ccff];
+  const count = 2 + Math.floor(hash2(Math.round(wx * 7), Math.round(wz * 7)) * 3);
+  for (let i = 0; i < count; i++) {
+    const angle = (i / count) * Math.PI * 2;
+    const dist = 0.05 + hash2b(i, Math.round(wx)) * 0.12;
+    const fx = wx + Math.cos(angle) * dist;
+    const fz = wz + Math.sin(angle) * dist;
+    const stemH = 0.12 + hash2c(i, Math.round(wz)) * 0.10;
+
+    const sGeo = new THREE.CylinderGeometry(0.01, 0.015, stemH, 3);
+    const sMat = new THREE.MeshLambertMaterial({ color: 0x3a6a20 });
+    const stem = new THREE.Mesh(sGeo, sMat);
+    stem.position.set(fx, baseY + stemH * 0.5, fz);
+    group.add(stem);
+
+    const petalColor = colors[Math.floor(hash2(Math.round(fx * 10), Math.round(fz * 10)) * colors.length)];
+    const pGeo = new THREE.SphereGeometry(0.03, 4, 3);
+    const pMat = new THREE.MeshLambertMaterial({ color: petalColor });
+    const petal = new THREE.Mesh(pGeo, pMat);
+    petal.position.set(fx, baseY + stemH + 0.02, fz);
+    group.add(petal);
+  }
+}
+
+// ─── CAMPFIRE ────────────────────────────────────────────────────────────────
+
+function addCampfire(group, wx, baseY, wz) {
+  // Ring of stones
+  for (let i = 0; i < 6; i++) {
+    const angle = (i / 6) * Math.PI * 2;
+    const sGeo = new THREE.DodecahedronGeometry(0.06, 0);
+    const sMat = new THREE.MeshLambertMaterial({ color: 0x555555 });
+    const stone = new THREE.Mesh(sGeo, sMat);
+    stone.position.set(wx + Math.cos(angle) * 0.18, baseY + 0.03, wz + Math.sin(angle) * 0.18);
+    group.add(stone);
+  }
+  // Logs
+  const logGeo = new THREE.CylinderGeometry(0.03, 0.025, 0.22, 4);
+  const logMat = new THREE.MeshLambertMaterial({ color: 0x3a2010 });
+  [-0.5, 0.5].forEach(r => {
+    const log = new THREE.Mesh(logGeo, logMat);
+    log.position.set(wx, baseY + 0.04, wz);
+    log.rotation.z = Math.PI / 2;
+    log.rotation.y = r;
+    group.add(log);
+  });
+  // Flame
+  const fGeo = new THREE.ConeGeometry(0.06, 0.18, 5);
+  const fMat = new THREE.MeshBasicMaterial({ color: 0xff6600 });
+  const flame = new THREE.Mesh(fGeo, fMat);
+  flame.position.set(wx, baseY + 0.14, wz);
+  group.add(flame);
+  const fGeo2 = new THREE.ConeGeometry(0.035, 0.12, 4);
+  const fMat2 = new THREE.MeshBasicMaterial({ color: 0xffcc00 });
+  const flame2 = new THREE.Mesh(fGeo2, fMat2);
+  flame2.position.set(wx, baseY + 0.16, wz + 0.02);
+  group.add(flame2);
+}
+
+// ─── CRYSTAL CLUSTER ─────────────────────────────────────────────────────────
+
+function addCrystal(group, wx, baseY, wz, color = 0x8844ff) {
+  const count = 2 + Math.floor(hash2(Math.round(wx * 9), Math.round(wz * 9)) * 3);
+  for (let i = 0; i < count; i++) {
+    const angle = (i / count) * Math.PI * 2 + 0.3;
+    const dist = hash2b(i, Math.round(wx)) * 0.12;
+    const h = 0.15 + hash2c(i, Math.round(wz)) * 0.25;
+    const r = 0.03 + hash2(i, Math.round(wx)) * 0.03;
+    const cGeo = new THREE.CylinderGeometry(0.005, r, h, 5);
+    const cMat = new THREE.MeshLambertMaterial({ color, transparent: true, opacity: 0.8 });
+    cMat.emissive = new THREE.Color(color);
+    cMat.emissiveIntensity = 0.3;
+    const crystal = new THREE.Mesh(cGeo, cMat);
+    crystal.position.set(wx + Math.cos(angle) * dist, baseY + h * 0.5, wz + Math.sin(angle) * dist);
+    crystal.rotation.z = (hash2(Math.round(wx) + i, Math.round(wz)) - 0.5) * 0.4;
+    crystal.rotation.x = (hash2b(Math.round(wx), Math.round(wz) + i) - 0.5) * 0.3;
+    group.add(crystal);
+  }
+}
+
+// ─── FALLEN LOG ──────────────────────────────────────────────────────────────
+
+function addFallenLog(group, wx, baseY, wz) {
+  const len = 0.8 + hash2(Math.round(wx * 3), Math.round(wz * 3)) * 0.6;
+  const logGeo = new THREE.CylinderGeometry(0.06, 0.08, len, 5);
+  const logMat = new THREE.MeshLambertMaterial({ color: 0x3a2a10 });
+  const log = new THREE.Mesh(logGeo, logMat);
+  log.position.set(wx, baseY + 0.06, wz);
+  log.rotation.z = Math.PI / 2;
+  log.rotation.y = hash2b(Math.round(wx), Math.round(wz)) * Math.PI;
+  log.castShadow = true;
+  group.add(log);
+
+  // Moss on log
+  if (hash2c(Math.round(wx * 5), Math.round(wz * 5)) > 0.5) {
+    const mossGeo = new THREE.BoxGeometry(len * 0.5, 0.03, 0.10);
+    const mossMat = new THREE.MeshLambertMaterial({ color: 0x2a5a18 });
+    const moss = new THREE.Mesh(mossGeo, mossMat);
+    moss.position.set(wx, baseY + 0.12, wz);
+    moss.rotation.y = log.rotation.y;
+    group.add(moss);
+  }
+}
+
+// ─── SWAMP POOL ──────────────────────────────────────────────────────────────
+
+function addSwampPool(group, wx, baseY, wz) {
+  const r = 0.3 + hash2(Math.round(wx * 4), Math.round(wz * 4)) * 0.3;
+  const poolGeo = new THREE.CircleGeometry(r, 8);
+  const poolMat = new THREE.MeshLambertMaterial({ color: 0x1a3020, transparent: true, opacity: 0.7 });
+  const pool = new THREE.Mesh(poolGeo, poolMat);
+  pool.rotation.x = -Math.PI / 2;
+  pool.position.set(wx, baseY + 0.01, wz);
+  group.add(pool);
+
+  // Reeds around edge
+  for (let i = 0; i < 4; i++) {
+    const a = (i / 4) * Math.PI * 2 + hash2c(i, Math.round(wx)) * 0.5;
+    const reedGeo = new THREE.CylinderGeometry(0.01, 0.015, 0.35, 3);
+    const reedMat = new THREE.MeshLambertMaterial({ color: 0x3a4a18 });
+    const reed = new THREE.Mesh(reedGeo, reedMat);
+    reed.position.set(wx + Math.cos(a) * (r + 0.05), baseY + 0.17, wz + Math.sin(a) * (r + 0.05));
+    reed.rotation.z = (hash2b(i, Math.round(wz)) - 0.5) * 0.2;
+    group.add(reed);
   }
 }
 
@@ -127,30 +288,65 @@ export function buildTerrainProps(cx, cy, range = 32) {
       const wz = ty * TILE_SIZE + (h3 - 0.5) * 1.2;
 
       if (zone?.id === "the_thornwild") {
-        if (h1 < 0.22) addTree(group, wx, baseY, wz, "pine");
-        else if (h1 < 0.28) addRock(group, wx, baseY, wz, 0.10 + h2 * 0.08, 0x3a4030);
-        else if (h1 < 0.34) addGrass(group, wx, baseY, wz, 0x1a3018);
+        if (h1 < 0.20) addTree(group, wx, baseY, wz, "pine");
+        else if (h1 < 0.24) addRock(group, wx, baseY, wz, 0.10 + h2 * 0.08, 0x3a4030);
+        else if (h1 < 0.30) addGrass(group, wx, baseY, wz, 0x1a3018);
+        else if (h1 < 0.33) addMushroom(group, wx, baseY, wz);
+        else if (h1 < 0.36) addFallenLog(group, wx, baseY, wz);
+        else if (h1 < 0.38) addFlower(group, wx, baseY, wz);
       } else if (zone?.id === "greyfen_reach") {
         if (h1 < 0.10) addTree(group, wx, baseY, wz, "dead");
-        else if (h1 < 0.18) addGrass(group, wx, baseY, wz, 0x2a3a1a);
-        else if (h1 < 0.22) addRock(group, wx, baseY, wz, 0.08 + h2 * 0.06, 0x3a3a2a);
+        else if (h1 < 0.16) addGrass(group, wx, baseY, wz, 0x2a3a1a);
+        else if (h1 < 0.20) addRock(group, wx, baseY, wz, 0.08 + h2 * 0.06, 0x3a3a2a);
+        else if (h1 < 0.24) addSwampPool(group, wx, baseY, wz);
+        else if (h1 < 0.27) addMushroom(group, wx, baseY, wz);
+        else if (h1 < 0.29) addFallenLog(group, wx, baseY, wz);
       } else if (zone?.id === "kharum_deep") {
-        if (h1 < 0.16) addRock(group, wx, baseY, wz, 0.14 + h2 * 0.18, 0x666666);
-        else if (h1 < 0.20) addRock(group, wx, baseY, wz, 0.08 + h2 * 0.06, 0x555555);
-      } else if (zone?.id === "the_ashen_march") {
-        if (h1 < 0.06) addRock(group, wx, baseY, wz, 0.08 + h2 * 0.06, 0x7a6a50);
-        else if (h1 < 0.12) addGrass(group, wx, baseY, wz, 0x5a6828);
-        else if (h1 < 0.16) {
-          // Wheat stalk
-          const stalkGeo = new THREE.CylinderGeometry(0.02, 0.04, 0.55, 4);
-          const stalkMat = new THREE.MeshLambertMaterial({ color: 0xd4aa30 });
-          const stalk = new THREE.Mesh(stalkGeo, stalkMat);
-          stalk.position.set(wx, baseY + 0.28, wz);
-          group.add(stalk);
+        if (h1 < 0.14) addRock(group, wx, baseY, wz, 0.14 + h2 * 0.18, 0x666666);
+        else if (h1 < 0.18) addRock(group, wx, baseY, wz, 0.08 + h2 * 0.06, 0x555555);
+        else if (h1 < 0.21) addCrystal(group, wx, baseY, wz, 0x6688ff);
+        else if (h1 < 0.23) {
+          // Ore vein
+          const oreGeo = new THREE.DodecahedronGeometry(0.10 + h2 * 0.06, 0);
+          const oreColor = h3 > 0.5 ? 0xb87333 : 0x888888;
+          const oreMat = new THREE.MeshLambertMaterial({ color: oreColor });
+          oreMat.emissive = new THREE.Color(oreColor);
+          oreMat.emissiveIntensity = 0.15;
+          const ore = new THREE.Mesh(oreGeo, oreMat);
+          ore.position.set(wx, baseY + 0.08, wz);
+          ore.rotation.set(h2 * 3, h3 * 3, 0);
+          group.add(ore);
         }
-      } else if (zone?.id === "vale_of_cinders") {
-        if (h1 < 0.12) addRock(group, wx, baseY, wz, 0.12 + h2 * 0.14, 0x3a1a0a);
+      } else if (zone?.id === "the_ashen_march") {
+        if (h1 < 0.05) addRock(group, wx, baseY, wz, 0.08 + h2 * 0.06, 0x7a6a50);
+        else if (h1 < 0.10) addGrass(group, wx, baseY, wz, 0x5a6828);
         else if (h1 < 0.16) {
+          // Wheat stalk cluster
+          const stalks = 2 + Math.floor(h2 * 3);
+          for (let s = 0; s < stalks; s++) {
+            const sa = (s / stalks) * Math.PI * 2;
+            const sd = 0.06 + hash2c(Math.round(wx) + s, Math.round(wz)) * 0.08;
+            const sh = 0.35 + hash2b(s, Math.round(wx)) * 0.25;
+            const stalkGeo = new THREE.CylinderGeometry(0.015, 0.03, sh, 4);
+            const stalkMat = new THREE.MeshLambertMaterial({ color: 0xd4aa30 });
+            const stalk = new THREE.Mesh(stalkGeo, stalkMat);
+            stalk.position.set(wx + Math.cos(sa) * sd, baseY + sh * 0.5, wz + Math.sin(sa) * sd);
+            stalk.rotation.z = (hash2(s, Math.round(wz)) - 0.5) * 0.15;
+            group.add(stalk);
+            // Wheat head
+            const headGeo = new THREE.SphereGeometry(0.025, 4, 3);
+            const headMat = new THREE.MeshLambertMaterial({ color: 0xeebb40 });
+            const head = new THREE.Mesh(headGeo, headMat);
+            head.scale.set(0.8, 1.4, 0.8);
+            head.position.set(wx + Math.cos(sa) * sd, baseY + sh + 0.015, wz + Math.sin(sa) * sd);
+            group.add(head);
+          }
+        }
+        else if (h1 < 0.18) addFlower(group, wx, baseY, wz);
+        else if (h1 < 0.20) addCampfire(group, wx, baseY, wz);
+      } else if (zone?.id === "vale_of_cinders") {
+        if (h1 < 0.10) addRock(group, wx, baseY, wz, 0.12 + h2 * 0.14, 0x3a1a0a);
+        else if (h1 < 0.15) {
           // Ember glow stone
           const eGeo = new THREE.DodecahedronGeometry(0.10 + h2 * 0.08, 0);
           const eMat = new THREE.MeshBasicMaterial({ color: 0xff4400 });
@@ -158,19 +354,91 @@ export function buildTerrainProps(cx, cy, range = 32) {
           ember.position.set(wx, baseY + 0.08, wz);
           group.add(ember);
         }
+        else if (h1 < 0.18) addCrystal(group, wx, baseY, wz, 0xff4400);
+        else if (h1 < 0.20) {
+          // Lava crack / vent
+          const crackGeo = new THREE.BoxGeometry(0.08, 0.02, 0.5 + h2 * 0.3);
+          const crackMat = new THREE.MeshBasicMaterial({ color: 0xff2200 });
+          const crack = new THREE.Mesh(crackGeo, crackMat);
+          crack.position.set(wx, baseY + 0.01, wz);
+          crack.rotation.y = h3 * Math.PI;
+          group.add(crack);
+          // Steam
+          const steamGeo = new THREE.ConeGeometry(0.06, 0.25, 4);
+          const steamMat = new THREE.MeshBasicMaterial({ color: 0xff8844, transparent: true, opacity: 0.3 });
+          const steam = new THREE.Mesh(steamGeo, steamMat);
+          steam.position.set(wx, baseY + 0.15, wz);
+          group.add(steam);
+        }
+      } else if (zone?.id === "the_sunken_crown") {
+        if (h1 < 0.08) addRock(group, wx, baseY, wz, 0.10 + h2 * 0.08, 0x6a6a7a);
+        else if (h1 < 0.12) {
+          // Ruined pillar
+          const pH = 0.4 + h2 * 0.6;
+          const pGeo = new THREE.CylinderGeometry(0.06, 0.08, pH, 6);
+          const pMat = new THREE.MeshLambertMaterial({ color: 0x8a8a9a });
+          const pillar = new THREE.Mesh(pGeo, pMat);
+          pillar.position.set(wx, baseY + pH * 0.5, wz);
+          pillar.rotation.z = (h3 - 0.5) * 0.3;
+          group.add(pillar);
+        }
+        else if (h1 < 0.16) addGrass(group, wx, baseY, wz, 0x4a5a3a);
+        else if (h1 < 0.18) addSwampPool(group, wx, baseY, wz);
       } else if (zone?.id === "high_bastion") {
-        // Sparse decoration — flower pots, barrels
-        if (h1 < 0.04) {
-          const barrelGeo = new THREE.CylinderGeometry(0.10, 0.10, 0.24, 6);
-          const barrelMat = new THREE.MeshLambertMaterial({ color: 0x5a3a1a });
-          const barrel = new THREE.Mesh(barrelGeo, barrelMat);
-          barrel.position.set(wx, baseY + 0.12, wz);
-          group.add(barrel);
+        if (h1 < 0.03) {
+          // Barrel cluster
+          const barrelCount = 1 + Math.floor(h2 * 2);
+          for (let b = 0; b < barrelCount; b++) {
+            const ba = (b / barrelCount) * Math.PI * 2;
+            const barrelGeo = new THREE.CylinderGeometry(0.08, 0.09, 0.22, 6);
+            const barrelMat = new THREE.MeshLambertMaterial({ color: 0x5a3a1a });
+            const barrel = new THREE.Mesh(barrelGeo, barrelMat);
+            barrel.position.set(wx + Math.cos(ba) * 0.12, baseY + 0.11, wz + Math.sin(ba) * 0.12);
+            group.add(barrel);
+            // Barrel rim
+            const rimGeo = new THREE.TorusGeometry(0.085, 0.012, 4, 8);
+            const rimMat = new THREE.MeshLambertMaterial({ color: 0x444444 });
+            const rim = new THREE.Mesh(rimGeo, rimMat);
+            rim.rotation.x = Math.PI / 2;
+            rim.position.set(wx + Math.cos(ba) * 0.12, baseY + 0.16, wz + Math.sin(ba) * 0.12);
+            group.add(rim);
+          }
+        }
+        else if (h1 < 0.05) {
+          // Crate stack
+          const crateGeo = new THREE.BoxGeometry(0.18, 0.16, 0.18);
+          const crateMat = new THREE.MeshLambertMaterial({ color: 0x6a5030 });
+          const crate = new THREE.Mesh(crateGeo, crateMat);
+          crate.position.set(wx, baseY + 0.08, wz);
+          group.add(crate);
+          if (h2 > 0.5) {
+            const crate2 = new THREE.Mesh(crateGeo, crateMat.clone());
+            crate2.material.color.multiplyScalar(0.85);
+            crate2.position.set(wx + 0.04, baseY + 0.24, wz - 0.02);
+            crate2.rotation.y = 0.3;
+            group.add(crate2);
+          }
+        }
+        else if (h1 < 0.07) addFlower(group, wx, baseY, wz);
+        else if (h1 < 0.08) {
+          // Street lamp
+          const poleGeo = new THREE.CylinderGeometry(0.02, 0.025, 0.8, 5);
+          const poleMat = new THREE.MeshLambertMaterial({ color: 0x444444 });
+          const pole = new THREE.Mesh(poleGeo, poleMat);
+          pole.position.set(wx, baseY + 0.40, wz);
+          group.add(pole);
+          const lampGeo = new THREE.SphereGeometry(0.06, 5, 4);
+          const lampMat = new THREE.MeshBasicMaterial({ color: 0xffcc66 });
+          const lamp = new THREE.Mesh(lampGeo, lampMat);
+          lamp.position.set(wx, baseY + 0.84, wz);
+          group.add(lamp);
         }
       } else if (tileName === "grass" && !zone) {
-        // Wilderness grass tufts
-        if (h1 < 0.06) addGrass(group, wx, baseY, wz);
-        else if (h1 < 0.08) addTree(group, wx, baseY, wz, "pine");
+        // Wilderness
+        if (h1 < 0.05) addGrass(group, wx, baseY, wz);
+        else if (h1 < 0.07) addTree(group, wx, baseY, wz, "pine");
+        else if (h1 < 0.08) addRock(group, wx, baseY, wz, 0.08 + h2 * 0.06, 0x6a6a6a);
+        else if (h1 < 0.09) addFlower(group, wx, baseY, wz);
       }
     }
   }
