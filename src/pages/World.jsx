@@ -94,6 +94,8 @@ export default function World() {
   const [runEnergy, setRunEnergy] = useState(100);
   const [isSprinting, setIsSprinting] = useState(false);
   const questsRef = useRef([]);
+  const monstersRef = useRef([]);
+  const allCharsRef = useRef([]);
   
   // â”€â”€â”€ ZOOM CONTROLLER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const { getCurrentZoomConfig } = useZoomController();
@@ -171,6 +173,9 @@ export default function World() {
   useEffect(() => {
     questsRef.current = characterQuests;
   }, [characterQuests]);
+
+  useEffect(() => { monstersRef.current = monsters; }, [monsters]);
+  useEffect(() => { allCharsRef.current = allCharacters; }, [allCharacters]);
 
   useEffect(() => {
     const handler = (e) => {
