@@ -321,32 +321,34 @@ export default function World() {
         if (targetId) triggerEntityState(targetId, "hurt", 360);
       } else if (type === "death") {
         if (targetId) triggerEntityState(targetId, "death", 1300);
+      }
+
       // Generate floating combat visuals
       if (type === "hit" && targetId) {
-        const target = monstersRef.current?.find(m => m.id === targetId) || allCharsRef.current?.find(c => c.id === targetId);
+        const tgt = monstersRef.current?.find(m => m.id === targetId) || allCharsRef.current?.find(c => c.id === targetId);
         const dmg = ev?.payload?.damage ?? ev?.damage ?? 0;
         const isCrit = !!ev?.payload?.critical;
         setCombatVisuals(prev => [...prev, {
           type: "damage_number",
-          x: target?.x ?? 0, y: target?.y ?? 0,
+          x: tgt?.x ?? 0, y: tgt?.y ?? 0,
           damage: dmg, isCrit, emoji: isCrit ? "💥" : "⚔️",
           color: isCrit ? "#fbbf24" : "#ef4444",
           duration: 1200,
         }]);
-      } else if (type === "miss") {
-        const target = monstersRef.current?.find(m => m.id === targetId) || allCharsRef.current?.find(c => c.id === targetId);
+      } else if (type === "miss" && String(ev?.payload?.reason || "") !== "cooldown") {
+        const tgt = monstersRef.current?.find(m => m.id === targetId) || allCharsRef.current?.find(c => c.id === targetId);
         setCombatVisuals(prev => [...prev, {
           type: "miss",
-          x: target?.x ?? 0, y: target?.y ?? 0,
+          x: tgt?.x ?? 0, y: tgt?.y ?? 0,
           color: "#999999",
           duration: 900,
         }]);
       } else if (type === "heal" && targetId) {
-        const target = monstersRef.current?.find(m => m.id === targetId) || allCharsRef.current?.find(c => c.id === targetId);
+        const tgt = monstersRef.current?.find(m => m.id === targetId) || allCharsRef.current?.find(c => c.id === targetId);
         const healAmt = ev?.payload?.amount ?? 0;
         setCombatVisuals(prev => [...prev, {
           type: "damage_number",
-          x: target?.x ?? 0, y: target?.y ?? 0,
+          x: tgt?.x ?? 0, y: tgt?.y ?? 0,
           damage: `+${healAmt}`, isCrit: false, emoji: "💚",
           color: "#22c55e",
           duration: 1200,
