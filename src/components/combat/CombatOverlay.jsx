@@ -1,4 +1,6 @@
-﻿import { useEffect, useMemo, useState, useCallback } from "react";
+﻿// DEPRECATED: Combat is now handled entirely within the 3D world view (pages/World.jsx).
+// ShadowbaneHUD, TargetFrame, AbilityHotbar, and CombatVisualFeedback replace this overlay.
+import { useEffect, useMemo, useState, useCallback } from "react";
 import { X, Swords, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import gameService from "@/api/gameService";

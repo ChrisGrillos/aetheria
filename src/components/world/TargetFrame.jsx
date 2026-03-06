@@ -24,7 +24,7 @@ const HOSTILITY_STYLES = {
   self:        { border: "border-amber-700",  name: "text-amber-400",  icon: "⭐" },
 };
 
-export default function TargetFrame({ target, myCharacter, combatMode, onEngage, onInteract, onClear, x, y }) {
+export default function TargetFrame({ target, myCharacter, combatMode, onEngage, onInteract, onClear, x, y, combatSession = null }) {
   if (!target) return null;
 
   const entity = target.entity || target;
@@ -98,6 +98,16 @@ export default function TargetFrame({ target, myCharacter, combatMode, onEngage,
           </span>
         )}
       </div>
+
+      {/* Combat Telegraph */}
+      {combatSession?.next_monster_swing_side && (
+        <div className="px-3 pb-1.5">
+          <div className="flex items-center gap-1.5 text-[10px] text-amber-300 font-semibold bg-amber-950/30 border border-amber-800/40 rounded px-2 py-1">
+            <Sword className="w-3 h-3" />
+            Telegraph: {String(combatSession.next_monster_swing_side).toUpperCase()} swing incoming
+          </div>
+        </div>
+      )}
 
       {/* Action Buttons */}
       <div className="px-3 pb-2.5 flex gap-1.5">

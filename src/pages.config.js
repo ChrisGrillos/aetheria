@@ -51,21 +51,21 @@ import AgentArena from './pages/AgentArena';
 import AgentProfile from './pages/AgentProfile';
 import Agents from './pages/Agents';
 import CharacterProfile from './pages/CharacterProfile';
+import Characters from './pages/Characters';
+import Combat from './pages/Combat';
+import Crafting from './pages/Crafting';
 import Economy from './pages/Economy';
 import Experimentation from './pages/Experimentation';
 import GMDashboard from './pages/GMDashboard';
 import Governance from './pages/Governance';
 import Guilds from './pages/Guilds';
+import Home from './pages/Home';
 import Housing from './pages/Housing';
 import Jobs from './pages/Jobs';
 import Recording from './pages/Recording';
+import World from './pages/World';
 import WorldEvents from './pages/WorldEvents';
 import WorldMapView from './pages/WorldMapView';
-import Characters from './pages/Characters';
-import Combat from './pages/Combat';
-import Crafting from './pages/Crafting';
-import Home from './pages/Home';
-import World from './pages/World';
 import __Layout from './Layout.jsx';
 
 
@@ -74,21 +74,21 @@ export const PAGES = {
     "AgentProfile": AgentProfile,
     "Agents": Agents,
     "CharacterProfile": CharacterProfile,
+    "Characters": Characters,
+    "Combat": Combat,
+    "Crafting": Crafting,
     "Economy": Economy,
     "Experimentation": Experimentation,
     "GMDashboard": GMDashboard,
     "Governance": Governance,
     "Guilds": Guilds,
+    "Home": Home,
     "Housing": Housing,
     "Jobs": Jobs,
     "Recording": Recording,
+    "World": World,
     "WorldEvents": WorldEvents,
     "WorldMapView": WorldMapView,
-    "Characters": Characters,
-    "Combat": Combat,
-    "Crafting": Crafting,
-    "Home": Home,
-    "World": World,
 }
 
 export const pagesConfig = {

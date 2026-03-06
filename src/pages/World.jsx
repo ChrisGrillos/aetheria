@@ -13,7 +13,8 @@ import Minimap from "@/components/world/Minimap.jsx";
 import MovableHudPanel from "@/components/world/MovableHudPanel.jsx";
 import TargetFrame from "@/components/world/TargetFrame.jsx";
 import ShadowbaneHUD from "@/components/world/ShadowbaneHUD.jsx";
-import InWorldCombatPanel from "@/components/world/InWorldCombatPanel.jsx";
+// InWorldCombatPanel deprecated — combat info merged into ShadowbaneHUD + TargetFrame
+import CombatVisualFeedback from "@/components/world/CombatVisualFeedback.jsx";
 import { getZoneAt, getPOIAt } from "@/components/shared/worldZones";
 import { isPassable, movementEnergyRegen, setMovementDynamicBlockers, validateStep } from "@/components/shared/movementAuthority";
 import { initiateCombat } from "@/components/combat/authorizedCombatEngine";
@@ -135,6 +136,7 @@ export default function World() {
   const [combatError, setCombatError] = useState("");
   const [aimVec, setAimVec] = useState({ x: 1, y: 0 });
   const [authoritativeCooldowns, setAuthoritativeCooldowns] = useState({});
+  const [combatVisuals, setCombatVisuals] = useState([]);
   const combatStartRef = useRef(false);
   const engineReplayRef = useRef([]);
   const seenCombatEventIdsRef = useRef([]);
@@ -314,7 +316,39 @@ export default function World() {
         if (targetId) triggerEntityState(targetId, "hurt", 360);
       } else if (type === "death") {
         if (targetId) triggerEntityState(targetId, "death", 1300);
-      } else if (type === "range_fail") {
+      // Generate floating combat visuals
+      if (type === "hit" && targetId) {
+        const target = monstersRef.current?.find(m => m.id === targetId) || allCharsRef.current?.find(c => c.id === targetId);
+        const dmg = ev?.payload?.damage ?? ev?.damage ?? 0;
+        const isCrit = !!ev?.payload?.critical;
+        setCombatVisuals(prev => [...prev, {
+          type: "damage_number",
+          x: target?.x ?? 0, y: target?.y ?? 0,
+          damage: dmg, isCrit, emoji: isCrit ? "💥" : "⚔️",
+          color: isCrit ? "#fbbf24" : "#ef4444",
+          duration: 1200,
+        }]);
+      } else if (type === "miss") {
+        const target = monstersRef.current?.find(m => m.id === targetId) || allCharsRef.current?.find(c => c.id === targetId);
+        setCombatVisuals(prev => [...prev, {
+          type: "miss",
+          x: target?.x ?? 0, y: target?.y ?? 0,
+          color: "#999999",
+          duration: 900,
+        }]);
+      } else if (type === "heal" && targetId) {
+        const target = monstersRef.current?.find(m => m.id === targetId) || allCharsRef.current?.find(c => c.id === targetId);
+        const healAmt = ev?.payload?.amount ?? 0;
+        setCombatVisuals(prev => [...prev, {
+          type: "damage_number",
+          x: target?.x ?? 0, y: target?.y ?? 0,
+          damage: `+${healAmt}`, isCrit: false, emoji: "💚",
+          color: "#22c55e",
+          duration: 1200,
+        }]);
+      }
+
+      if (type === "range_fail") {
         const reason = String(ev?.payload?.reason || "out_of_range");
         setCombatError(reason === "cooldown" ? "Ability cooling down." : "Target out of range.");
       } else if (type === "miss" && String(ev?.payload?.reason || "") === "cooldown") {
@@ -970,6 +1004,8 @@ export default function World() {
           pushToTalk={voice.pushToTalk}
           speaking={voice.speaking}
           onInventory={() => setShowInventory(true)}
+          combatSession={combatSession}
+          combatError={combatError}
           inline
         />
       </MovableHudPanel>
@@ -1044,28 +1080,17 @@ export default function World() {
                 if (activeTarget?.type === "npc") interactWithNpc(entity);
               }}
               onClear={() => { clearTarget(); clearActiveTarget(); }}
+              combatSession={combatSession}
             />
           </div>
         </MovableHudPanel>
       )}
 
-      {(combatSession || combatStatus !== "idle") && (
-        <MovableHudPanel
-          panelId="hud_combat"
-          title="Combat"
-          minWidth={260}
-          minHeight={98}
-          defaultLayout={{ x: Math.max(20, (typeof window !== "undefined" ? window.innerWidth : 1500) / 2 - 170), y: 252, width: 340, height: 132, opacity: 0.95, locked: false }}
-          zIndex={44}
-        >
-          <InWorldCombatPanel
-            session={combatSession}
-            status={combatStatus}
-            combatError={combatError}
-            inline
-          />
-        </MovableHudPanel>
-      )}
+      {/* Combat visual feedback — floating damage numbers over the 3D world */}
+      <CombatVisualFeedback
+        visuals={combatVisuals}
+        onVisualComplete={(v) => setCombatVisuals(prev => prev.filter(p => p.key !== v.key))}
+      />
 
       <MovableHudPanel
         panelId="hud_chat"

@@ -1,4 +1,4 @@
-import { Coins, Heart, Mic, MicOff, Package, Zap } from "lucide-react";
+import { Coins, Heart, Mic, MicOff, Package, Zap, AlertTriangle } from "lucide-react";
 
 function Bar({ label, value, max, tone = "red" }) {
   const pct = Math.max(0, Math.min(100, (Number(value || 0) / Math.max(1, Number(max || 1))) * 100));
@@ -31,6 +31,8 @@ export default function ShadowbaneHUD({
   speaking = false,
   onInventory,
   inline = false,
+  combatSession = null,
+  combatError = "",
 }) {
   if (!character) return null;
 
@@ -82,6 +84,27 @@ export default function ShadowbaneHUD({
 
           {targetName && (
             <div className="text-[10px] text-[#d7c9a1] truncate">Target: <span className="text-[#f0e1b8]">{targetName}</span></div>
+          )}
+
+          {/* Inline combat session info */}
+          {combatSession && combatStatus === "active" && (
+            <div className="space-y-1 pt-1 border-t border-[#3b3428]">
+              {combatSession.next_monster_swing_side && (
+                <div className="flex items-center gap-1 text-[10px] text-amber-300 font-semibold">
+                  <AlertTriangle className="w-3 h-3" />
+                  Telegraph: {String(combatSession.next_monster_swing_side).toUpperCase()}
+                </div>
+              )}
+              <div className="flex items-center gap-2 text-[10px]">
+                <span className={combatSession.in_range ? "text-emerald-300" : "text-orange-300"}>
+                  {combatSession.in_range ? "● In Range" : "● Out of Range"}
+                </span>
+              </div>
+            </div>
+          )}
+
+          {combatError && (
+            <div className="text-[10px] text-red-400 truncate">{combatError}</div>
           )}
 
           <div className="flex items-center justify-between text-[10px] text-gray-300">
